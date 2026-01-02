@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/* ========================================
+   设计系统 - 山维空间博客
+   ======================================== */
+
+/* 配色方案 - 浅色主题（默认） */
+:root {
+  /* 浅色主题背景 */
+  --background: #fafafa;
+  --surface: #ffffff;
+  --surface-hover: #f4f4f5;
+  --surface-border: rgba(0, 0, 0, 0.08);
+
+  /* 渐变主色 */
+  --gradient-from: #9333ea;
+  --gradient-to: #0891b2;
+
+  /* 文字颜色 */
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+
+  /* 强调色 */
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+
+  /* 其他 */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  /* 光晕颜色 */
+  --glow-purple: rgba(147, 51, 234, 0.15);
+  --glow-cyan: rgba(8, 145, 178, 0.1);
+
+  /* 玻璃效果背景 */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+}
+
+/* 深色主题 - 根据系统设置自动切换 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 深色主题背景 */
+    --background: #0a0a0f;
+    --surface: #16161f;
+    --surface-hover: #1e1e2a;
+    --surface-border: rgba(255, 255, 255, 0.08);
+
+    /* 渐变主色 */
+    --gradient-from: #a855f7;
+    --gradient-to: #06b6d4;
+
+    /* 文字颜色 */
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+
+    /* 强调色 */
+    --accent: #8b5cf6;
+    --accent-hover: #a78bfa;
+
+    /* 其他 */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+
+    /* 光晕颜色 */
+    --glow-purple: rgba(168, 85, 247, 0.15);
+    --glow-cyan: rgba(6, 182, 212, 0.1);
+
+    /* 玻璃效果背景 */
+    --glass-bg: rgba(22, 22, 31, 0.8);
+  }
+}
+
+/* 全局样式 */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 渐变文字 */
+.text-gradient {
+  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 玻璃效果 */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--surface-border);
+}
+
+/* 发光效果 */
+.glow {
+  box-shadow:
+    0 0 20px var(--glow-purple),
+    0 0 40px var(--glow-cyan);
+}
+
+.glow-text {
+  text-shadow:
+    0 0 20px var(--gradient-from),
+    0 0 40px var(--gradient-to);
+}
+
+/* 链接样式 */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 选中文字样式 */
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: white;
+}
+
+/* 动画 */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+/* 卡片悬浮效果 */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 0 20px var(--glow-purple);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card-hover:hover {
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.3),
+      0 0 20px var(--glow-purple);
+  }
+}
+
+/* 响应式字体 */
+.text-responsive-hero {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.text-responsive-title {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  line-height: 1.2;
+  font-weight: 700;
+}
