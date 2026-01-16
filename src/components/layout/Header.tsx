@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import {
   SearchIcon,
   MenuIcon,
@@ -12,19 +12,19 @@ import {
   GithubIcon,
   YoutubeIcon,
   TwitterIcon,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const navLinks = [
-  { href: "/", label: "首页", icon: HomeIcon },
-  { href: "/posts", label: "归档", icon: ArchiveIcon },
-  { href: "/about", label: "关于", icon: UserIcon },
+  { href: '/', label: '首页', icon: HomeIcon },
+  { href: '/posts', label: '归档', icon: ArchiveIcon },
+  { href: '/about', label: '关于', icon: UserIcon },
 ];
 
 const socialLinks = [
-  { href: "https://github.com/meathill", label: "GitHub", icon: GithubIcon },
-  { href: "https://youtube.com/@meathill", label: "YouTube", icon: YoutubeIcon },
-  { href: "https://x.com/meathill1", label: "X", icon: TwitterIcon },
+  { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon },
+  { href: 'https://youtube.com/@meathill', label: 'YouTube', icon: YoutubeIcon },
+  { href: 'https://x.com/meathill1', label: 'X', icon: TwitterIcon },
 ];
 
 export default function Header() {
@@ -35,24 +35,21 @@ export default function Header() {
     function handleScroll() {
       setIsScrolled(window.scrollY > 20);
     }
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled ? "glass py-3" : "bg-transparent py-5"
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        isScrolled ? 'glass py-3' : 'bg-transparent py-5',
       )}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link
-            href="/"
-            className="text-xl font-bold text-gradient hover:opacity-80 transition-opacity"
-          >
+          <Link href="/" className="text-xl font-bold text-gradient hover:opacity-80 transition-opacity">
             山维空间
           </Link>
 
@@ -109,8 +106,8 @@ export default function Header() {
         {/* Mobile Menu */}
         <div
           className={cn(
-            "md:hidden overflow-hidden transition-all duration-300",
-            isMobileMenuOpen ? "max-h-96 mt-4" : "max-h-0"
+            'md:hidden overflow-hidden transition-all duration-300',
+            isMobileMenuOpen ? 'max-h-96 mt-4' : 'max-h-0',
           )}
         >
           <nav className="flex flex-col gap-2 py-4 border-t border-[var(--surface-border)]">

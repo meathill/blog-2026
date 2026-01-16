@@ -1,6 +1,6 @@
-import { ArrowRightIcon, CalendarIcon, ClockIcon, EyeIcon, ExternalLinkIcon } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { ArrowRightIcon, CalendarIcon, ClockIcon, EyeIcon, ExternalLinkIcon } from 'lucide-react';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface PostCardProps {
   title: string;
@@ -26,24 +26,20 @@ export default function PostCard({
   isExternal = false,
 }: PostCardProps) {
   const linkHref = isExternal ? slug : `/posts/${slug}`;
-  const LinkComponent = isExternal ? "a" : Link;
-  const linkProps = isExternal
-    ? { href: linkHref, target: "_blank", rel: "noopener noreferrer" }
-    : { href: linkHref };
+  const LinkComponent = isExternal ? 'a' : Link;
+  const linkProps = isExternal ? { href: linkHref, target: '_blank', rel: 'noopener noreferrer' } : { href: linkHref };
 
   return (
     <article
       className={cn(
-        "group relative rounded-2xl overflow-hidden card-hover",
-        featured
-          ? "glass glow p-6 md:p-8"
-          : "bg-[var(--surface)] border border-[var(--surface-border)] p-5 md:p-6"
+        'group relative rounded-2xl overflow-hidden card-hover',
+        featured ? 'glass glow p-6 md:p-8' : 'bg-[var(--surface)] border border-[var(--surface-border)] p-5 md:p-6',
       )}
     >
       {/* 推荐标记 */}
       {featured && (
         <div className="absolute top-4 right-4">
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-[var(--gradient-from)] to-[var(--gradient-to)] text-white">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-amber-600 to-orange-600 text-white">
             推荐
           </span>
         </div>
@@ -61,22 +57,21 @@ export default function PostCard({
       {/* 标题 */}
       <h3
         className={cn(
-          "font-bold mb-3 group-hover:text-gradient transition-all",
-          featured ? "text-xl md:text-2xl" : "text-lg"
+          'font-bold mb-3 group-hover:text-gradient transition-all',
+          featured ? 'text-xl md:text-2xl' : 'text-lg',
         )}
       >
-        <LinkComponent {...linkProps} className="hover:no-underline text-[var(--text-primary)] inline-flex items-start gap-2">
+        <LinkComponent
+          {...linkProps}
+          className="hover:no-underline text-[var(--text-primary)] inline-flex items-start gap-2"
+        >
           <span className="flex-1">{title}</span>
-          {isExternal && (
-            <ExternalLinkIcon size={14} className="flex-shrink-0 mt-1 opacity-50" />
-          )}
+          {isExternal && <ExternalLinkIcon size={14} className="flex-shrink-0 mt-1 opacity-50" />}
         </LinkComponent>
       </h3>
 
       {/* 摘要 */}
-      <p className="text-[var(--text-secondary)] text-sm leading-relaxed mb-4 line-clamp-2">
-        {excerpt}
-      </p>
+      <p className="text-[var(--text-secondary)] text-sm leading-relaxed mb-4 line-clamp-2">{excerpt}</p>
 
       {/* 元信息 */}
       <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">

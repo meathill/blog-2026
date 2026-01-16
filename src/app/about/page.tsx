@@ -1,5 +1,5 @@
-import { Metadata } from "next";
-import Image from "next/image";
+import { Metadata } from 'next';
+import Image from 'next/image';
 import {
   GithubIcon,
   YoutubeIcon,
@@ -10,32 +10,32 @@ import {
   CodeIcon,
   DumbbellIcon,
   PlaneIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: "关于我",
-  description: "Meathill - 19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识",
+  title: '关于我',
+  description: 'Meathill - 19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识',
 };
 
 const socialLinks = [
-  { href: "https://github.com/meathill", label: "GitHub", icon: GithubIcon, username: "@meathill" },
-  { href: "https://youtube.com/@meathill", label: "YouTube", icon: YoutubeIcon, username: "@meathill" },
-  { href: "https://x.com/meathill1", label: "X (Twitter)", icon: TwitterIcon, username: "@meathill1" },
+  { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon, username: '@meathill' },
+  { href: 'https://youtube.com/@meathill', label: 'YouTube', icon: YoutubeIcon, username: '@meathill' },
+  { href: 'https://x.com/meathill1', label: 'X (Twitter)', icon: TwitterIcon, username: '@meathill1' },
 ];
 
 const skills = [
-  { category: "前端", items: ["Vue.js", "React", "Next.js", "TypeScript", "TailwindCSS"] },
-  { category: "后端", items: ["Node.js", "Python", "PHP", "MySQL", "TiDB"] },
-  { category: "移动端", items: ["React Native", "Expo"] },
-  { category: "DevOps", items: ["Cloudflare", "Docker", "GitHub Actions"] },
+  { category: '前端', items: ['Vue.js', 'React', 'Next.js', 'TypeScript', 'TailwindCSS'] },
+  { category: '后端', items: ['Node.js', 'Python', 'PHP', 'MySQL', 'TiDB'] },
+  { category: '移动端', items: ['React Native', 'Expo'] },
+  { category: 'DevOps', items: ['Cloudflare', 'Docker', 'GitHub Actions'] },
 ];
 
 const timeline = [
-  { year: "2006", event: "开始 Web 开发之旅" },
-  { year: "2010", event: "全职前端开发" },
-  { year: "2015", event: "转型全栈开发" },
-  { year: "2020", event: "开始技术自媒体" },
-  { year: "2023", event: "专注远程工作" },
+  { year: '2006', event: '开始 Web 开发之旅' },
+  { year: '2010', event: '全职前端开发' },
+  { year: '2015', event: '转型全栈开发' },
+  { year: '2020', event: '开始技术自媒体' },
+  { year: '2023', event: '专注远程工作' },
 ];
 
 export default function AboutPage() {
@@ -46,7 +46,7 @@ export default function AboutPage() {
         <section className="text-center mb-16">
           {/* Avatar */}
           <div className="relative w-32 h-32 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[var(--gradient-from)] to-[var(--gradient-to)] animate-pulse-glow" />
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 animate-pulse-glow" />
             <div className="relative w-full h-full rounded-full bg-[var(--surface)] border-4 border-[var(--background)] flex items-center justify-center text-4xl">
               🏋️
             </div>
@@ -98,16 +98,15 @@ export default function AboutPage() {
           <h2 className="text-xl font-bold text-gradient mb-6">关于我</h2>
           <div className="prose prose-invert max-w-none space-y-4 text-[var(--text-secondary)]">
             <p>
-              大家好，我是肉山（Meathill），一名拥有 19 年以上经验的全栈开发者。
-              目前主要从事 Web 全栈开发，专注于 Vue.js、React、Node.js 等现代技术栈。
+              大家好，我是肉山（Meathill），一名拥有 19 年以上经验的全栈开发者。 目前主要从事 Web 全栈开发，专注于
+              Vue.js、React、Node.js 等现代技术栈。
             </p>
             <p>
-              我热爱技术，喜欢探索新工具和新方法。同时也热衷于技术分享，
-              在 YouTube 和 B 站上发布视频教程，帮助更多人学习编程。
+              我热爱技术，喜欢探索新工具和新方法。同时也热衷于技术分享， 在 YouTube 和 B
+              站上发布视频教程，帮助更多人学习编程。
             </p>
             <p>
-              工作之余，我是一名力量举爱好者。目前的最好成绩是：
-              深蹲 172.5kg、卧推 130kg、硬拉 187.5kg，总重量 490kg。
+              工作之余，我是一名力量举爱好者。目前的最好成绩是： 深蹲 172.5kg、卧推 130kg、硬拉 187.5kg，总重量 490kg。
               目标是突破 510kg！
             </p>
           </div>
@@ -118,11 +117,16 @@ export default function AboutPage() {
           <h2 className="text-xl font-bold text-gradient mb-6">技术栈</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {skills.map((skill) => (
-              <div key={skill.category} className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)]">
+              <div
+                key={skill.category}
+                className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)]"
+              >
                 <h3 className="text-sm font-semibold text-[var(--accent)] mb-3">{skill.category}</h3>
                 <ul className="space-y-1">
                   {skill.items.map((item) => (
-                    <li key={item} className="text-sm text-[var(--text-secondary)]">{item}</li>
+                    <li key={item} className="text-sm text-[var(--text-secondary)]">
+                      {item}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -196,7 +200,7 @@ export default function AboutPage() {
               href="https://github.com/sponsors/meathill"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--gradient-from)] to-[var(--gradient-to)] text-white font-semibold hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
             >
               ❤️ 赞助我
             </a>

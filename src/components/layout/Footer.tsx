@@ -1,21 +1,16 @@
-import Link from "next/link";
-import {
-  GithubIcon,
-  YoutubeIcon,
-  TwitterIcon,
-  HeartIcon,
-} from "lucide-react";
+import Link from 'next/link';
+import { GithubIcon, YoutubeIcon, TwitterIcon, HeartIcon } from 'lucide-react';
 
 const socialLinks = [
-  { href: "https://github.com/meathill", label: "GitHub", icon: GithubIcon },
-  { href: "https://youtube.com/@meathill", label: "YouTube", icon: YoutubeIcon },
-  { href: "https://x.com/meathill1", label: "X", icon: TwitterIcon },
+  { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon },
+  { href: 'https://youtube.com/@meathill', label: 'YouTube', icon: YoutubeIcon },
+  { href: 'https://x.com/meathill1', label: 'X', icon: TwitterIcon },
 ];
 
 const footerLinks = [
-  { href: "/posts", label: "文章归档" },
-  { href: "/about", label: "关于我" },
-  { href: "https://github.com/sponsors/meathill", label: "赞助", external: true },
+  { href: '/posts', label: '文章归档' },
+  { href: '/about', label: '关于我' },
+  { href: 'https://github.com/sponsors/meathill', label: '赞助', external: true },
 ];
 
 export default function Footer() {
@@ -27,10 +22,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link
-              href="/"
-              className="text-xl font-bold text-gradient inline-block"
-            >
+            <Link href="/" className="text-xl font-bold text-gradient inline-block">
               山维空间
             </Link>
             <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
@@ -54,9 +46,7 @@ export default function Footer() {
 
           {/* Links */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-              快速链接
-            </h3>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">快速链接</h3>
             <ul className="space-y-2">
               {footerLinks.map((link) => (
                 <li key={link.href}>
@@ -84,20 +74,16 @@ export default function Footer() {
 
           {/* Newsletter or Extra */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-              技术栈
-            </h3>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">技术栈</h3>
             <div className="flex flex-wrap gap-2">
-              {["Vue", "React", "Node.js", "TypeScript", "Next.js", "Cloudflare"].map(
-                (tech) => (
-                  <span
-                    key={tech}
-                    className="px-2 py-1 text-xs rounded-md bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--surface-border)]"
-                  >
-                    {tech}
-                  </span>
-                )
-              )}
+              {['Vue', 'React', 'Node.js', 'TypeScript', 'Next.js', 'Cloudflare'].map((tech) => (
+                <span
+                  key={tech}
+                  className="px-2 py-1 text-xs rounded-md bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--surface-border)]"
+                >
+                  {tech}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -107,11 +93,9 @@ export default function Footer() {
           <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
             © {currentYear} Meathill. Made with
             <HeartIcon size={12} className="text-red-500" fill="currentColor" />
-            in Shenzhen
+            in Chongqing
           </p>
-          <p className="text-xs text-[var(--text-muted)]">
-            Powered by Next.js + OpenNext + Cloudflare
-          </p>
+          <p className="text-xs text-[var(--text-muted)]">Powered by Next.js + OpenNext + Cloudflare</p>
         </div>
       </div>
     </footer>

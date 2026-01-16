@@ -13,8 +13,8 @@
   --surface-border: rgba(0, 0, 0, 0.08);
 
   /* 渐变主色 */
-  --gradient-from: #9333ea;
-  --gradient-to: #0891b2;
+  --primary-from: #d97706;
+  --primary-to: #ea580c;
 
   /* 文字颜色 */
   --text-primary: #18181b;
@@ -22,8 +22,8 @@
   --text-muted: #a1a1aa;
 
   /* 强调色 */
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
+  --accent: #d97706;
+  --accent-hover: #b45309;
 
   /* 其他 */
   --success: #10b981;
@@ -31,8 +31,8 @@
   --error: #ef4444;
 
   /* 光晕颜色 */
-  --glow-purple: rgba(147, 51, 234, 0.15);
-  --glow-cyan: rgba(8, 145, 178, 0.1);
+  --glow-amber: rgba(217, 119, 6, 0.15);
+  --glow-orange: rgba(234, 88, 12, 0.1);
 
   /* 玻璃效果背景 */
   --glass-bg: rgba(255, 255, 255, 0.8);
@@ -48,8 +48,8 @@
     --surface-border: rgba(255, 255, 255, 0.08);
 
     /* 渐变主色 */
-    --gradient-from: #a855f7;
-    --gradient-to: #06b6d4;
+    --primary-from: #f59e0b;
+    --primary-to: #f97316;
 
     /* 文字颜色 */
     --text-primary: #f5f5f7;
@@ -57,8 +57,8 @@
     --text-muted: #71717a;
 
     /* 强调色 */
-    --accent: #8b5cf6;
-    --accent-hover: #a78bfa;
+    --accent: #f59e0b;
+    --accent-hover: #fbbf24;
 
     /* 其他 */
     --success: #10b981;
@@ -66,8 +66,8 @@
     --error: #ef4444;
 
     /* 光晕颜色 */
-    --glow-purple: rgba(168, 85, 247, 0.15);
-    --glow-cyan: rgba(6, 182, 212, 0.1);
+    --glow-amber: rgba(245, 158, 11, 0.15);
+    --glow-orange: rgba(249, 115, 22, 0.1);
 
     /* 玻璃效果背景 */
     --glass-bg: rgba(22, 22, 31, 0.8);
@@ -82,14 +82,14 @@ html {
 body {
   background-color: var(--background);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
 /* 渐变文字 */
 .text-gradient {
-  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+  background: linear-gradient(135deg, #d97706, #ea580c);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -106,14 +106,14 @@ body {
 /* 发光效果 */
 .glow {
   box-shadow:
-    0 0 20px var(--glow-purple),
-    0 0 40px var(--glow-cyan);
+    0 0 20px var(--glow-amber),
+    0 0 40px var(--glow-orange);
 }
 
 .glow-text {
   text-shadow:
-    0 0 20px var(--gradient-from),
-    0 0 40px var(--gradient-to);
+    0 0 20px #d97706,
+    0 0 40px #ea580c;
 }
 
 /* 链接样式 */
@@ -213,14 +213,14 @@ a:hover {
   transform: translateY(-4px);
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.15),
-    0 0 20px var(--glow-purple);
+    0 0 20px var(--glow-amber);
 }
 
 @media (prefers-color-scheme: dark) {
   .card-hover:hover {
     box-shadow:
       0 20px 40px rgba(0, 0, 0, 0.3),
-      0 0 20px var(--glow-purple);
+      0 0 20px var(--glow-amber);
   }
 }
 

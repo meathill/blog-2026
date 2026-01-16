@@ -1,5 +1,5 @@
-import { ArrowRightIcon, SparklesIcon } from "lucide-react";
-import Link from "next/link";
+import { ArrowRightIcon, SparklesIcon } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Hero() {
   return (
@@ -7,8 +7,14 @@ export default function Hero() {
       {/* 背景装饰 */}
       <div className="absolute inset-0 overflow-hidden">
         {/* 渐变光晕 */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse-glow" style={{ backgroundColor: 'var(--glow-purple)' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse-glow" style={{ backgroundColor: 'var(--glow-cyan)', animationDelay: '1.5s' }} />
+        <div
+          className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse-glow"
+          style={{ backgroundColor: 'var(--glow-amber)' }}
+        />
+        <div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse-glow"
+          style={{ backgroundColor: 'var(--glow-orange)', animationDelay: '1.5s' }}
+        />
 
         {/* 网格背景 */}
         <div
@@ -18,7 +24,7 @@ export default function Hero() {
               linear-gradient(var(--surface-border) 1px, transparent 1px),
               linear-gradient(90deg, var(--surface-border) 1px, transparent 1px)
             `,
-            backgroundSize: '50px 50px'
+            backgroundSize: '50px 50px',
           }}
         />
 
@@ -31,9 +37,7 @@ export default function Hero() {
         {/* 小标签 */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-float">
           <SparklesIcon size={16} className="text-[var(--accent)]" />
-          <span className="text-sm text-[var(--text-secondary)]">
-            全栈开发 · 技术分享 · 生活记录
-          </span>
+          <span className="text-sm text-[var(--text-secondary)]">全栈开发 · 技术分享 · 生活记录</span>
         </div>
 
         {/* 大标题 */}
@@ -59,7 +63,7 @@ export default function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/posts"
-            className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-[var(--gradient-from)] to-[var(--gradient-to)] text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+            className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
           >
             探索文章
             <ArrowRightIcon size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -77,17 +81,13 @@ export default function Hero() {
         {/* 统计数据 */}
         <div className="mt-16 grid grid-cols-3 gap-8 max-w-md mx-auto">
           {[
-            { label: "年经验", value: "19+" },
-            { label: "开源项目", value: "50+" },
-            { label: "技术文章", value: "500+" },
+            { label: '年经验', value: '19+' },
+            { label: '开源项目', value: '50+' },
+            { label: '技术文章', value: '500+' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-gradient">
-                {stat.value}
-              </div>
-              <div className="text-sm text-[var(--text-muted)] mt-1">
-                {stat.label}
-              </div>
+              <div className="text-2xl md:text-3xl font-bold text-gradient">{stat.value}</div>
+              <div className="text-sm text-[var(--text-muted)] mt-1">{stat.label}</div>
             </div>
           ))}
         </div>

@@ -3,10 +3,7 @@
   "main": ".open-next/worker.js",
   "name": "blog-2026",
   "compatibility_date": "2026-01-01",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
-  ],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -20,20 +17,12 @@
     ]
   },
   "images": {
-    "binding": "IMAGES",
+    "binding": "IMAGES"
   },
-  "kv_namespaces": [
-    {
-      "binding": "NEXT_CACHE_WORKERS_KV",
-      "id": ""
-    }
-  ],
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": [
-        "DOQueueHandler"
-      ]
+      "new_sqlite_classes": ["DOQueueHandler"]
     }
   ],
   "observability": {
@@ -51,6 +40,6 @@
   "vars": {
     "NEXT_PUBLIC_SITE_URL": "https://blog.meathill.com",
     "WP_ORIGIN_IP": "198.18.0.162",
-    "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2",
+    "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2"
   }
 }

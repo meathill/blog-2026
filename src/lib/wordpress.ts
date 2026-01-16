@@ -4,8 +4,8 @@
  */
 
 // 从环境变量获取配置
-const WP_API_BASE = process.env.WORDPRESS_API_URL || "https://blog.meathill.com/wp-json/wp/v2";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://blog.meathill.com";
+const WP_API_BASE = process.env.WORDPRESS_API_URL || 'https://blog.meathill.com/wp-json/wp/v2';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.meathill.com';
 // 可选：通过 IP 访问源站
 const WP_ORIGIN_IP = process.env.WP_ORIGIN_IP; // 例如: "123.45.67.89"
 
@@ -20,8 +20,8 @@ export interface WPPost {
   tags: number[];
   featured_media: number;
   _embedded?: {
-    "wp:featuredmedia"?: Array<{ source_url: string }>;
-    "wp:term"?: Array<Array<{ id: number; name: string; slug: string }>>;
+    'wp:featuredmedia'?: Array<{ source_url: string }>;
+    'wp:term'?: Array<Array<{ id: number; name: string; slug: string }>>;
   };
 }
 
@@ -46,7 +46,7 @@ export interface WPTag {
 async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   let url = `${WP_API_BASE}${endpoint}`;
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
     ...(options?.headers || {}),
   };
 
@@ -54,7 +54,7 @@ async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   if (WP_ORIGIN_IP) {
     const siteHost = new URL(SITE_URL).host;
     url = url.replace(siteHost, WP_ORIGIN_IP);
-    (headers as Record<string, string>)["Host"] = siteHost;
+    (headers as Record<string, string>)['Host'] = siteHost;
   }
 
   const response = await fetch(url, {
@@ -83,30 +83,28 @@ export async function getPosts(params?: {
   search?: string;
 }): Promise<{ posts: WPPost[]; total: number; totalPages: number }> {
   const searchParams = new URLSearchParams();
-  searchParams.set("_embed", "true");
-  searchParams.set("per_page", String(params?.perPage || 10));
-  searchParams.set("page", String(params?.page || 1));
+  searchParams.set('_embed', 'true');
+  searchParams.set('per_page', String(params?.perPage || 10));
+  searchParams.set('page', String(params?.page || 1));
 
   if (params?.categories?.length) {
-    searchParams.set("categories", params.categories.join(","));
+    searchParams.set('categories', params.categories.join(','));
   }
   if (params?.tags?.length) {
-    searchParams.set("tags", params.tags.join(","));
+    searchParams.set('tags', params.tags.join(','));
   }
   if (params?.search) {
-    searchParams.set("search", params.search);
+    searchParams.set('search', params.search);
   }
 
   const response = await fetch(`${WP_API_BASE}/posts?${searchParams}`, {
-    headers: WP_ORIGIN_IP
-      ? { Host: new URL(SITE_URL).host }
-      : {},
+    headers: WP_ORIGIN_IP ? { Host: new URL(SITE_URL).host } : {},
     next: { revalidate: 300 },
   });
 
   const posts = await response.json();
-  const total = parseInt(response.headers.get("X-WP-Total") || "0", 10);
-  const totalPages = parseInt(response.headers.get("X-WP-TotalPages") || "0", 10);
+  const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
+  const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
 
   return { posts, total, totalPages };
 }
@@ -123,7 +121,7 @@ export async function getPost(slug: string): Promise<WPPost | null> {
  * 获取分类列表
  */
 export async function getCategories(): Promise<WPCategory[]> {
-  return wpFetch<WPCategory[]>("/categories?per_page=100");
+  return wpFetch<WPCategory[]>('/categories?per_page=100');
 }
 
 /**
@@ -138,11 +136,11 @@ export async function getTags(params?: { perPage?: number }): Promise<WPTag[]> {
  */
 export function stripHtml(html: string): string {
   return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .trim();
 }
@@ -162,5 +160,5 @@ export function calculateReadingTime(content: string): number {
  */
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toISOString().split("T")[0];
+  return date.toISOString().split('T')[0];
 }

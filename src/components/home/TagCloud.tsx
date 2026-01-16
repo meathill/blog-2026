@@ -1,26 +1,26 @@
-import Link from "next/link";
+import Link from 'next/link';
 
 // 模拟数据
 const tags = [
-  { name: "Vue.js", count: 45 },
-  { name: "React", count: 38 },
-  { name: "Node.js", count: 32 },
-  { name: "TypeScript", count: 28 },
-  { name: "Next.js", count: 24 },
-  { name: "JavaScript", count: 56 },
-  { name: "CSS", count: 18 },
-  { name: "Cloudflare", count: 12 },
-  { name: "数据库", count: 15 },
-  { name: "移动开发", count: 20 },
-  { name: "工具", count: 22 },
-  { name: "生活", count: 35 },
+  { name: 'Vue.js', count: 45 },
+  { name: 'React', count: 38 },
+  { name: 'Node.js', count: 32 },
+  { name: 'TypeScript', count: 28 },
+  { name: 'Next.js', count: 24 },
+  { name: 'JavaScript', count: 56 },
+  { name: 'CSS', count: 18 },
+  { name: 'Cloudflare', count: 12 },
+  { name: '数据库', count: 15 },
+  { name: '移动开发', count: 20 },
+  { name: '工具', count: 22 },
+  { name: '生活', count: 35 },
 ];
 
 function getTagSize(count: number): string {
-  if (count >= 50) return "text-lg font-semibold";
-  if (count >= 30) return "text-base font-medium";
-  if (count >= 20) return "text-sm font-medium";
-  return "text-xs";
+  if (count >= 50) return 'text-lg font-semibold';
+  if (count >= 30) return 'text-base font-medium';
+  if (count >= 20) return 'text-sm font-medium';
+  return 'text-xs';
 }
 
 export default function TagCloud() {
@@ -40,15 +40,13 @@ export default function TagCloud() {
                 px-4 py-2 rounded-full
                 bg-[var(--surface)] border border-[var(--surface-border)]
                 text-[var(--text-secondary)]
-                hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5
+                hover:border-amber-600 hover:text-amber-600 hover:bg-amber-600/5
                 transition-all duration-200
                 ${getTagSize(tag.count)}
               `}
             >
               {tag.name}
-              <span className="ml-1 text-[var(--text-muted)] text-xs">
-                ({tag.count})
-              </span>
+              <span className="ml-1 text-[var(--text-muted)] text-xs">({tag.count})</span>
             </Link>
           ))}
         </div>
