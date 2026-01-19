@@ -1,12 +1,10 @@
 import type { MetadataRoute } from 'next';
 import { getPosts, getCategories } from '@/lib/wordpress';
-
-const SITE_URL = 'https://meathill.com';
-
-// 强制动态渲染，避免构建时预渲染
-export const dynamic = 'force-dynamic';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const { env } = await getCloudflareContext({ async: true });
+  const SITE_URL = env.NEXT_PUBLIC_SITE_URL;
   // 静态页面
   const staticPages: MetadataRoute.Sitemap = [
     {
