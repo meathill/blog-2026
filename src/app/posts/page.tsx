@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { CalendarIcon, ClockIcon, TagIcon } from 'lucide-react';
+import { CalendarIcon, ClockIcon, TagIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { getPosts, getCategories, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
+
+const POSTS_PER_PAGE = 20;
 
 export const metadata: Metadata = {
   title: '文章归档',
@@ -9,9 +11,26 @@ export const metadata: Metadata = {
 };
 
 export default async function ArchivePage() {
-  const { posts, total } = await getPosts({ perPage: 50 });
+  const { posts, total, totalPages } = await getPosts({ perPage: POSTS_PER_PAGE });
   const categories = await getCategories();
 
+  return <PostList posts={posts} total={total} totalPages={totalPages} currentPage={1} categories={categories} />;
+}
+
+// 导出供分页页面使用
+export function PostList({
+  posts,
+  total,
+  totalPages,
+  currentPage,
+  categories,
+}: {
+  posts: any[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  categories: any[];
+}) {
   // 按年份分组
   const postsByYear: Record<string, typeof posts> = {};
   for (const post of posts) {
@@ -25,7 +44,7 @@ export default async function ArchivePage() {
   const years = Object.keys(postsByYear).sort((a, b) => Number(b) - Number(a));
 
   // 创建分类 ID 到名称的映射
-  const categoryMap = new Map(categories.map((cat) => [cat.id, cat.name]));
+  const categoryMap = new Map(categories.map((cat: any) => [cat.id, cat.name]));
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -35,7 +54,10 @@ export default async function ArchivePage() {
           <h1 className="text-responsive-title mb-4">
             <span className="text-gradient">文章归档</span>
           </h1>
-          <p className="text-[var(--text-secondary)]">共 {total} 篇文章，持续更新中...</p>
+          <p className="text-[var(--text-secondary)]">
+            共 {total} 篇文章
+            {totalPages > 1 && `，当前第 ${currentPage}/${totalPages} 页`}
+          </p>
         </header>
 
         {/* Timeline */}
@@ -51,7 +73,7 @@ export default async function ArchivePage() {
 
               {/* Posts List */}
               <ul className="space-y-4">
-                {postsByYear[year].map((post) => {
+                {postsByYear[year].map((post: any) => {
                   const title = stripHtml(post.title.rendered);
                   const date = formatDate(post.date);
                   const readingTime = calculateReadingTime(post.content.rendered);
@@ -97,6 +119,45 @@ export default async function ArchivePage() {
             </section>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <nav className="mt-12 flex items-center justify-center gap-2">
+            {currentPage > 1 ? (
+              <Link
+                href={currentPage === 2 ? '/posts' : `/posts/page/${currentPage - 1}`}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface)] border border-[var(--surface-border)] text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all"
+              >
+                <ChevronLeftIcon size={16} />
+                上一页
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] cursor-not-allowed">
+                <ChevronLeftIcon size={16} />
+                上一页
+              </span>
+            )}
+
+            <span className="px-4 py-2 text-sm text-[var(--text-secondary)]">
+              {currentPage} / {totalPages}
+            </span>
+
+            {currentPage < totalPages ? (
+              <Link
+                href={`/posts/page/${currentPage + 1}`}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface)] border border-[var(--surface-border)] text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all"
+              >
+                下一页
+                <ChevronRightIcon size={16} />
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] cursor-not-allowed">
+                下一页
+                <ChevronRightIcon size={16} />
+              </span>
+            )}
+          </nav>
+        )}
       </div>
     </div>
   );

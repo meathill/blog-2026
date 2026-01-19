@@ -1,6 +1,7 @@
-import { ArrowRightIcon, CalendarIcon, ClockIcon, EyeIcon } from 'lucide-react';
+import { ArrowRightIcon, CalendarIcon, ClockIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getPosts, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
+import { cn } from '@/lib/utils';
 
 export default async function RecentPosts() {
   const { posts } = await getPosts({ perPage: 10 });
@@ -73,11 +74,15 @@ function PostCard({ post, featured = false }: { post: any; featured?: boolean })
   // 获取分类名称
   const category = post._embedded?.['wp:term']?.[0]?.[0]?.name;
 
+  // 获取缩略图
+  const thumbnail = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
+
   return (
     <article
-      className={`group relative rounded-2xl overflow-hidden card-hover ${
-        featured ? 'glass glow p-6 md:p-8' : 'bg-[var(--surface)] border border-[var(--surface-border)] p-5 md:p-6'
-      }`}
+      className={cn(
+        'group relative rounded-2xl overflow-hidden card-hover',
+        featured ? 'glass glow p-6 md:p-8' : 'bg-[var(--surface)] border border-[var(--surface-border)] p-5 md:p-6',
+      )}
     >
       {/* 推荐标记 */}
       {featured && (
@@ -85,6 +90,19 @@ function PostCard({ post, featured = false }: { post: any; featured?: boolean })
           <span className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-amber-600 to-orange-600 text-white">
             推荐
           </span>
+        </div>
+      )}
+
+      {/* 缩略图 */}
+      {thumbnail && (
+        <div className="mb-4 overflow-hidden rounded-t-xl -mx-6 -mt-6 md:-mx-8 md:-mt-8">
+          <Link href={`/posts/${slug}`}>
+            <img
+              src={thumbnail}
+              alt={title}
+              className="w-full object-cover transition-transform group-hover:scale-105 h-48 md:h-64"
+            />
+          </Link>
         </div>
       )}
 
@@ -99,9 +117,10 @@ function PostCard({ post, featured = false }: { post: any; featured?: boolean })
 
       {/* 标题 */}
       <h3
-        className={`font-bold mb-3 group-hover:text-gradient transition-all ${
-          featured ? 'text-xl md:text-2xl' : 'text-lg'
-        }`}
+        className={cn(
+          'font-bold mb-3 group-hover:text-gradient transition-all',
+          featured ? 'text-xl md:text-2xl' : 'text-lg',
+        )}
       >
         <Link href={`/posts/${slug}`} className="hover:no-underline text-[var(--text-primary)]">
           {title}

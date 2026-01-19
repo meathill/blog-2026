@@ -1,0 +1,49 @@
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { getPosts, getCategories } from '@/lib/wordpress';
+import { PostList } from '../../page';
+
+const POSTS_PER_PAGE = 20;
+
+interface PageProps {
+  params: Promise<{ num: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { num } = await params;
+  const pageNum = parseInt(num, 10);
+
+  return {
+    title: `文章归档 - 第 ${pageNum} 页`,
+    description: `山维空间技术文章归档 - 第 ${pageNum} 页`,
+  };
+}
+
+export default async function ArchivePageNum({ params }: PageProps) {
+  const { num } = await params;
+  const currentPage = parseInt(num, 10);
+
+  if (isNaN(currentPage) || currentPage < 1) {
+    notFound();
+  }
+
+  // 第 1 页应该重定向到 /posts
+  if (currentPage === 1) {
+    notFound();
+  }
+
+  const { posts, total, totalPages } = await getPosts({
+    page: currentPage,
+    perPage: POSTS_PER_PAGE,
+  });
+
+  if (currentPage > totalPages) {
+    notFound();
+  }
+
+  const categories = await getCategories();
+
+  return (
+    <PostList posts={posts} total={total} totalPages={totalPages} currentPage={currentPage} categories={categories} />
+  );
+}

@@ -97,6 +97,17 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
         </header>
 
+        {/* Featured Image */}
+        {post._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
+          <div className="mb-8 overflow-hidden rounded-xl">
+            <img
+              src={post._embedded['wp:featuredmedia'][0].source_url}
+              alt={title}
+              className="w-full h-auto object-cover"
+            />
+          </div>
+        )}
+
         {/* Article Content */}
         <div
           className="prose prose-invert prose-lg max-w-none
