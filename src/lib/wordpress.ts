@@ -5,9 +5,9 @@
 
 // 从环境变量获取配置
 const WP_API_BASE = process.env.WORDPRESS_API_URL || 'https://blog.meathill.com/wp-json/wp/v2';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.meathill.com';
-// 可选：通过 IP 访问源站
-const WP_ORIGIN_IP = process.env.WP_ORIGIN_IP; // 例如: "123.45.67.89"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://meathill.com';
+// 可选：通过 IP 访问源站时使用的 Host 头
+const WP_HOSTNAME = process.env.WP_HOSTNAME || 'blog.meathill.com';
 
 export interface WPPost {
   id: number;
@@ -50,11 +50,9 @@ async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
     ...(options?.headers || {}),
   };
 
-  // 如果配置了源站 IP，通过 IP 访问并设置 Host 头
-  if (WP_ORIGIN_IP) {
-    const siteHost = new URL(SITE_URL).host;
-    url = url.replace(siteHost, WP_ORIGIN_IP);
-    (headers as Record<string, string>)['Host'] = siteHost;
+  // 如果配置了 WP_HOSTNAME，通过 IP 访问并设置 Host 头
+  if (WP_HOSTNAME) {
+    (headers as Record<string, string>)['Host'] = WP_HOSTNAME;
   }
 
   const response = await fetch(url, {
@@ -98,7 +96,7 @@ export async function getPosts(params?: {
   }
 
   const response = await fetch(`${WP_API_BASE}/posts?${searchParams}`, {
-    headers: WP_ORIGIN_IP ? { Host: new URL(SITE_URL).host } : {},
+    headers: WP_HOSTNAME ? { Host: WP_HOSTNAME } : {},
     next: { revalidate: 300 },
   });
 
