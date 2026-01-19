@@ -44,6 +44,7 @@ async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   let url = `${env.WORDPRESS_API_URL}${endpoint}`;
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    'User-Agent': 'Next.js Worker',
     ...(options?.headers || {}),
   };
 
