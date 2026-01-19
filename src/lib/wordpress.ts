@@ -47,11 +47,6 @@ async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
     ...(options?.headers || {}),
   };
 
-  // 如果配置了 WP_HOSTNAME，通过 IP 访问并设置 Host 头
-  if (env.WP_HOSTNAME) {
-    (headers as Record<string, string>)['Host'] = env.WP_HOSTNAME;
-  }
-
   const response = await fetch(url, {
     ...options,
     headers,
@@ -94,7 +89,7 @@ export async function getPosts(params?: {
 
   const { env } = await getCloudflareContext({ async: true });
   const response = await fetch(`${env.WORDPRESS_API_URL}/posts?${searchParams}`, {
-    headers: env.WP_HOSTNAME ? { Host: env.WP_HOSTNAME } : {},
+    headers: {},
     next: { revalidate: 300 },
   });
 
