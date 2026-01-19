@@ -15,9 +15,11 @@ function getAccessHeaders(env: CloudflareEnv): HeadersInit {
   };
 
   // 添加 Zero Trust 认证头
-  if (env.CF_ACCESS_CLIENT_ID && env.CF_ACCESS_CLIENT_SECRET) {
-    headers['CF-Access-Client-Id'] = env.CF_ACCESS_CLIENT_ID;
-    headers['CF-Access-Client-Secret'] = env.CF_ACCESS_CLIENT_SECRET;
+  const CF_ACCESS_CLIENT_ID = env.CF_ACCESS_CLIENT_ID || process.env.CF_ACCESS_CLIENT_ID;
+  const CF_ACCESS_CLIENT_SECRET = env.CF_ACCESS_CLIENT_SECRET || process.env.CF_ACCESS_CLIENT_SECRET;
+  if (CF_ACCESS_CLIENT_ID && CF_ACCESS_CLIENT_SECRET) {
+    headers['CF-Access-Client-Id'] = CF_ACCESS_CLIENT_ID;
+    headers['CF-Access-Client-Secret'] = CF_ACCESS_CLIENT_SECRET;
   }
 
   return headers;

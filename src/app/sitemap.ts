@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next';
 import { getPosts, getCategories } from '@/lib/wordpress';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
+export const revalidate = 86400; // 1 day
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { env } = await getCloudflareContext({ async: true });
   const SITE_URL = env.NEXT_PUBLIC_SITE_URL;
