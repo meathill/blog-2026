@@ -235,3 +235,9 @@ a:hover {
   line-height: 1.2;
   font-weight: 700;
 }
+
+.wp-block-table-of-contents {
+  @media (min-width: 641px) {
+    display: none;
+  }
+}

@@ -55,7 +55,12 @@ async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
     },
   });
 
+  console.log('[WP API] Request:', url, 'Headers:', JSON.stringify(headers));
+  console.log('[WP API] Response status:', response.status);
+
   if (!response.ok) {
+    const text = await response.text();
+    console.error('[WP API] Error Body:', text);
     throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
   }
 
