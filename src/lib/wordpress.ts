@@ -1,9 +1,27 @@
 /**
  * WordPress REST API 客户端
- * 支持通过 IP 访问源站，Host 头使用域名
+ * 使用 Cloudflare Zero Trust 鉴权访问源站
  */
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+
+/**
+ * 获取 Cloudflare Access 认证头
+ */
+function getAccessHeaders(env: CloudflareEnv): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'User-Agent': 'Next.js Worker',
+  };
+
+  // 添加 Zero Trust 认证头
+  if (env.CF_ACCESS_CLIENT_ID && env.CF_ACCESS_CLIENT_SECRET) {
+    headers['CF-Access-Client-Id'] = env.CF_ACCESS_CLIENT_ID;
+    headers['CF-Access-Client-Secret'] = env.CF_ACCESS_CLIENT_SECRET;
+  }
+
+  return headers;
+}
 
 export interface WPPost {
   id: number;
@@ -41,10 +59,9 @@ export interface WPTag {
  */
 async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const { env } = await getCloudflareContext({ async: true });
-  let url = `${env.WORDPRESS_API_URL}${endpoint}`;
+  const url = `${env.WORDPRESS_API_URL}${endpoint}`;
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'User-Agent': 'Next.js Worker',
+    ...getAccessHeaders(env),
     ...(options?.headers || {}),
   };
 
@@ -95,7 +112,7 @@ export async function getPosts(params?: {
 
   const { env } = await getCloudflareContext({ async: true });
   const response = await fetch(`${env.WORDPRESS_API_URL}/posts?${searchParams}`, {
-    headers: {},
+    headers: getAccessHeaders(env),
     next: { revalidate: 300 },
   });
 

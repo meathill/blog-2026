@@ -4,6 +4,7 @@
   "name": "blog-2026",
   "compatibility_date": "2026-01-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "account_id": "fdc63eeea83ae8f5234357308b9a638b",
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -39,7 +40,6 @@
   ],
   "vars": {
     "NEXT_PUBLIC_SITE_URL": "https://meathill.com",
-    "WP_ORIGIN_IP": "164.90.146.101",
-    "WORDPRESS_API_URL": "http://164.90.146.101/wp-json/wp/v2"
+    "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2"
   }
 }
