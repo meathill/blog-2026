@@ -144,6 +144,21 @@ export async function getPostsByCategory(categoryId: number, page = 1, perPage =
 }
 
 /**
+ * 通过 slug 获取标签
+ */
+export async function getTagBySlug(slug: string): Promise<WPTag | null> {
+  const tags = await wpFetch<WPTag[]>(`/tags?slug=${encodeURIComponent(slug)}`);
+  return tags[0] || null;
+}
+
+/**
+ * 获取标签下的文章
+ */
+export async function getPostsByTag(tagId: number, page = 1, perPage = 20): Promise<WPPost[]> {
+  return wpFetch<WPPost[]>(`/posts?tags=${tagId}&page=${page}&per_page=${perPage}&_embed=true`);
+}
+
+/**
  * 从 HTML 中提取纯文本摘要
  */
 export function stripHtml(html: string): string {

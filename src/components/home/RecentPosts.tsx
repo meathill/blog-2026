@@ -71,8 +71,8 @@ function PostCard({ post, featured = false }: { post: any; featured?: boolean })
   const readingTime = calculateReadingTime(post.content.rendered);
   const slug = post.slug;
 
-  // 获取分类名称
-  const category = post._embedded?.['wp:term']?.[0]?.[0]?.name;
+  // 获取标签 (wp:term[1] 通常是标签，[0] 是分类)
+  const tags = post._embedded?.['wp:term']?.[1] || [];
 
   // 获取缩略图
   const thumbnail = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
@@ -106,12 +106,18 @@ function PostCard({ post, featured = false }: { post: any; featured?: boolean })
         </div>
       )}
 
-      {/* 分类标签 */}
-      {category && (
-        <div className="mb-4">
-          <span className="px-3 py-1 text-xs font-medium rounded-md bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
-            {category}
-          </span>
+      {/* Tags */}
+      {tags && tags.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {tags.map((tag: any) => (
+            <Link
+              key={tag.id}
+              href={`/tags/${tag.slug}`}
+              className="px-3 py-1 text-xs font-medium rounded-md bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 transition-colors z-10 relative"
+            >
+              {tag.name}
+            </Link>
+          ))}
         </div>
       )}
 
