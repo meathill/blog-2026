@@ -1,8 +1,10 @@
 import type { NextConfig } from 'next';
+import pkg from './package.json';
 
 const nextConfig: NextConfig = {
   // WordPress CMS 配置
   env: {
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
     WORDPRESS_API_URL: process.env.WORDPRESS_API_URL || 'https://blog.meathill.com/wp-json/wp/v2',
   },
 

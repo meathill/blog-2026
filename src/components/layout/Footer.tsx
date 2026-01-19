@@ -97,6 +97,7 @@ export default function Footer() {
           </p>
 
           <p className="text-xs text-[var(--text-muted)]">
+            <span className="text-gray-500 me-2">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
             <Link href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
               粤ICP备15055091号-1
             </Link>
