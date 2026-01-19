@@ -143,8 +143,18 @@ export async function getCategories(): Promise<WPCategory[]> {
 /**
  * 获取标签列表
  */
-export async function getTags(params?: { perPage?: number }): Promise<WPTag[]> {
-  return wpFetch<WPTag[]>(`/tags?per_page=${params?.perPage || 100}&orderby=count&order=desc`);
+export async function getTags(params?: { perPage?: number; include?: number[] }): Promise<WPTag[]> {
+  const query = new URLSearchParams({
+    per_page: String(params?.perPage || 100),
+    orderby: 'count',
+    order: 'desc',
+  });
+
+  if (params?.include?.length) {
+    query.set('include', params.include.join(','));
+  }
+
+  return wpFetch<WPTag[]>(`/tags?${query.toString()}`);
 }
 
 /**

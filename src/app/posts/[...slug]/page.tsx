@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeftIcon, CalendarIcon, ClockIcon, TagIcon } from 'lucide-react';
+import { ArrowLeftIcon, CalendarIcon, ClockIcon, TagIcon, FolderIcon } from 'lucide-react';
 import {
   getPost,
   getCategories,
@@ -10,6 +10,8 @@ import {
   stripHtml,
   processContent,
   WPCategory,
+  getTags,
+  WPTag,
 } from '@/lib/wordpress';
 
 interface PostPageProps {
@@ -81,10 +83,16 @@ export default async function PostPage({ params }: PostPageProps) {
     categories = allCategories.filter((cat) => post.categories.includes(cat.id));
   }
 
+  // 获取标签
+  let tags: WPTag[] = [];
+  if (post.tags && post.tags.length > 0) {
+    tags = await getTags({ include: post.tags });
+  }
+
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="lg:flex lg:gap-8">
+        <div className={`lg:flex lg:gap-8 ${toc.length === 0 ? 'lg:justify-center' : ''}`}>
           {/* Left Sidebar - TOC (宽屏显示) */}
           {toc.length > 0 && (
             <aside className="hidden lg:block lg:w-64 flex-shrink-0">
@@ -133,8 +141,14 @@ export default async function PostPage({ params }: PostPageProps) {
                 </span>
                 {categories.length > 0 && (
                   <span className="inline-flex items-center gap-1">
-                    <TagIcon size={14} />
+                    <FolderIcon size={14} />
                     {categories.map((cat) => cat.name).join(', ')}
+                  </span>
+                )}
+                {tags.length > 0 && (
+                  <span className="inline-flex items-center gap-1">
+                    <TagIcon size={14} />
+                    {tags.map((tag) => tag.name).join(', ')}
                   </span>
                 )}
               </div>

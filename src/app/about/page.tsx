@@ -1,10 +1,8 @@
 import { Metadata } from 'next';
-import Image from 'next/image';
 import {
   GithubIcon,
   YoutubeIcon,
   TwitterIcon,
-  MailIcon,
   MapPinIcon,
   CalendarIcon,
   CodeIcon,
@@ -32,10 +30,9 @@ const skills = [
 
 const timeline = [
   { year: '2006', event: '开始 Web 开发之旅' },
-  { year: '2010', event: '全职前端开发' },
-  { year: '2015', event: '转型全栈开发' },
-  { year: '2020', event: '开始技术自媒体' },
-  { year: '2023', event: '专注远程工作' },
+  { year: '2012', event: '转型全栈开发' },
+  { year: '2015', event: '开始技术自媒体' },
+  { year: '2017', event: '专注远程工作' },
 ];
 
 export default function AboutPage() {
@@ -64,7 +61,7 @@ export default function AboutPage() {
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-[var(--text-muted)]">
             <span className="inline-flex items-center gap-1">
               <MapPinIcon size={14} />
-              深圳, 中国
+              重庆, 中国
             </span>
             <span className="inline-flex items-center gap-1">
               <CalendarIcon size={14} />
@@ -106,8 +103,8 @@ export default function AboutPage() {
               站上发布视频教程，帮助更多人学习编程。
             </p>
             <p>
-              工作之余，我是一名力量举爱好者。目前的最好成绩是： 深蹲 172.5kg、卧推 130kg、硬拉 187.5kg，总重量 490kg。
-              目标是突破 510kg！
+              工作之余，我是一名力量举爱好者。目前的最好成绩是： 深蹲 172.5kg、卧推 130kg、硬拉 210kg，总重量 512.5kg。
+              目标是突破 530kg！
             </p>
           </div>
         </section>
@@ -153,7 +150,7 @@ export default function AboutPage() {
                   <div className="text-xs text-[var(--text-muted)]">卧推</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-gradient">187.5kg</div>
+                  <div className="text-2xl font-bold text-gradient">210kg</div>
                   <div className="text-xs text-[var(--text-muted)]">硬拉</div>
                 </div>
               </div>

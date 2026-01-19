@@ -21,8 +21,16 @@ const navLinks: NavItem[] = [
     children: [
       { href: '/category/js', label: 'JavaScript' },
       { href: '/category/ai', label: 'AI' },
-      { href: '/gitbook-design-patterns-in-jquery/', label: '从 jQuery 里学习设计模式' },
-      { href: '/gitbook-javascript-async-tutorial/', label: 'JavaScript 异步开发全攻略' },
+      {
+        href: 'https://github.com/meathill/gitbook-design-patterns-in-jquery',
+        label: '从 jQuery 里学习设计模式',
+        external: true,
+      },
+      {
+        href: 'https://github.com/meathill/gitbook-javascript-async-tutorial',
+        label: 'JavaScript 异步开发全攻略',
+        external: true,
+      },
     ],
   },
   {
