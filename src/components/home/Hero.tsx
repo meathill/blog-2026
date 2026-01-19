@@ -56,7 +56,7 @@ export default function Hero() {
 
         {/* 额外信息 */}
         <p className="text-[var(--text-muted)] mb-10 text-sm md:text-base">
-          力量举爱好者 🏋️ · 深蹲 172.5kg · 卧推 130kg · 硬拉 187.5kg
+          力量举爱好者 🏋️ · 深蹲 172.5kg · 卧推 130kg · 硬拉 210kg
         </p>
 
         {/* CTA 按钮 */}

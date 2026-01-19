@@ -95,7 +95,12 @@ export default function Footer() {
             <HeartIcon size={12} className="text-red-500" fill="currentColor" />
             in Chongqing
           </p>
-          <p className="text-xs text-[var(--text-muted)]">Powered by Next.js + OpenNext + Cloudflare</p>
+
+          <p className="text-xs text-[var(--text-muted)]">
+            <Link href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+              粤ICP备15055091号-1
+            </Link>
+          </p>
         </div>
       </div>
     </footer>

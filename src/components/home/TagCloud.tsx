@@ -31,7 +31,7 @@ export default function TagCloud() {
           <span className="text-gradient">热门标签</span>
         </h2>
 
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center items-center gap-3">
           {tags.map((tag) => (
             <Link
               key={tag.name}

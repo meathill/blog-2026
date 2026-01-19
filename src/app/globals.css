@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* ========================================
    设计系统 - 山维空间博客
@@ -112,13 +113,12 @@ body {
 
 .glow-text {
   text-shadow:
-    0 0 20px #d97706,
-    0 0 40px #ea580c;
+    0 0 2rem #d9770688,
+    0 0 4rem #ea580c88;
 }
 
 /* 链接样式 */
 a {
-  color: var(--accent);
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -154,7 +154,6 @@ a:hover {
 
 /* 动画 */
 @keyframes float {
-
   0%,
   100% {
     transform: translateY(0);
@@ -166,7 +165,6 @@ a:hover {
 }
 
 @keyframes pulse-glow {
-
   0%,
   100% {
     opacity: 1;

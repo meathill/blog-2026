@@ -1,18 +1,7 @@
 import type { Metadata } from 'next';
-import { Inter, Outfit } from 'next/font/google';
-import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-});
-
-const outfit = Outfit({
-  variable: '--font-outfit',
-  subsets: ['latin'],
-});
+import './globals.css';
 
 export const metadata: Metadata = {
   title: {
@@ -50,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="zh-CN" className="antialiased">
       <head>
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/favicon.png" />

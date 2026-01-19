@@ -132,6 +132,21 @@ export async function getTags(params?: { perPage?: number }): Promise<WPTag[]> {
 }
 
 /**
+ * 通过 slug 获取分类
+ */
+export async function getCategoryBySlug(slug: string): Promise<WPCategory | null> {
+  const categories = await wpFetch<WPCategory[]>(`/categories?slug=${encodeURIComponent(slug)}`);
+  return categories[0] || null;
+}
+
+/**
+ * 获取分类下的文章
+ */
+export async function getPostsByCategory(categoryId: number, page = 1, perPage = 20): Promise<WPPost[]> {
+  return wpFetch<WPPost[]>(`/posts?categories=${categoryId}&page=${page}&per_page=${perPage}&_embed=true`);
+}
+
+/**
  * 从 HTML 中提取纯文本摘要
  */
 export function stripHtml(html: string): string {
@@ -161,4 +176,19 @@ export function calculateReadingTime(content: string): number {
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toISOString().split('T')[0];
+}
+
+/**
+ * 处理文章内容中的链接
+ * - 将 blog.meathill.com 的完整 URL 锚点链接转为纯锚点
+ * - 将 blog.meathill.com 的文章链接转为本地路由
+ */
+export function processContent(html: string): string {
+  return (
+    html
+      // 将带锚点的完整 URL 替换为纯锚点（用于 TOC）
+      .replace(/href="https?:\/\/blog\.meathill\.com\/[^"]*?(#[^"]+)"/g, 'href="$1"')
+      // 将老博客文章链接转为本地路由
+      .replace(/href="https?:\/\/blog\.meathill\.com\/([^"#]+)\.html"/g, 'href="/posts/$1"')
+  );
 }
