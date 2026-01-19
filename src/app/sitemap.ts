@@ -3,6 +3,9 @@ import { getPosts, getCategories } from '@/lib/wordpress';
 
 const SITE_URL = 'https://meathill.com';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 静态页面
   const staticPages: MetadataRoute.Sitemap = [

@@ -3,11 +3,7 @@
  * 支持通过 IP 访问源站，Host 头使用域名
  */
 
-// 从环境变量获取配置
-const WP_API_BASE = process.env.WORDPRESS_API_URL || 'https://blog.meathill.com/wp-json/wp/v2';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://meathill.com';
-// 可选：通过 IP 访问源站时使用的 Host 头
-const WP_HOSTNAME = process.env.WP_HOSTNAME || 'blog.meathill.com';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export interface WPPost {
   id: number;
@@ -44,15 +40,16 @@ export interface WPTag {
  * 支持通过 IP 访问，Host 头使用域名
  */
 async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  let url = `${WP_API_BASE}${endpoint}`;
+  const { env } = await getCloudflareContext({ async: true });
+  let url = `${env.WORDPRESS_API_URL}${endpoint}`;
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options?.headers || {}),
   };
 
   // 如果配置了 WP_HOSTNAME，通过 IP 访问并设置 Host 头
-  if (WP_HOSTNAME) {
-    (headers as Record<string, string>)['Host'] = WP_HOSTNAME;
+  if (env.WP_HOSTNAME) {
+    (headers as Record<string, string>)['Host'] = env.WP_HOSTNAME;
   }
 
   const response = await fetch(url, {
@@ -95,12 +92,13 @@ export async function getPosts(params?: {
     searchParams.set('search', params.search);
   }
 
-  const response = await fetch(`${WP_API_BASE}/posts?${searchParams}`, {
-    headers: WP_HOSTNAME ? { Host: WP_HOSTNAME } : {},
+  const { env } = await getCloudflareContext({ async: true });
+  const response = await fetch(`${env.WORDPRESS_API_URL}/posts?${searchParams}`, {
+    headers: env.WP_HOSTNAME ? { Host: env.WP_HOSTNAME } : {},
     next: { revalidate: 300 },
   });
 
-  const posts = await response.json();
+  const posts: WPPost[] = await response.json();
   const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
   const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
 
