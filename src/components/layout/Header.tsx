@@ -14,6 +14,7 @@ interface NavItem {
 
 const navLinks: NavItem[] = [
   { href: '/about', label: '关于我' },
+  { href: '/app', label: 'Apps' },
   { href: 'https://mizufinancial.com/', label: 'Mizu Financial', external: true },
   {
     href: '/tech',

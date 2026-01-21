@@ -2,6 +2,10 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, CalendarIcon, ClockIcon, TagIcon, FolderIcon } from 'lucide-react';
+import { getDb } from '@/lib/db';
+import { apps } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import AppCard from '@/components/AppCard';
 import {
   getPost,
   getCategories,
@@ -61,6 +65,8 @@ function extractTOC(html: string): Array<{ id: string; text: string; level: numb
   return toc;
 }
 
+// ... (existing imports, but I will put them at top via allow multiple or just standard replacement if I can, but imports are at top. I'll use multi_replace to handle imports and content)
+
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
   const slugStr = slug[slug.length - 1];
@@ -87,6 +93,15 @@ export default async function PostPage({ params }: PostPageProps) {
   let tags: WPTag[] = [];
   if (post.tags && post.tags.length > 0) {
     tags = await getTags({ include: post.tags });
+  }
+
+  // check for app tag
+  let relatedApp = null;
+  const appTag = tags.find((t) => t.name.startsWith('app:'));
+  if (appTag) {
+    const appSlug = appTag.name.replace('app:', '');
+    const db = await getDb();
+    relatedApp = await db.select().from(apps).where(eq(apps.slug, appSlug)).get();
   }
 
   return (
@@ -154,6 +169,16 @@ export default async function PostPage({ params }: PostPageProps) {
               </div>
             </header>
 
+            {/* Featured App */}
+            {relatedApp && (
+              <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/20">
+                <h3 className="text-sm font-bold text-amber-800 dark:text-amber-500 uppercase tracking-wider mb-4">
+                  Related App
+                </h3>
+                <AppCard app={relatedApp} />
+              </div>
+            )}
+
             {/* Featured Image */}
             {post._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
               <div className="mb-8 overflow-hidden rounded-xl">
@@ -165,7 +190,7 @@ export default async function PostPage({ params }: PostPageProps) {
               </div>
             )}
 
-            {/* Article Content */}
+            {/* ... rest of content ... */}
             <div
               className="prose prose-invert prose-lg max-w-none
                 prose-headings:text-[var(--text-primary)] prose-headings:scroll-mt-24

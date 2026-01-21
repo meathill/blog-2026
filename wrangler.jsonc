@@ -17,6 +17,13 @@
       }
     ]
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "meathill",
+      "database_id": "600784c2-db96-4bd6-be22-d2e2375bcef7"
+    }
+  ],
   "images": {
     "binding": "IMAGES"
   },
@@ -40,6 +47,7 @@
   ],
   "vars": {
     "NEXT_PUBLIC_SITE_URL": "https://meathill.com",
+    "BETTER_AUTH_BASE_URL": "https://meathill.com",
     "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2"
   }
 }

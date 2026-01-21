@@ -9,6 +9,7 @@ const socialLinks = [
 
 const footerLinks = [
   { href: '/posts', label: '文章归档' },
+  { href: '/app', label: 'Apps' },
   { href: '/about', label: '关于我' },
   { href: 'https://github.com/sponsors/meathill', label: '赞助', external: true },
 ];
