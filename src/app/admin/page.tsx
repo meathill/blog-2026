@@ -30,7 +30,7 @@ export default async function AdminDashboard() {
           {allApps.map((app) => (
             <div
               key={app.id}
-              className="relative group rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+              className="relative group rounded-lg border border-border bg-card text-card-foreground p-6 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
@@ -42,20 +42,20 @@ export default async function AdminDashboard() {
                         app.status === 'published'
                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                           : app.status === 'draft'
-                            ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            ? 'bg-muted text-muted-foreground'
+                            : 'bg-destructive/10 text-destructive'
                       }`}
                     >
                       {app.status}
                     </span>
                   </div>
                 </div>
-                <Link href={`/admin/apps/${app.id}`} className="p-2 text-zinc-500 hover:text-amber-600">
+                <Link href={`/admin/apps/${app.id}`} className="p-2 text-muted-foreground hover:text-amber-600">
                   <PencilIcon size={16} />
                 </Link>
               </div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2 mb-4">{app.description}</p>
-              <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{app.description}</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>/{app.slug}</span>
                 {app.url && (
                   <a

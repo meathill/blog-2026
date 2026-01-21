@@ -34,7 +34,9 @@ export async function createApp(formData: FormData) {
 
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
+  const content = formData.get('content') as string;
   const url = formData.get('url') as string;
+  const repoUrl = formData.get('repoUrl') as string;
   const icon = formData.get('icon') as string;
   const status = formData.get('status') as 'published' | 'draft' | 'archived';
   const slug = (formData.get('slug') as string) || slugify(name);
@@ -44,8 +46,10 @@ export async function createApp(formData: FormData) {
     id: crypto.randomUUID(),
     name,
     description,
+    content,
     slug,
     url,
+    repoUrl,
     icon,
     status: status || 'draft',
     createdAt: new Date(),
@@ -62,7 +66,9 @@ export async function updateApp(id: string, formData: FormData) {
 
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
+  const content = formData.get('content') as string;
   const url = formData.get('url') as string;
+  const repoUrl = formData.get('repoUrl') as string;
   const icon = formData.get('icon') as string;
   const status = formData.get('status') as 'published' | 'draft' | 'archived';
   const slug = formData.get('slug') as string;
@@ -73,8 +79,10 @@ export async function updateApp(id: string, formData: FormData) {
     .set({
       name,
       description,
+      content,
       slug,
       url,
+      repoUrl,
       icon,
       status,
       updatedAt: new Date(),

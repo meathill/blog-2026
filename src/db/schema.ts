@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -59,11 +59,48 @@ export const apps = sqliteTable('apps', {
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
   description: text('description'),
+  content: text('content'),
   icon: text('icon'),
-  url: text('url'),
+  url: text('url'), // Main website/demo URL
+  repoUrl: text('repo_url'),
   status: text('status', { enum: ['published', 'draft', 'archived'] })
     .notNull()
     .default('draft'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  publishedAt: integer('published_at', { mode: 'timestamp' }),
 });
+
+export const appImages = sqliteTable('app_images', {
+  id: text('id').primaryKey(),
+  appId: text('app_id')
+    .notNull()
+    .references(() => apps.id),
+  url: text('url').notNull(),
+  alt: text('alt'),
+  type: text('type', { enum: ['cover', 'screenshot'] }).default('screenshot'),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const tags = sqliteTable('tags', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const appTags = sqliteTable(
+  'app_tags',
+  {
+    appId: text('app_id')
+      .notNull()
+      .references(() => apps.id),
+    tagId: text('tag_id')
+      .notNull()
+      .references(() => tags.id),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.appId, t.tagId] }),
+  }),
+);

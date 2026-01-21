@@ -2,9 +2,10 @@ import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
-import { ExternalLink, ArrowLeft } from 'lucide-react';
+import { ExternalLink, Github } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { MDXRemote } from 'next-mdx-remote/rsc';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -43,12 +44,17 @@ export default async function AppDetailPage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
-      <Link
-        href="/app"
-        className="inline-flex items-center text-sm text-zinc-500 hover:text-amber-600 mb-8 transition-colors"
-      >
-        <ArrowLeft size={16} className="mr-1" /> Back to Apps
-      </Link>
+      <nav className="mb-8 flex items-center text-sm text-muted-foreground">
+        <Link href="/" className="hover:text-foreground transition-colors">
+          首页
+        </Link>
+        <span className="mx-2">/</span>
+        <Link href="/app" className="hover:text-foreground transition-colors">
+          Apps
+        </Link>
+        <span className="mx-2">/</span>
+        <span className="text-foreground font-medium truncate">{app.name}</span>
+      </nav>
 
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col md:flex-row gap-8 items-start">
@@ -70,20 +76,36 @@ export default async function AppDetailPage({ params }: PageProps) {
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{app.name}</h1>
             <p className="text-lg text-zinc-600 dark:text-zinc-300 mb-6 leading-relaxed">{app.description}</p>
 
-            {app.url && (
-              <a
-                href={app.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-amber-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:bg-amber-500 hover:shadow-amber-500/30 hover:-translate-y-0.5"
-              >
-                Launch App <ExternalLink size={18} />
-              </a>
-            )}
+            <div className="flex flex-wrap gap-4">
+              {app.url && (
+                <a
+                  href={app.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-amber-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:bg-amber-500 hover:shadow-amber-500/30 hover:-translate-y-0.5"
+                >
+                  Launch App <ExternalLink size={18} />
+                </a>
+              )}
+              {app.repoUrl && (
+                <a
+                  href={app.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-6 py-3 text-base font-semibold text-zinc-900 shadow-lg transition-all hover:bg-zinc-200 hover:-translate-y-0.5 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
+                >
+                  Source Code <Github size={18} />
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Future: Screenshots or more details could go here */}
+        {app.content && (
+          <div className="mt-12 md:mt-16 prose prose-lg max-w-none">
+            <MDXRemote source={app.content} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -17,14 +17,14 @@ export default async function FeaturedApps() {
   if (featuredApps.length === 0) return null;
 
   return (
-    <section className="py-16 md:py-24 bg-white/50 dark:bg-zinc-900/30">
+    <section className="py-16 md:py-24 bg-muted/50">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               Apps & Tools
             </h2>
-            <p className="mt-2 text-zinc-600 dark:text-zinc-400">Small utilities I built for fun and profit.</p>
+            <p className="mt-2 text-muted-foreground">Small utilities I built for fun and profit.</p>
           </div>
 
           <Link

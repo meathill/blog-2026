@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeftIcon, CalendarIcon, ClockIcon, TagIcon, FolderIcon } from 'lucide-react';
+import { CalendarIcon, ClockIcon, TagIcon, FolderIcon } from 'lucide-react';
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -131,14 +131,27 @@ export default async function PostPage({ params }: PostPageProps) {
 
           {/* Main Content */}
           <article className="flex-1 max-w-3xl">
-            {/* Back Link */}
-            <Link
-              href="/posts"
-              className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-8"
-            >
-              <ArrowLeftIcon size={16} />
-              返回文章列表
-            </Link>
+            {/* Breadcrumb */}
+            <nav className="mb-8 flex items-center text-sm text-[var(--text-muted)]">
+              <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">
+                首页
+              </Link>
+              <span className="mx-2">/</span>
+              {categories.length > 0 ? (
+                <Link
+                  href={`/category/${categories[0].slug}`}
+                  className="hover:text-[var(--text-primary)] transition-colors"
+                >
+                  {categories[0].name}
+                </Link>
+              ) : (
+                <Link href="/posts" className="hover:text-[var(--text-primary)] transition-colors">
+                  全部文章
+                </Link>
+              )}
+              <span className="mx-2">/</span>
+              <span className="text-[var(--text-primary)] font-medium truncate">{title}</span>
+            </nav>
 
             {/* Article Header */}
             <header className="mb-8">
@@ -213,7 +226,6 @@ export default async function PostPage({ params }: PostPageProps) {
                   href="/posts"
                   className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
-                  <ArrowLeftIcon size={16} />
                   返回文章列表
                 </Link>
 

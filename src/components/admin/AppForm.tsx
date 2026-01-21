@@ -12,7 +12,9 @@ interface AppFormProps {
     name: string;
     slug: string;
     description: string | null;
+    content: string | null;
     url: string | null;
+    repoUrl: string | null;
     icon: string | null;
     status: 'published' | 'draft' | 'archived';
   };
@@ -21,7 +23,34 @@ interface AppFormProps {
 
 export default function AppForm({ initialData, action }: AppFormProps) {
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const router = useRouter();
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // We need to dynamically import the action to avoid bundling issues if any
+      const { uploadImage } = await import('@/actions/upload');
+      const { url } = await uploadImage(formData);
+
+      // Update the icon input value
+      const iconInput = document.getElementsByName('icon')[0] as HTMLInputElement;
+      if (iconInput) {
+        iconInput.value = url;
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (formData: FormData) => {
     setLoading(true);
@@ -38,68 +67,100 @@ export default function AppForm({ initialData, action }: AppFormProps) {
   return (
     <form
       action={handleSubmit}
-      className="space-y-6 max-w-2xl bg-white p-6 rounded-lg shadow-sm border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800"
+      className="space-y-6 max-w-2xl bg-card text-card-foreground p-6 rounded-lg shadow-sm border border-border"
     >
       <div className="grid gap-6 md:grid-cols-2">
         <div className="col-span-2">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Name</label>
+          <label className="block text-sm font-medium text-foreground">Name</label>
           <input
             name="name"
             defaultValue={initialData?.name}
             required
-            className="mt-1 block w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:text-white"
+            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Slug</label>
+          <label className="block text-sm font-medium text-foreground">Slug</label>
           <input
             name="slug"
             defaultValue={initialData?.slug}
             placeholder="Leave empty to auto-generate"
-            className="mt-1 block w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:text-white"
+            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Status</label>
+          <label className="block text-sm font-medium text-foreground">Status</label>
           <select
             name="status"
             defaultValue={initialData?.status || 'draft'}
-            className="mt-1 block w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-zinc-900 focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:text-white"
+            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
           >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
+            <option value="draft" className="bg-popover text-popover-foreground">
+              Draft
+            </option>
+            <option value="published" className="bg-popover text-popover-foreground">
+              Published
+            </option>
+            <option value="archived" className="bg-popover text-popover-foreground">
+              Archived
+            </option>
           </select>
         </div>
 
         <div className="col-span-2">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">URL</label>
+          <label className="block text-sm font-medium text-foreground">URL</label>
           <input
             name="url"
             type="url"
             defaultValue={initialData?.url || ''}
-            className="mt-1 block w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:text-white"
+            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
           />
         </div>
 
         <div className="col-span-2">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Icon URL</label>
-          <input
-            name="icon"
-            defaultValue={initialData?.icon || ''}
-            className="mt-1 block w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:text-white"
-          />
+          <label className="block text-sm font-medium text-foreground">Icon URL</label>
+          <div className="flex gap-2">
+            <input
+              name="icon"
+              defaultValue={initialData?.icon || ''}
+              className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+            />
+            <label className="flex items-center justify-center px-4 py-2 border border-input rounded-lg cursor-pointer hover:bg-accent hover:text-accent-foreground">
+              {uploading ? <Loader2 className="animate-spin" size={16} /> : <span className="text-sm">Upload</span>}
+              <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
+            </label>
+          </div>
         </div>
 
         <div className="col-span-2">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Description</label>
+          <label className="block text-sm font-medium text-foreground">Description (Short)</label>
           <textarea
             name="description"
-            rows={4}
+            rows={2}
             defaultValue={initialData?.description || ''}
-            className="mt-1 block w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:text-white"
+            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+          />
+        </div>
+
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-foreground">Content (Markdown)</label>
+          <textarea
+            name="content"
+            rows={10}
+            defaultValue={initialData?.content || ''}
+            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 font-mono text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground">Repo URL</label>
+          <input
+            name="repoUrl"
+            type="url"
+            defaultValue={initialData?.repoUrl || ''}
+            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
           />
         </div>
       </div>
@@ -108,7 +169,7 @@ export default function AppForm({ initialData, action }: AppFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
         >
           Cancel
         </button>
