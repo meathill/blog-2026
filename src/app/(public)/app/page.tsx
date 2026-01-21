@@ -4,6 +4,8 @@ import { eq, desc } from 'drizzle-orm';
 import AppCard from '@/components/AppCard';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Apps & Tools',
   description: 'Collection of useful small tools and apps built by Meathill.',
