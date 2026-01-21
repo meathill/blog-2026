@@ -3,6 +3,8 @@ import RecentPosts from '@/components/home/RecentPosts';
 import TagCloud from '@/components/home/TagCloud';
 import FeaturedApps from '@/components/home/FeaturedApps';
 
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   return (
     <>
