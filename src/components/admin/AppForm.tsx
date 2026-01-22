@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import MarkdownEditor from './MarkdownEditor';
 
 // Define simpler props since we are using formData directly in actions for now,
 // but for uncontrolled inputs we can just pass initialData.
@@ -145,12 +146,10 @@ export default function AppForm({ initialData, action }: AppFormProps) {
         </div>
 
         <div className="col-span-2">
-          <label className="block text-sm font-medium text-foreground">Content (Markdown)</label>
-          <textarea
+          <MarkdownEditor
             name="content"
-            rows={10}
             defaultValue={initialData?.content || ''}
-            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 font-mono text-sm"
+            rows={12}
           />
         </div>
 
