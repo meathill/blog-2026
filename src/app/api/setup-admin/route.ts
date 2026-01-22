@@ -4,11 +4,9 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword } from 'better-auth/crypto';
 
-export const runtime = 'edge';
-
 export async function POST(req: NextRequest) {
   try {
-    const { env } = await getCloudflareContext({ async: true });
+    const { env } = getCloudflareContext();
     // @ts-ignore
     const secret = env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET;
     const authHeader = req.headers.get('Authorization');
