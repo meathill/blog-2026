@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { EyeIcon, EditIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { marked } from 'marked';
 
 interface MarkdownEditorProps {
   name: string;
@@ -23,6 +24,12 @@ export default function MarkdownEditor({
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValue(e.target.value);
   }, []);
+
+  // Convert markdown to HTML for preview
+  const previewHtml = useMemo(() => {
+    if (!value) return '';
+    return marked(value) as string;
+  }, [value]);
 
   return (
     <div className="space-y-2">
@@ -65,16 +72,9 @@ export default function MarkdownEditor({
 
       {isPreview ? (
         <div
-          className="prose prose-sm max-w-none p-4 min-h-[240px] rounded-lg border border-input bg-transparent"
-        // Using dangerouslySetInnerHTML with a simple markdown-to-html for preview
-        // In production, you'd want a proper markdown parser
-        >
-          {value ? (
-            <div className="whitespace-pre-wrap">{value}</div>
-          ) : (
-            <p className="text-muted-foreground italic">暂无内容</p>
-          )}
-        </div>
+          className="prose prose-sm max-w-none p-4 min-h-[240px] rounded-lg border border-input bg-transparent overflow-auto"
+          dangerouslySetInnerHTML={{ __html: previewHtml || '<p class="text-muted-foreground italic">暂无内容</p>' }}
+        />
       ) : (
         <textarea
           value={value}
@@ -91,3 +91,4 @@ export default function MarkdownEditor({
     </div>
   );
 }
+

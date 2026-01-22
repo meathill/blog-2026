@@ -36,18 +36,27 @@ export default function AppForm({ initialData, action }: AppFormProps) {
       const formData = new FormData();
       formData.append('file', file);
 
-      // We need to dynamically import the action to avoid bundling issues if any
-      const { uploadImage } = await import('@/actions/upload');
-      const { url } = await uploadImage(formData);
+      // Use API route instead of Server Action for better compatibility
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const data = await response.json() as { url: string };
 
       // Update the icon input value
       const iconInput = document.getElementsByName('icon')[0] as HTMLInputElement;
       if (iconInput) {
-        iconInput.value = url;
+        iconInput.value = data.url;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      alert(`Upload failed: ${error?.message || 'Please try again.'}`);
     } finally {
       setUploading(false);
     }

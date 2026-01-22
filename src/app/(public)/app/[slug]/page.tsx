@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { ExternalLink, Github } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { MDXRemote } from 'next-mdx-remote/rsc';
+import { marked } from 'marked';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +43,9 @@ export default async function AppDetailPage({ params }: PageProps) {
   if (!app || app.status !== 'published') {
     notFound();
   }
+
+  // Convert markdown to HTML
+  const contentHtml = app.content ? await marked(app.content) : '';
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
@@ -103,12 +106,14 @@ export default async function AppDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {app.content && (
-          <div className="mt-12 md:mt-16 prose prose-lg max-w-none">
-            <MDXRemote source={app.content} />
-          </div>
+        {contentHtml && (
+          <div
+            className="mt-12 md:mt-16 prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
+          />
         )}
       </div>
     </div>
   );
 }
+

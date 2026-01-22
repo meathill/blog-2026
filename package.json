@@ -1,6 +1,6 @@
 {
   "name": "blog-2026",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3100",
@@ -27,6 +27,7 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.562.0",
+    "marked": "^17.0.1",
     "next": "~16.0.10",
     "next-mdx-remote": "^5.0.0",
     "react": "^19.2.3",
