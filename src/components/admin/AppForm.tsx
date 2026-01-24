@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import MarkdownEditor from './MarkdownEditor';
+import TagSelector from './TagSelector';
 
 // Define simpler props since we are using formData directly in actions for now,
 // but for uncontrolled inputs we can just pass initialData.
@@ -20,9 +21,11 @@ interface AppFormProps {
     status: 'published' | 'draft' | 'archived';
   };
   action: (formData: FormData) => Promise<void>;
+  allTags?: { id: string; name: string; slug: string }[];
+  initialTags?: { id: string; name: string; slug: string }[];
 }
 
-export default function AppForm({ initialData, action }: AppFormProps) {
+export default function AppForm({ initialData, action, allTags = [], initialTags = [] }: AppFormProps) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
@@ -43,11 +46,11 @@ export default function AppForm({ initialData, action }: AppFormProps) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json() as { error?: string };
+        const errorData = (await response.json()) as { error?: string };
         throw new Error(errorData.error || 'Upload failed');
       }
 
-      const data = await response.json() as { url: string };
+      const data = (await response.json()) as { url: string };
 
       // Update the icon input value
       const iconInput = document.getElementsByName('icon')[0] as HTMLInputElement;
@@ -155,11 +158,7 @@ export default function AppForm({ initialData, action }: AppFormProps) {
         </div>
 
         <div className="col-span-2">
-          <MarkdownEditor
-            name="content"
-            defaultValue={initialData?.content || ''}
-            rows={12}
-          />
+          <MarkdownEditor name="content" defaultValue={initialData?.content || ''} rows={12} />
         </div>
 
         <div>
@@ -170,6 +169,10 @@ export default function AppForm({ initialData, action }: AppFormProps) {
             defaultValue={initialData?.repoUrl || ''}
             className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
           />
+        </div>
+
+        <div className="col-span-2">
+          <TagSelector allTags={allTags} initialTags={initialTags} />
         </div>
       </div>
 

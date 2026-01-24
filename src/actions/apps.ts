@@ -40,10 +40,13 @@ export async function createApp(formData: FormData) {
   const icon = formData.get('icon') as string;
   const status = formData.get('status') as 'published' | 'draft' | 'archived';
   const slug = (formData.get('slug') as string) || slugify(name);
+  const tagIds = (formData.get('tagIds') as string)?.split(',').filter(Boolean) || [];
 
   const db = await getDb();
+  const id = crypto.randomUUID();
+
   await db.insert(apps).values({
-    id: crypto.randomUUID(),
+    id,
     name,
     description,
     content,
@@ -55,6 +58,11 @@ export async function createApp(formData: FormData) {
     createdAt: new Date(),
     updatedAt: new Date(),
   });
+
+  if (tagIds.length > 0) {
+    const { updateAppTags } = await import('./tags');
+    await updateAppTags(id, tagIds);
+  }
 
   revalidatePath('/admin');
   revalidatePath('/app');
@@ -72,6 +80,7 @@ export async function updateApp(id: string, formData: FormData) {
   const icon = formData.get('icon') as string;
   const status = formData.get('status') as 'published' | 'draft' | 'archived';
   const slug = formData.get('slug') as string;
+  const tagIds = (formData.get('tagIds') as string)?.split(',').filter(Boolean) || [];
 
   const db = await getDb();
   await db
@@ -88,6 +97,9 @@ export async function updateApp(id: string, formData: FormData) {
       updatedAt: new Date(),
     })
     .where(eq(apps.id, id));
+
+  const { updateAppTags } = await import('./tags');
+  await updateAppTags(id, tagIds);
 
   revalidatePath('/admin');
   revalidatePath('/app');

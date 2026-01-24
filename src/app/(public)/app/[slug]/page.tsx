@@ -2,10 +2,11 @@ import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
-import { ExternalLink, Github } from 'lucide-react';
+import { ExternalLink, Github, TagIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { marked } from 'marked';
+import { getAppTags } from '@/actions/tags';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,8 @@ export default async function AppDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const tags = await getAppTags(app.id);
+
   // Convert markdown to HTML
   const contentHtml = app.content ? await marked(app.content) : '';
 
@@ -81,6 +84,20 @@ export default async function AppDetailPage({ params }: PageProps) {
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{app.name}</h1>
             <p className="text-lg text-zinc-600 dark:text-zinc-300 mb-6 leading-relaxed">{app.description}</p>
 
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {tags.map((tag) => (
+                  <div
+                    key={tag.id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 text-sm font-medium"
+                  >
+                    <TagIcon size={14} className="opacity-70" />
+                    {tag.name}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-4">
               {app.url && (
                 <a
@@ -107,13 +124,9 @@ export default async function AppDetailPage({ params }: PageProps) {
         </div>
 
         {contentHtml && (
-          <div
-            className="mt-12 md:mt-16 prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: contentHtml }}
-          />
+          <div className="mt-12 md:mt-16 prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
         )}
       </div>
     </div>
   );
 }
-

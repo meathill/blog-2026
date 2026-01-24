@@ -1,6 +1,7 @@
 import AppForm from '@/components/admin/AppForm';
 import DeleteAppButton from '@/components/admin/DeleteAppButton';
 import { updateApp, deleteApp } from '@/actions/apps';
+import { getTags, getAppTags } from '@/actions/tags';
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -15,6 +16,9 @@ export default async function EditAppPage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
+  const allTags = await getTags();
+  const appTags = await getAppTags(id);
+
   const updateAction = updateApp.bind(null, id);
   const deleteAction = deleteApp.bind(null, id);
 
@@ -24,7 +28,7 @@ export default async function EditAppPage({ params }: { params: Promise<{ id: st
         <h1 className="text-2xl font-bold">Edit App</h1>
         <DeleteAppButton action={deleteAction} />
       </div>
-      <AppForm initialData={app} action={updateAction} />
+      <AppForm initialData={app} action={updateAction} allTags={allTags} initialTags={appTags} />
     </div>
   );
 }

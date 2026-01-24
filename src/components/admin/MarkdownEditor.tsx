@@ -34,9 +34,7 @@ export default function MarkdownEditor({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">
-          Content (Markdown)
-        </span>
+        <span className="text-sm font-medium text-foreground">Content (Markdown)</span>
         <div className="flex gap-1">
           <button
             type="button"
@@ -45,7 +43,7 @@ export default function MarkdownEditor({
               'flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors',
               !isPreview
                 ? 'bg-amber-600 text-white'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
             )}
           >
             <EditIcon size={14} />
@@ -58,7 +56,7 @@ export default function MarkdownEditor({
               'flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors',
               isPreview
                 ? 'bg-amber-600 text-white'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
             )}
           >
             <EyeIcon size={14} />
@@ -85,10 +83,7 @@ export default function MarkdownEditor({
         />
       )}
 
-      <p className="text-xs text-muted-foreground">
-        支持 Markdown 语法，包括标题、列表、链接、代码块等
-      </p>
+      <p className="text-xs text-muted-foreground">支持 Markdown 语法，包括标题、列表、链接、代码块等</p>
     </div>
   );
 }
-

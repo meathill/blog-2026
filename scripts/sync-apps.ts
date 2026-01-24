@@ -44,9 +44,7 @@ async function main() {
 
   // 1. 读取本地 D1 数据
   console.log('📖 读取本地 D1 数据库...');
-  const localResult = run(
-    `npx wrangler d1 execute DB --local --command "SELECT * FROM apps" --json`
-  );
+  const localResult = run(`npx wrangler d1 execute DB --local --command "SELECT * FROM apps" --json`);
 
   let apps: App[];
   try {
@@ -87,7 +85,9 @@ async function main() {
         ${app.updated_at},
         ${app.published_at ?? 'NULL'}
       );
-    `.replace(/\n/g, ' ').trim();
+    `
+      .replace(/\n/g, ' ')
+      .trim();
 
     try {
       run(`npx wrangler d1 execute DB --remote --command "${sql}"`);
