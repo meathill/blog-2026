@@ -233,3 +233,68 @@ export function processContent(html: string): string {
       .replace(/href="https?:\/\/blog\.meathill\.com\/([^"#]+)\.html"/g, 'href="/posts/$1"')
   );
 }
+
+/**
+ * Basic Auth Header Helper
+ */
+function getBasicAuthHeader(env: CloudflareEnv): HeadersInit {
+  const WP_USERNAME = env.WP_USERNAME || process.env.WP_USERNAME;
+  const WP_APP_PASSWORD = env.WP_APP_PASSWORD || process.env.WP_APP_PASSWORD;
+  if (!WP_USERNAME || !WP_APP_PASSWORD) {
+    throw new Error('Missing WP_USERNAME or WP_APP_PASSWORD');
+  }
+  const auth = btoa(`${WP_USERNAME}:${WP_APP_PASSWORD}`);
+  return {
+    Authorization: `Basic ${auth}`,
+  };
+}
+
+/**
+ * Create a new post in WordPress
+ */
+export async function createPost(env: CloudflareEnv, postData: any): Promise<WPPost> {
+  const url = `${env.WORDPRESS_API_URL}/posts`;
+  const headers = {
+    ...getAccessHeaders(env),
+    ...getBasicAuthHeader(env),
+    'Content-Type': 'application/json',
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(postData),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to create post: ${response.status} ${text}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Update an existing post in WordPress
+ */
+export async function updatePost(env: CloudflareEnv, id: number, postData: any): Promise<WPPost> {
+  const url = `${env.WORDPRESS_API_URL}/posts/${id}`;
+  const headers = {
+    ...getAccessHeaders(env),
+    ...getBasicAuthHeader(env),
+    'Content-Type': 'application/json',
+  };
+
+  const response = await fetch(url, {
+    method: 'POST', // WP REST API uses POST for updates (or PUT/PATCH)
+    headers,
+    body: JSON.stringify(postData),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to update post: ${response.status} ${text}`);
+  }
+
+  return response.json();
+}
