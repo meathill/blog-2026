@@ -8,6 +8,7 @@ export interface NotionPost {
   slug: string;
   status: string;
   tags: string[];
+  categories: string[]; // Added
   date?: string;
   content: string; // HTML
 }
@@ -90,6 +91,17 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
     // @ts-ignore
     const tags = props.Tags?.multi_select?.map((t: any) => t.name) || [];
     // @ts-ignore
+    // Support Select or Multi-select for Categories
+    const categories: string[] = [];
+    if (props.Categories?.type === 'multi_select') {
+      // @ts-ignore
+      categories.push(...props.Categories.multi_select.map((c: any) => c.name));
+    } else if (props.Categories?.type === 'select' && props.Categories.select) {
+      // @ts-ignore
+      categories.push(props.Categories.select.name);
+    }
+
+    // @ts-ignore
     const date = props.Date?.date?.start || new Date().toISOString();
 
     // Convert Content
@@ -103,6 +115,7 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
       slug,
       status: 'Ready',
       tags,
+      categories,
       date,
       content: htmlContent,
     });

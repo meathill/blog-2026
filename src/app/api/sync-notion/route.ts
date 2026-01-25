@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { fetchReadyPosts, updateNotionPostStatus } from '@/lib/notion';
-import { createPost, updatePost, getPost } from '@/lib/wordpress';
+import { createPost, updatePost, getPost, getOrCreateCategory, getOrCreateTag } from '@/lib/wordpress';
 import { processContentImages } from '@/lib/content-processor';
 
 export async function GET(req: NextRequest) {
@@ -29,6 +29,36 @@ export async function GET(req: NextRequest) {
       logs.push(`Processing content for "${nPost.title}"...`);
       const finalContent = await processContentImages(env, nPost.content, nPost.slug);
 
+      // Resolve Taxonomies
+      const categoryIds: number[] = [];
+      const tagIds: number[] = [];
+
+      // Categories
+      if (nPost.categories && nPost.categories.length > 0) {
+        for (const catName of nPost.categories) {
+          try {
+            const cat = await getOrCreateCategory(env, catName);
+            if (cat && cat.id) categoryIds.push(cat.id);
+          } catch (e) {
+            console.error(`Failed to sync category: ${catName}`, e);
+            logs.push(`Error syncing category "${catName}"`);
+          }
+        }
+      }
+
+      // Tags
+      if (nPost.tags && nPost.tags.length > 0) {
+        for (const tagName of nPost.tags) {
+          try {
+            const tag = await getOrCreateTag(env, tagName);
+            if (tag && tag.id) tagIds.push(tag.id);
+          } catch (e) {
+            console.error(`Failed to sync tag: ${tagName}`, e);
+            logs.push(`Error syncing tag "${tagName}"`);
+          }
+        }
+      }
+
       // 1. Check if post exists in WP (by slug)
       let wpPost = await getPost(nPost.slug);
 
@@ -38,7 +68,8 @@ export async function GET(req: NextRequest) {
         date: nPost.date,
         slug: nPost.slug,
         status: 'publish', // Publish immediately
-        // tags: nPost.tags, // TODO: ID mapping needed for tags, skipping for MVP or needing "create tag" logic
+        categories: categoryIds, // Synced IDs
+        tags: tagIds, // Synced IDs
       };
 
       if (wpPost) {

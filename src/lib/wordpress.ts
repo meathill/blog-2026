@@ -325,3 +325,88 @@ export async function uploadMedia(env: CloudflareEnv, buffer: ArrayBuffer, filen
 
   return response.json();
 }
+
+/**
+ * 创建分类
+ */
+export async function createCategory(env: CloudflareEnv, name: string): Promise<WPCategory> {
+  const url = `${env.WORDPRESS_API_URL}/categories`;
+  const headers = {
+    ...getAccessHeaders(env),
+    ...getBasicAuthHeader(env),
+    'Content-Type': 'application/json',
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ name }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to create category: ${response.status} ${text}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * 创建标签
+ */
+export async function createTag(env: CloudflareEnv, name: string): Promise<WPTag> {
+  const url = `${env.WORDPRESS_API_URL}/tags`;
+  const headers = {
+    ...getAccessHeaders(env),
+    ...getBasicAuthHeader(env),
+    'Content-Type': 'application/json',
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ name }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to create tag: ${response.status} ${text}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * 获取或创建分类
+ */
+export async function getOrCreateCategory(env: CloudflareEnv, name: string): Promise<WPCategory> {
+  // 简单 slugify: 转小写，空格变连字符，去除非字母数字
+  const slug = name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+
+  let category = await getCategoryBySlug(slug);
+  if (!category) {
+    console.log(`[WP] Category "${name}" not found (slug: ${slug}), creating...`);
+    category = await createCategory(env, name);
+  }
+  return category;
+}
+
+/**
+ * 获取或创建标签
+ */
+export async function getOrCreateTag(env: CloudflareEnv, name: string): Promise<WPTag> {
+  const slug = name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+
+  let tag = await getTagBySlug(slug);
+  if (!tag) {
+    console.log(`[WP] Tag "${name}" not found (slug: ${slug}), creating...`);
+    tag = await createTag(env, name);
+  }
+  return tag;
+}

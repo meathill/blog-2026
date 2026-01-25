@@ -1,6 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { stripHtml, calculateReadingTime, formatDate } from '@/lib/wordpress';
 
+vi.mock('@opennextjs/cloudflare', () => ({
+  getCloudflareContext: async () => ({
+    env: {
+      WORDPRESS_API_URL: 'https://wp.example.com',
+      WP_USERNAME: 'user',
+      WP_APP_PASSWORD: 'pass',
+      CF_ACCESS_CLIENT_ID: 'id',
+      CF_ACCESS_CLIENT_SECRET: 'secret',
+    },
+  }),
+}));
+
 describe('wordpress utils', () => {
   describe('stripHtml', () => {
     it('应该移除 HTML 标签', () => {
@@ -52,7 +64,7 @@ describe('wordpress utils', () => {
       WP_USERNAME: 'user',
       WP_APP_PASSWORD: 'pass',
       CF_ACCESS_CLIENT_ID: 'id',
-      CF_ACCESS_CLIENT_SECRET: 'secret'
+      CF_ACCESS_CLIENT_SECRET: 'secret',
     } as any;
 
     beforeEach(() => {
@@ -74,11 +86,11 @@ describe('wordpress utils', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Authorization': expect.stringContaining('Basic'),
-            'Content-Type': 'application/json'
+            Authorization: expect.stringContaining('Basic'),
+            'Content-Type': 'application/json',
           }),
-          body: JSON.stringify(postData)
-        })
+          body: JSON.stringify(postData),
+        }),
       );
       expect(res).toEqual({ id: 101 });
     });
@@ -93,7 +105,7 @@ describe('wordpress utils', () => {
       const res = await updatePost(mockEnv, 101, { title: 'Updated' });
       expect(global.fetch).toHaveBeenCalledWith(
         'https://wp.example.com/posts/101',
-        expect.objectContaining({ method: 'POST' })
+        expect.objectContaining({ method: 'POST' }),
       );
       expect(res.id).toBe(101);
     });
@@ -113,12 +125,61 @@ describe('wordpress utils', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Content-Disposition': 'attachment; filename="test.jpg"'
+            'Content-Disposition': 'attachment; filename="test.jpg"',
           }),
-          body: buffer
-        })
+          body: buffer,
+        }),
       );
       expect(res.source_url).toBe('http://img.jpg');
+    });
+
+    it('getOrCreateCategory should find existing category', async () => {
+      const { getOrCreateCategory } = await import('@/lib/wordpress');
+      // Mock getCategoryBySlug -> matches
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ id: 10, name: 'Cat1', slug: 'cat1' }],
+      });
+
+      const cat = await getOrCreateCategory(mockEnv, 'Cat1');
+      expect(cat.id).toBe(10);
+      // createUrl not called
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('getOrCreateCategory should create new category if missing', async () => {
+      const { getOrCreateCategory } = await import('@/lib/wordpress');
+      // Mock getCategoryBySlug -> empty
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      });
+      // Mock createCategory -> success
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 11, name: 'Cat2', slug: 'cat2' }),
+      });
+
+      const cat = await getOrCreateCategory(mockEnv, 'Cat2');
+      expect(cat.id).toBe(11);
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('getOrCreateTag should create new tag if missing', async () => {
+      const { getOrCreateTag } = await import('@/lib/wordpress');
+      // Mock getTagBySlug -> empty
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      });
+      // Mock createTag -> success
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 21, name: 'Tag2', slug: 'tag2' }),
+      });
+
+      const tag = await getOrCreateTag(mockEnv, 'Tag2');
+      expect(tag.id).toBe(21);
     });
   });
 });

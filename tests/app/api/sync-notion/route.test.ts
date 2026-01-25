@@ -9,6 +9,8 @@ const mockGetPost = vi.fn();
 const mockCreatePost = vi.fn();
 const mockUpdatePost = vi.fn();
 const mockProcessContentImages = vi.fn();
+const mockGetOrCreateCategory = vi.fn();
+const mockGetOrCreateTag = vi.fn();
 
 vi.mock('@/lib/notion', () => ({
   fetchReadyPosts: (...args: any[]) => mockFetchReadyPosts(...args),
@@ -19,6 +21,8 @@ vi.mock('@/lib/wordpress', () => ({
   getPost: (...args: any[]) => mockGetPost(...args),
   createPost: (...args: any[]) => mockCreatePost(...args),
   updatePost: (...args: any[]) => mockUpdatePost(...args),
+  getOrCreateCategory: (...args: any[]) => mockGetOrCreateCategory(...args),
+  getOrCreateTag: (...args: any[]) => mockGetOrCreateTag(...args),
 }));
 
 vi.mock('@/lib/content-processor', () => ({
@@ -27,7 +31,7 @@ vi.mock('@/lib/content-processor', () => ({
 
 vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: async () => ({
-    env: { CRON_SECRET: 'secret123' }
+    env: { CRON_SECRET: 'secret123' },
   }),
 }));
 
@@ -55,16 +59,34 @@ describe('Sync Notion Route', () => {
     expect(res.status).toBe(200);
   });
 
-  it('should process ready posts', async () => {
+  it('should process ready posts with taxonomies', async () => {
     const req = new NextRequest('http://localhost/api/sync-notion?key=secret123');
 
     // Mock Data
     const posts = [
-      { id: 'p1', title: 'P1', slug: 'p1', content: 'content' },
-      { id: 'p2', title: 'P2', slug: 'p2', content: 'content' },
+      {
+        id: 'p1',
+        title: 'P1',
+        slug: 'p1',
+        content: 'content',
+        categories: ['Cat1'],
+        tags: ['Tag1'],
+      },
+      {
+        id: 'p2',
+        title: 'P2',
+        slug: 'p2',
+        content: 'content',
+        categories: [],
+        tags: [],
+      },
     ];
     mockFetchReadyPosts.mockResolvedValue(posts);
     mockProcessContentImages.mockImplementation((env, html) => Promise.resolve(html + '_processed'));
+
+    // Mock Taxonomy Resolution
+    mockGetOrCreateCategory.mockResolvedValue({ id: 10, name: 'Cat1' });
+    mockGetOrCreateTag.mockResolvedValue({ id: 20, name: 'Tag1' });
 
     // P1 exists -> Update
     mockGetPost.mockResolvedValueOnce({ id: 101 });
@@ -72,7 +94,7 @@ describe('Sync Notion Route', () => {
     mockGetPost.mockResolvedValueOnce(null);
 
     const res = await GET(req);
-    const json = await res.json();
+    const json = (await res.json()) as any;
 
     expect(res.status).toBe(200);
     expect(json.success).toBe(true);
@@ -81,17 +103,32 @@ describe('Sync Notion Route', () => {
     expect(mockFetchReadyPosts).toHaveBeenCalled();
     expect(mockProcessContentImages).toHaveBeenCalledTimes(2);
 
-    // Verify P1 Update
-    expect(mockUpdatePost).toHaveBeenCalledWith(expect.anything(), 101, expect.objectContaining({
-      title: 'P1',
-      content: 'content_processed'
-    }));
+    // Verify Taxonomy Calls
+    expect(mockGetOrCreateCategory).toHaveBeenCalledWith(expect.anything(), 'Cat1');
+    expect(mockGetOrCreateTag).toHaveBeenCalledWith(expect.anything(), 'Tag1');
 
-    // Verify P2 Create
-    expect(mockCreatePost).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
-      title: 'P2',
-      content: 'content_processed'
-    }));
+    // Verify P1 Update with Taxonomies
+    expect(mockUpdatePost).toHaveBeenCalledWith(
+      expect.anything(),
+      101,
+      expect.objectContaining({
+        title: 'P1',
+        content: 'content_processed',
+        categories: [10],
+        tags: [20],
+      }),
+    );
+
+    // Verify P2 Create without Taxonomies
+    expect(mockCreatePost).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        title: 'P2',
+        content: 'content_processed',
+        categories: [],
+        tags: [],
+      }),
+    );
 
     // Verify Notion Status Update
     expect(mockUpdateNotionPostStatus).toHaveBeenCalledTimes(2);
@@ -102,7 +139,7 @@ describe('Sync Notion Route', () => {
     mockFetchReadyPosts.mockRejectedValue(new Error('Notion Down'));
 
     const res = await GET(req);
-    const json = await res.json();
+    const json = (await res.json()) as any;
 
     expect(res.status).toBe(500);
     expect(json.success).toBe(false);
@@ -114,7 +151,7 @@ describe('Sync Notion Route', () => {
     mockFetchReadyPosts.mockResolvedValue([{ id: 'p1', title: 'No Slug' }]); // No slug
 
     const res = await GET(req);
-    const json = await res.json();
+    const json = (await res.json()) as any;
 
     expect(json.success).toBe(true);
     expect(mockProcessContentImages).not.toHaveBeenCalled();

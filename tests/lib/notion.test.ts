@@ -30,18 +30,22 @@ describe('notion utils', () => {
     // Setup Notion Client Mock
     mockQuery = vi.fn();
     mockUpdate = vi.fn();
-    (Client as any).mockImplementation(class {
-      databases = { query: mockQuery };
-      pages = { update: mockUpdate };
-    });
+    (Client as any).mockImplementation(
+      class {
+        databases = { query: mockQuery };
+        pages = { update: mockUpdate };
+      },
+    );
 
     // Setup NotionToMarkdown Mock
     mockPageToMarkdown = vi.fn();
     mockToMarkdownString = vi.fn();
-    (NotionToMarkdown as any).mockImplementation(class {
-      pageToMarkdown = mockPageToMarkdown;
-      toMarkdownString = mockToMarkdownString;
-    });
+    (NotionToMarkdown as any).mockImplementation(
+      class {
+        pageToMarkdown = mockPageToMarkdown;
+        toMarkdownString = mockToMarkdownString;
+      },
+    );
   });
 
   describe('getNotionClient', () => {
@@ -69,6 +73,7 @@ describe('notion utils', () => {
                 Slug: { rich_text: [{ plain_text: 'test-slug' }] },
                 Status: { status: { name: 'Ready' } },
                 Tags: { multi_select: [{ name: 'Tag1' }] },
+                Categories: { type: 'multi_select', multi_select: [{ name: 'Cat1' }] },
                 Date: { date: { start: '2023-01-01' } },
               },
             },
@@ -89,7 +94,7 @@ describe('notion utils', () => {
       expect(url).toBe('https://api.notion.com/v1/databases/12345678-1234-1234-1234-123456789012/query');
       expect(init.method).toBe('POST');
       expect(init.headers).toEqual({
-        'Authorization': 'Bearer secret_key',
+        Authorization: 'Bearer secret_key',
         'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json',
       });
@@ -97,8 +102,8 @@ describe('notion utils', () => {
       expect(JSON.parse(init.body)).toEqual({
         filter: {
           property: 'Status',
-          status: { equals: 'Ready' }
-        }
+          status: { equals: 'Ready' },
+        },
       });
 
       expect(posts).toHaveLength(1);
@@ -108,6 +113,7 @@ describe('notion utils', () => {
         slug: 'test-slug',
         status: 'Ready',
         tags: ['Tag1'],
+        categories: ['Cat1'],
         date: '2023-01-01',
         content: 'HTML: Markdown Content',
       });
@@ -116,7 +122,7 @@ describe('notion utils', () => {
     it('should ignore pages without properties', async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ results: [{ id: 'noprops' }] })
+        json: async () => ({ results: [{ id: 'noprops' }] }),
       });
       const posts = await fetchReadyPosts(mockEnv);
       expect(posts).toHaveLength(0);
@@ -126,7 +132,7 @@ describe('notion utils', () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 400,
-        text: async () => 'Bad Request'
+        text: async () => 'Bad Request',
       });
       await expect(fetchReadyPosts(mockEnv)).rejects.toThrow('Notion API Error: 400 Bad Request');
     });
