@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { fetchReadyPosts, updateNotionPostStatus } from '@/lib/notion';
 import { createPost, updatePost, getPost } from '@/lib/wordpress';
+import { processContentImages } from '@/lib/content-processor';
 
 export async function GET(req: NextRequest) {
   const { env } = await getCloudflareContext({ async: true });
@@ -24,12 +25,16 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
+      // Process Content (Sideload Images)
+      logs.push(`Processing content for "${nPost.title}"...`);
+      const finalContent = await processContentImages(env, nPost.content, nPost.slug);
+
       // 1. Check if post exists in WP (by slug)
       let wpPost = await getPost(nPost.slug);
 
       const postData = {
         title: nPost.title,
-        content: nPost.content,
+        content: finalContent,
         date: nPost.date,
         slug: nPost.slug,
         status: 'publish', // Publish immediately

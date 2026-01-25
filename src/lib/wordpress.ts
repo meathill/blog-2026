@@ -298,3 +298,30 @@ export async function updatePost(env: CloudflareEnv, id: number, postData: any):
 
   return response.json();
 }
+
+/**
+ * Upload Media to WordPress
+ */
+export async function uploadMedia(env: CloudflareEnv, buffer: ArrayBuffer, filename: string): Promise<any> {
+  const url = `${env.WORDPRESS_API_URL}/media`;
+
+  const headers = {
+    ...getAccessHeaders(env),
+    ...getBasicAuthHeader(env),
+    'Content-Disposition': `attachment; filename="${filename}"`,
+    'Content-Type': 'image/jpeg', // Default, should ideally be detected
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: buffer,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to upload media: ${response.status} ${text}`);
+  }
+
+  return response.json();
+}
