@@ -346,3 +346,40 @@ a:hover {
     display: none;
   }
 }
+
+/* Custom Code Block Styles for highlight.js + WordPress */
+.wp-block-code {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 0 !important;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background-color: #282c34;
+  /* Match Atom One Dark bg */
+  color: #abb2bf;
+}
+
+/* Force text wrapping to avoid horizontal scroll */
+.wp-block-code code {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  display: block;
+  padding: 1rem !important;
+  background-color: transparent !important;
+  /* Let pre handle bg */
+}
+
+/* Title Bar */
+.wp-block-code[title]::before {
+  content: attr(title);
+  display: block;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background-color: rgba(255, 255, 255, 0.05);
+  /* Slightly lighter/different for contrast */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9da5b4;
+  user-select: none;
+}
