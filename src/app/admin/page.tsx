@@ -3,7 +3,6 @@ import { Plus, ExternalLink, Pencil as PencilIcon } from 'lucide-react';
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { desc } from 'drizzle-orm';
-import { NotionSyncButton } from '@/components/admin/NotionSyncButton';
 
 export default async function AdminDashboard() {
   const db = await getDb();
@@ -13,16 +12,13 @@ export default async function AdminDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">My Apps</h2>
-        <div className="flex gap-2">
-          <NotionSyncButton />
-          <Link
-            href="/admin/apps/new"
-            className="inline-flex items-center gap-2 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500"
-          >
-            <Plus size={16} />
-            Create App
-          </Link>
-        </div>
+        <Link
+          href="/admin/apps/new"
+          className="inline-flex items-center gap-2 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500"
+        >
+          <Plus size={16} />
+          Create App
+        </Link>
       </div>
 
       {allApps.length === 0 ? (

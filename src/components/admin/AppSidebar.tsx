@@ -1,4 +1,4 @@
-import { Home, Settings, LogOut } from 'lucide-react';
+import { Home, Settings, LogOut, FileText } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +22,11 @@ const items = [
     title: 'Apps',
     url: '/admin', // Initially same as dashboard until we split them
     icon: Home,
+  },
+  {
+    title: 'Blog',
+    url: '/admin/blog',
+    icon: FileText,
   },
   {
     title: 'Settings',

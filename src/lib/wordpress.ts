@@ -1,20 +1,11 @@
-/**
- * WordPress REST API 客户端
- * 使用 Cloudflare Zero Trust 鉴权访问源站
- */
-
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-/**
- * 获取 Cloudflare Access 认证头
- */
 function getAccessHeaders(env: CloudflareEnv): HeadersInit {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'User-Agent': 'Next.js Worker',
   };
 
-  // 添加 Zero Trust 认证头
   const CF_ACCESS_CLIENT_ID = env.CF_ACCESS_CLIENT_ID || process.env.CF_ACCESS_CLIENT_ID;
   const CF_ACCESS_CLIENT_SECRET = env.CF_ACCESS_CLIENT_SECRET || process.env.CF_ACCESS_CLIENT_SECRET;
   if (CF_ACCESS_CLIENT_ID && CF_ACCESS_CLIENT_SECRET) {
@@ -55,10 +46,6 @@ export interface WPTag {
   count: number;
 }
 
-/**
- * 发起 WordPress API 请求
- * 支持通过 IP 访问，Host 头使用域名
- */
 async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const { env } = await getCloudflareContext({ async: true });
   const url = `${env.WORDPRESS_API_URL}${endpoint}`;
@@ -71,12 +58,11 @@ async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
     ...options,
     headers,
     next: {
-      revalidate: 300, // 5 分钟缓存
+      revalidate: options?.cache === 'no-store' ? 0 : 300,
+      ...options?.next,
     },
+    cache: options?.cache,
   });
-
-  console.log('[WP API] Request:', url, 'Headers:', JSON.stringify(headers));
-  console.log('[WP API] Response status:', response.status);
 
   if (!response.ok) {
     const text = await response.text();
@@ -87,9 +73,6 @@ async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   return response.json();
 }
 
-/**
- * 获取文章列表
- */
 export async function getPosts(params?: {
   page?: number;
   perPage?: number;
@@ -125,24 +108,15 @@ export async function getPosts(params?: {
   return { posts, total, totalPages };
 }
 
-/**
- * 获取单篇文章
- */
-export async function getPost(slug: string): Promise<WPPost | null> {
-  const posts = await wpFetch<WPPost[]>(`/posts?slug=${encodeURIComponent(slug)}&_embed=true`);
+export async function getPost(slug: string, options?: RequestInit): Promise<WPPost | null> {
+  const posts = await wpFetch<WPPost[]>(`/posts?slug=${encodeURIComponent(slug)}&_embed=true`, options);
   return posts[0] || null;
 }
 
-/**
- * 获取分类列表
- */
 export async function getCategories(): Promise<WPCategory[]> {
   return wpFetch<WPCategory[]>('/categories?per_page=100');
 }
 
-/**
- * 获取标签列表
- */
 export async function getTags(params?: { perPage?: number; include?: number[] }): Promise<WPTag[]> {
   const query = new URLSearchParams({
     per_page: String(params?.perPage || 100),
@@ -157,39 +131,24 @@ export async function getTags(params?: { perPage?: number; include?: number[] })
   return wpFetch<WPTag[]>(`/tags?${query.toString()}`);
 }
 
-/**
- * 通过 slug 获取分类
- */
 export async function getCategoryBySlug(slug: string): Promise<WPCategory | null> {
   const categories = await wpFetch<WPCategory[]>(`/categories?slug=${encodeURIComponent(slug)}`);
   return categories[0] || null;
 }
 
-/**
- * 获取分类下的文章
- */
 export async function getPostsByCategory(categoryId: number, page = 1, perPage = 20): Promise<WPPost[]> {
   return wpFetch<WPPost[]>(`/posts?categories=${categoryId}&page=${page}&per_page=${perPage}&_embed=true`);
 }
 
-/**
- * 通过 slug 获取标签
- */
 export async function getTagBySlug(slug: string): Promise<WPTag | null> {
   const tags = await wpFetch<WPTag[]>(`/tags?slug=${encodeURIComponent(slug)}`);
   return tags[0] || null;
 }
 
-/**
- * 获取标签下的文章
- */
 export async function getPostsByTag(tagId: number, page = 1, perPage = 20): Promise<WPPost[]> {
   return wpFetch<WPPost[]>(`/posts?tags=${tagId}&page=${page}&per_page=${perPage}&_embed=true`);
 }
 
-/**
- * 从 HTML 中提取纯文本摘要
- */
 export function stripHtml(html: string): string {
   return html
     .replace(/<[^>]*>/g, '')
@@ -201,42 +160,24 @@ export function stripHtml(html: string): string {
     .trim();
 }
 
-/**
- * 计算阅读时间（分钟）
- */
 export function calculateReadingTime(content: string): number {
   const text = stripHtml(content);
-  const wordCount = text.length; // 中文按字符计算
-  const wordsPerMinute = 400; // 中文阅读速度
+  const wordCount = text.length;
+  const wordsPerMinute = 400;
   return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
 }
 
-/**
- * 格式化日期
- */
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toISOString().split('T')[0];
 }
 
-/**
- * 处理文章内容中的链接
- * - 将 blog.meathill.com 的完整 URL 锚点链接转为纯锚点
- * - 将 blog.meathill.com 的文章链接转为本地路由
- */
 export function processContent(html: string): string {
-  return (
-    html
-      // 将带锚点的完整 URL 替换为纯锚点（用于 TOC）
-      .replace(/href="https?:\/\/blog\.meathill\.com\/[^"]*?(#[^"]+)"/g, 'href="$1"')
-      // 将老博客文章链接转为本地路由
-      .replace(/href="https?:\/\/blog\.meathill\.com\/([^"#]+)\.html"/g, 'href="/posts/$1"')
-  );
+  return html
+    .replace(/href="https?:\/\/blog\.meathill\.com\/[^"]*?(#[^"]+)"/g, 'href="$1"')
+    .replace(/href="https?:\/\/blog\.meathill\.com\/([^"#]+)\.html"/g, 'href="/posts/$1"');
 }
 
-/**
- * Basic Auth Header Helper
- */
 function getBasicAuthHeader(env: CloudflareEnv): HeadersInit {
   const WP_USERNAME = env.WP_USERNAME || process.env.WP_USERNAME;
   const WP_APP_PASSWORD = env.WP_APP_PASSWORD || process.env.WP_APP_PASSWORD;
@@ -249,9 +190,27 @@ function getBasicAuthHeader(env: CloudflareEnv): HeadersInit {
   };
 }
 
-/**
- * Create a new post in WordPress
- */
+export async function verifyAuth(env: CloudflareEnv): Promise<any> {
+  const url = `${env.WORDPRESS_API_URL}/users/me?context=edit`; // context=edit reveals roles
+  const headers = {
+    ...getAccessHeaders(env),
+    ...getBasicAuthHeader(env),
+  };
+
+  console.log('[WP Auth Check] Request:', url);
+  const response = await fetch(url, { headers });
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error('[WP Auth Check] Failed:', response.status, text);
+    return { success: false, status: response.status, body: text };
+  }
+
+  const user = (await response.json()) as any;
+  console.log('[WP Auth Check] Success. User:', user.name, 'Roles:', user.roles);
+  return { success: true, user };
+}
+
 export async function createPost(env: CloudflareEnv, postData: any): Promise<WPPost> {
   const url = `${env.WORDPRESS_API_URL}/posts`;
   const headers = {
@@ -274,9 +233,6 @@ export async function createPost(env: CloudflareEnv, postData: any): Promise<WPP
   return response.json();
 }
 
-/**
- * Update an existing post in WordPress
- */
 export async function updatePost(env: CloudflareEnv, id: number, postData: any): Promise<WPPost> {
   const url = `${env.WORDPRESS_API_URL}/posts/${id}`;
   const headers = {
@@ -286,7 +242,7 @@ export async function updatePost(env: CloudflareEnv, id: number, postData: any):
   };
 
   const response = await fetch(url, {
-    method: 'POST', // WP REST API uses POST for updates (or PUT/PATCH)
+    method: 'POST',
     headers,
     body: JSON.stringify(postData),
   });
@@ -299,9 +255,6 @@ export async function updatePost(env: CloudflareEnv, id: number, postData: any):
   return response.json();
 }
 
-/**
- * Upload Media to WordPress
- */
 export async function uploadMedia(env: CloudflareEnv, buffer: ArrayBuffer, filename: string): Promise<any> {
   const url = `${env.WORDPRESS_API_URL}/media`;
 
@@ -309,7 +262,7 @@ export async function uploadMedia(env: CloudflareEnv, buffer: ArrayBuffer, filen
     ...getAccessHeaders(env),
     ...getBasicAuthHeader(env),
     'Content-Disposition': `attachment; filename="${filename}"`,
-    'Content-Type': 'image/jpeg', // Default, should ideally be detected
+    'Content-Type': 'image/jpeg',
   };
 
   const response = await fetch(url, {
@@ -326,9 +279,6 @@ export async function uploadMedia(env: CloudflareEnv, buffer: ArrayBuffer, filen
   return response.json();
 }
 
-/**
- * 创建分类
- */
 export async function createCategory(env: CloudflareEnv, name: string): Promise<WPCategory> {
   const url = `${env.WORDPRESS_API_URL}/categories`;
   const headers = {
@@ -351,9 +301,6 @@ export async function createCategory(env: CloudflareEnv, name: string): Promise<
   return response.json();
 }
 
-/**
- * 创建标签
- */
 export async function createTag(env: CloudflareEnv, name: string): Promise<WPTag> {
   const url = `${env.WORDPRESS_API_URL}/tags`;
   const headers = {
@@ -376,11 +323,7 @@ export async function createTag(env: CloudflareEnv, name: string): Promise<WPTag
   return response.json();
 }
 
-/**
- * 获取或创建分类
- */
 export async function getOrCreateCategory(env: CloudflareEnv, name: string): Promise<WPCategory> {
-  // 简单 slugify: 转小写，空格变连字符，去除非字母数字
   const slug = name
     .toLowerCase()
     .replace(/\s+/g, '-')
@@ -389,14 +332,24 @@ export async function getOrCreateCategory(env: CloudflareEnv, name: string): Pro
   let category = await getCategoryBySlug(slug);
   if (!category) {
     console.log(`[WP] Category "${name}" not found (slug: ${slug}), creating...`);
-    category = await createCategory(env, name);
+    try {
+      category = await createCategory(env, name);
+    } catch (e: any) {
+      const match = e.message.match(/"term_id":(\d+)/);
+      if (match && match[1]) {
+        const existingId = parseInt(match[1], 10);
+        console.log(`[WP] Category "${name}" already exists (ID: ${existingId}), using existing.`);
+        const url = `/categories?include=${existingId}`;
+        const cats = await wpFetch<WPCategory[]>(url);
+        if (cats.length > 0) category = cats[0];
+      }
+
+      if (!category) throw e;
+    }
   }
   return category;
 }
 
-/**
- * 获取或创建标签
- */
 export async function getOrCreateTag(env: CloudflareEnv, name: string): Promise<WPTag> {
   const slug = name
     .toLowerCase()
@@ -406,7 +359,24 @@ export async function getOrCreateTag(env: CloudflareEnv, name: string): Promise<
   let tag = await getTagBySlug(slug);
   if (!tag) {
     console.log(`[WP] Tag "${name}" not found (slug: ${slug}), creating...`);
-    tag = await createTag(env, name);
+    try {
+      tag = await createTag(env, name);
+    } catch (e: any) {
+      // Check for term_exists error
+      const match = e.message.match(/"term_id":(\d+)/);
+      if (match && match[1]) {
+        const existingId = parseInt(match[1], 10);
+        console.log(`[WP] Tag "${name}" already exists (ID: ${existingId}), using existing.`);
+        const existingTags = await getTags({ include: [existingId] });
+        if (existingTags.length > 0) {
+          tag = existingTags[0];
+        }
+      }
+
+      if (!tag) {
+        throw e;
+      }
+    }
   }
   return tag;
 }

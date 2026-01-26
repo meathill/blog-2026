@@ -1,12 +1,19 @@
 import { fetchReadyPosts, updateNotionPostStatus, NotionPost } from '@/lib/notion';
-import { createPost, updatePost, getPost, getOrCreateCategory, getOrCreateTag } from '@/lib/wordpress';
-import { processContentImages } from '@/lib/content-processor';
+import { createPost, updatePost, getPost, getOrCreateCategory, getOrCreateTag, verifyAuth } from '@/lib/wordpress';
+import { processContentImages, downloadAndUploadImage } from '@/lib/content-processor';
 
 export async function syncNotionToWordPress(
   env: CloudflareEnv,
 ): Promise<{ success: boolean; logs: string[]; error?: string }> {
   const logs: string[] = [];
   try {
+    // 0. Verify Auth
+    const authCheck = await verifyAuth(env);
+    if (!authCheck.success) {
+      throw new Error(`WordPress Auth Failed: ${authCheck.status} ${authCheck.body}`); // Stop immediately
+    }
+    logs.push(`Authenticated as user: ${authCheck.user.name} (${authCheck.user.roles.join(', ')})`);
+
     const notionPosts = await fetchReadyPosts(env);
     logs.push(`Found ${notionPosts.length} posts with status "Ready"`);
 
@@ -51,9 +58,23 @@ export async function syncNotionToWordPress(
       }
 
       // 1. Check if post exists in WP (by slug)
-      let wpPost = await getPost(nPost.slug);
+      // DISABLE CACHE to avoid duplicate post creation if we just found it previously but cache says valid
+      let wpPost = await getPost(nPost.slug, { cache: 'no-store' });
 
-      const postData = {
+      // Handle Cover Image
+      let featuredMediaId = 0;
+      if (nPost.coverImage) {
+        logs.push(`Processing cover image for "${nPost.title}"...`);
+        // Use 'cover' suffix
+        const filename = `${nPost.slug}-cover-${Date.now()}.jpg`;
+        const media = await downloadAndUploadImage(env, nPost.coverImage, filename);
+        if (media) {
+          featuredMediaId = media.id;
+          logs.push(`Cover image uploaded (ID: ${media.id})`);
+        }
+      }
+
+      const postData: any = {
         title: nPost.title,
         content: finalContent,
         date: nPost.date,
@@ -62,6 +83,9 @@ export async function syncNotionToWordPress(
         categories: categoryIds, // Synced IDs
         tags: tagIds, // Synced IDs
       };
+      if (featuredMediaId) {
+        postData.featured_media = featuredMediaId;
+      }
 
       if (wpPost) {
         // Update

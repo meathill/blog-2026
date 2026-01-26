@@ -8,48 +8,35 @@ export interface NotionPost {
   slug: string;
   status: string;
   tags: string[];
-  categories: string[]; // Added
+  categories: string[];
   date?: string;
-  content: string; // HTML
+  content: string;
+  lastEditedTime: string; // ISO String
+  coverImage?: string | null;
 }
 
 export function getNotionClient(env: CloudflareEnv) {
   const client = new Client({
     auth: env.NOTION_API_KEY,
-    fetch: fetch, // Explicitly use fetch for Cloudflare Workers
+    fetch: fetch,
   });
-  console.log('[Notion] Client created:', !!client, 'Keys:', Object.keys(client));
-  if (client.databases) {
-    console.log('[Notion] client.databases exists');
-  } else {
-    console.error('[Notion] client.databases MISSING');
-  }
+  console.log('[Notion] Client created:', !!client);
 
   const n2m = new NotionToMarkdown({ notionClient: client });
   return { client, n2m };
 }
 
-/**
- * Fetch "Ready" posts from Notion Database
- */
 export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]> {
-  const { client, n2m } = await getNotionClient(env);
+  const { n2m } = await getNotionClient(env);
 
   if (!env.NOTION_DATABASE_ID) {
     throw new Error('NOTION_DATABASE_ID is missing');
   }
 
-  // Format UUID with dashes if needed (Notion API usually expects 8-4-4-4-12)
-  const dbId = env.NOTION_DATABASE_ID.replace(
-    /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
-    '$1-$2-$3-$4-$5',
-  );
+  const dbId = env.NOTION_DATABASE_ID;
   console.log('[Notion] Querying Database:', dbId);
 
-  // Fallback to native fetch because SDK query method is missing in Cloudflare Workers
   const url = `https://api.notion.com/v1/databases/${dbId}/query`;
-  console.log('[Notion] Fetching URL:', url);
-
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -59,11 +46,12 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
     },
     body: JSON.stringify({
       filter: {
-        property: 'Status',
-        status: {
-          equals: 'Ready',
-        },
+        or: [
+          { property: 'Status', status: { equals: 'Ready' } },
+          { property: 'Status', status: { equals: 'Published' } },
+        ],
       },
+      sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
     }),
   });
 
@@ -75,36 +63,58 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
 
   const data = (await response.json()) as any;
   const results = data.results || [];
-
   const posts: NotionPost[] = [];
 
   for (const page of results) {
     if (!('properties' in page)) continue;
 
-    // Parse Properties
     const props = page.properties;
 
-    // @ts-ignore
-    const title = props.Name?.title?.[0]?.plain_text || 'Untitled';
-    // @ts-ignore
-    const slug = props.Slug?.rich_text?.[0]?.plain_text || '';
-    // @ts-ignore
-    const tags = props.Tags?.multi_select?.map((t: any) => t.name) || [];
-    // @ts-ignore
-    // Support Select or Multi-select for Categories
-    const categories: string[] = [];
-    if (props.Categories?.type === 'multi_select') {
-      // @ts-ignore
-      categories.push(...props.Categories.multi_select.map((c: any) => c.name));
-    } else if (props.Categories?.type === 'select' && props.Categories.select) {
-      // @ts-ignore
-      categories.push(props.Categories.select.name);
+    const lastEditedTime = page.last_edited_time;
+    const lastPublished = props['published_at']?.date?.start;
+    const status = props.Status?.status?.name;
+
+    let coverImage = null;
+    const thumbnailProp = props.Thumbnail;
+    if (thumbnailProp) {
+      if (thumbnailProp.type === 'files' && thumbnailProp.files.length > 0) {
+        coverImage = thumbnailProp.files[0].file?.url || thumbnailProp.files[0].external?.url;
+      }
+    }
+    if (!coverImage && page.cover) {
+      if (page.cover.type === 'external') {
+        coverImage = page.cover.external.url;
+      } else if (page.cover.type === 'file') {
+        coverImage = page.cover.file.url;
+      }
     }
 
-    // @ts-ignore
-    const date = props.Date?.date?.start || new Date().toISOString();
+    if (status === 'Published') {
+      if (lastPublished) {
+        const edited = new Date(lastEditedTime).getTime();
+        const published = new Date(lastPublished).getTime();
+        if (edited <= published + 60000) {
+          continue;
+        }
+        console.log(`[Notion] Post "${page.id}" Modified (${lastEditedTime}) > Published (${lastPublished}). Syncing.`);
+      }
+    }
 
-    // Convert Content
+    const titleProp = props['Doc name'] || props.Name || props.Title || props.title;
+    const title = titleProp?.title?.[0]?.plain_text || 'Untitled';
+    const slug = props.Slug?.rich_text?.[0]?.plain_text || '';
+    const tags = props.Tags?.multi_select?.map((t: any) => t.name) || [];
+
+    const categories: string[] = [];
+    const catProp = props['Category'] || props.Categories;
+    if (catProp?.type === 'multi_select') {
+      categories.push(...catProp.multi_select.map((c: any) => c.name));
+    } else if (catProp?.type === 'select' && catProp.select) {
+      categories.push(catProp.select.name);
+    }
+
+    const date = props['published_at']?.date?.start || props.Date?.date?.start || new Date().toISOString();
+
     const mdBlocks = await n2m.pageToMarkdown(page.id);
     const mdString = n2m.toMarkdownString(mdBlocks);
     const htmlContent = await marked(mdString.parent);
@@ -118,15 +128,14 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
       categories,
       date,
       content: htmlContent,
+      lastEditedTime,
+      coverImage,
     });
   }
 
   return posts;
 }
 
-/**
- * Update Notion Page Status (e.g. to "Published")
- */
 export async function updateNotionPostStatus(env: CloudflareEnv, pageId: string, status: string) {
   const { client } = await getNotionClient(env);
   await client.pages.update({
@@ -135,6 +144,11 @@ export async function updateNotionPostStatus(env: CloudflareEnv, pageId: string,
       Status: {
         status: {
           name: status,
+        },
+      },
+      published_at: {
+        date: {
+          start: new Date().toISOString(),
         },
       },
     },

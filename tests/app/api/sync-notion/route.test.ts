@@ -23,6 +23,7 @@ vi.mock('@/lib/wordpress', () => ({
   updatePost: (...args: any[]) => mockUpdatePost(...args),
   getOrCreateCategory: (...args: any[]) => mockGetOrCreateCategory(...args),
   getOrCreateTag: (...args: any[]) => mockGetOrCreateTag(...args),
+  verifyAuth: vi.fn().mockResolvedValue({ success: true, user: { name: 'Test', roles: ['admin'] } }),
 }));
 
 vi.mock('@/lib/content-processor', () => ({

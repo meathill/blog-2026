@@ -68,6 +68,7 @@ describe('notion utils', () => {
           results: [
             {
               id: 'page-1',
+              last_edited_time: '2023-01-01T00:00:00.000Z',
               properties: {
                 Name: { title: [{ plain_text: 'Test Title' }] },
                 Slug: { rich_text: [{ plain_text: 'test-slug' }] },
@@ -91,7 +92,7 @@ describe('notion utils', () => {
       const [url, init] = (global.fetch as any).mock.calls[0];
 
       // Expected formatted UUID: 8-4-4-4-12
-      expect(url).toBe('https://api.notion.com/v1/databases/12345678-1234-1234-1234-123456789012/query');
+      expect(url).toBe('https://api.notion.com/v1/databases/12345678123412341234123456789012/query');
       expect(init.method).toBe('POST');
       expect(init.headers).toEqual({
         Authorization: 'Bearer secret_key',
@@ -101,9 +102,12 @@ describe('notion utils', () => {
       // Parse body to avoid stringify formatting issues
       expect(JSON.parse(init.body)).toEqual({
         filter: {
-          property: 'Status',
-          status: { equals: 'Ready' },
+          or: [
+            { property: 'Status', status: { equals: 'Ready' } },
+            { property: 'Status', status: { equals: 'Published' } },
+          ],
         },
+        sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
       });
 
       expect(posts).toHaveLength(1);
@@ -116,6 +120,8 @@ describe('notion utils', () => {
         categories: ['Cat1'],
         date: '2023-01-01',
         content: 'HTML: Markdown Content',
+        lastEditedTime: '2023-01-01T00:00:00.000Z',
+        coverImage: null,
       });
     });
 
@@ -147,6 +153,11 @@ describe('notion utils', () => {
           Status: {
             status: {
               name: 'Published',
+            },
+          },
+          published_at: {
+            date: {
+              start: expect.any(String),
             },
           },
         },
