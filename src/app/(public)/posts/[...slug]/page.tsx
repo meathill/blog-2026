@@ -17,6 +17,7 @@ import {
   getTags,
   WPTag,
 } from '@/lib/wordpress';
+import CodeHighlight from '@/components/CodeHighlight';
 
 interface PostPageProps {
   params: Promise<{ slug: string[] }>;
@@ -247,6 +248,7 @@ export default async function PostPage({ params }: PostPageProps) {
           </article>
         </div>
       </div>
+      <CodeHighlight />
     </div>
   );
 }
