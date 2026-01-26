@@ -42,3 +42,14 @@ export default {
 1. **WordPress API 集成** - 从原博客获取文章数据
 2. **搜索功能** - 可考虑使用 Algolia 或 Pagefind
 3. **评论系统** - 可集成 Awesome Comment 或其他方案
+
+## 代码结构变更
+
+### WordPress API 模块 (`src/lib/wordpress/`)
+
+原 `src/lib/wordpress.ts` 已拆分为模块化结构：
+- `types.ts` - 接口定义
+- `client.ts` - API 客户端与认证
+- `posts.ts` - 文章与媒体操作
+- `taxonomies.ts` - 分类与标签操作
+- `index.ts` - 统一导出
