@@ -22,6 +22,11 @@
       "binding": "DB",
       "database_name": "meathill",
       "database_id": "600784c2-db96-4bd6-be22-d2e2375bcef7"
+    },
+    {
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "tag-cache",
+      "database_id": "5f26868d-5d24-4645-8954-a27168f6fcd6"
     }
   ],
   "images": {
