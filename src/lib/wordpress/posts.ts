@@ -8,9 +8,14 @@ export async function getPosts(params?: {
   categories?: number[];
   tags?: number[];
   search?: string;
+  embed?: boolean;
 }): Promise<{ posts: WPPost[]; total: number; totalPages: number }> {
   const searchParams = new URLSearchParams();
-  searchParams.set('_embed', 'true');
+  const { embed = true, ...rest } = params || {};
+
+  if (embed) {
+    searchParams.set('_embed', 'true');
+  }
   searchParams.set('per_page', String(params?.perPage || 10));
   searchParams.set('page', String(params?.page || 1));
 

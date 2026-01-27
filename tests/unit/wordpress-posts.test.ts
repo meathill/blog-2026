@@ -68,6 +68,23 @@ describe('WordPress Posts Module', () => {
       expect(url).toContain('search=query');
       expect(url).toContain('categories=1%2C2');
     });
+
+    it('should respect embed parameter', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [],
+        headers: { get: () => '0' },
+      });
+
+      await getPosts({ embed: false });
+
+      const url = (global.fetch as any).mock.calls[0][0];
+      expect(url).not.toContain('_embed=true');
+
+      await getPosts({ embed: true });
+      const url2 = (global.fetch as any).mock.calls[1][0];
+      expect(url2).toContain('_embed=true');
+    });
   });
 
   describe('getPost', () => {
