@@ -1,6 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { getPosts, getCategories } from '@/lib/wordpress';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { getDb } from '@/lib/db';
+import { apps } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const revalidate = 86400; // 1 day
 
@@ -20,6 +23,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/app`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
     },
     {
       url: `${SITE_URL}/about`,
@@ -49,5 +58,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-  return [...staticPages, ...postPages, ...categoryPages];
+  // 获取所有 Apps
+  const db = await getDb();
+  const allApps = await db.select().from(apps).where(eq(apps.status, 'published'));
+  const appPages: MetadataRoute.Sitemap = allApps.map((app) => ({
+    url: `${SITE_URL}/app/${app.slug}`,
+    lastModified: app.updatedAt,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...postPages, ...categoryPages, ...appPages];
 }

@@ -29,6 +29,16 @@ interface App {
   published_at: number | null;
 }
 
+interface AppImage {
+  id: string;
+  app_id: string;
+  url: string;
+  alt: string | null;
+  type: string;
+  sort_order: number | null;
+  created_at: number;
+}
+
 function escapeSQL(value: string | null): string {
   if (value === null) return 'NULL';
   return `'${value.replace(/'/g, "''")}'`;
@@ -94,6 +104,46 @@ async function main() {
       console.log(`   ✅ ${app.name} 同步成功`);
     } catch (e: any) {
       console.error(`   ❌ ${app.name} 同步失败:`, e.message);
+    }
+  }
+
+
+
+  // 3. 同步 app_images
+  console.log('\n📖 读取本地 app_images...');
+  const localImagesResult = run(`npx wrangler d1 execute DB --local --command "SELECT * FROM app_images" --json`);
+  let images: AppImage[];
+  try {
+    const parsed = JSON.parse(localImagesResult);
+    images = parsed[0]?.results || [];
+  } catch (e) {
+    console.error('❌ 解析 app_images 失败:', e);
+    images = []; // 继续执行
+  }
+
+  if (images.length > 0) {
+    console.log(`📊 找到 ${images.length} 个 images\n`);
+    for (const img of images) {
+      console.log(`🔄 同步 image: ${img.url}`);
+      const sql = `
+        INSERT OR REPLACE INTO app_images (id, app_id, url, alt, type, sort_order, created_at)
+        VALUES (
+          ${escapeSQL(img.id)},
+          ${escapeSQL(img.app_id)},
+          ${escapeSQL(img.url)},
+          ${escapeSQL(img.alt)},
+          ${escapeSQL(img.type)},
+          ${img.sort_order ?? 0},
+          ${img.created_at}
+        );
+      `.replace(/\n/g, ' ').trim();
+
+      try {
+        run(`npx wrangler d1 execute DB --remote --command "${sql}"`);
+        console.log(`   ✅ Image 同步成功`);
+      } catch (e: any) {
+        console.error(`   ❌ Image 同步失败:`, e.message);
+      }
     }
   }
 
