@@ -39,7 +39,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // 获取所有文章
-  const { posts } = await getPosts({ perPage: 100, embed: false });
+  const { posts } = await getPosts({
+    perPage: 100,
+    embed: false,
+    fields: ['slug', 'date'],
+  });
   const postPages: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${SITE_URL}/posts/${post.slug}`,
     lastModified: new Date(post.date),

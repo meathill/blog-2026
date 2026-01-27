@@ -9,12 +9,16 @@ export async function getPosts(params?: {
   tags?: number[];
   search?: string;
   embed?: boolean;
+  fields?: string[];
 }): Promise<{ posts: WPPost[]; total: number; totalPages: number }> {
   const searchParams = new URLSearchParams();
-  const { embed = true, ...rest } = params || {};
+  const { embed = true, fields, ...rest } = params || {};
 
   if (embed) {
     searchParams.set('_embed', 'true');
+  }
+  if (fields && fields.length > 0) {
+    searchParams.set('_fields', fields.join(','));
   }
   searchParams.set('per_page', String(params?.perPage || 10));
   searchParams.set('page', String(params?.page || 1));

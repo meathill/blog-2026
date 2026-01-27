@@ -85,6 +85,19 @@ describe('WordPress Posts Module', () => {
       const url2 = (global.fetch as any).mock.calls[1][0];
       expect(url2).toContain('_embed=true');
     });
+
+    it('should respect fields parameter', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [],
+        headers: { get: () => '0' },
+      });
+
+      await getPosts({ fields: ['id', 'slug'] });
+
+      const url = (global.fetch as any).mock.calls[0][0];
+      expect(url).toContain('_fields=id%2Cslug');
+    });
   });
 
   describe('getPost', () => {
