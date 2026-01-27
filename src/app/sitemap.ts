@@ -63,14 +63,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
   // 获取所有 Apps
-  const db = await getDb();
-  const allApps = await db.select().from(apps).where(eq(apps.status, 'published'));
-  const appPages: MetadataRoute.Sitemap = allApps.map((app) => ({
-    url: `${SITE_URL}/app/${app.slug}`,
-    lastModified: app.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }));
+  let appPages: MetadataRoute.Sitemap = [];
+  try {
+    const db = await getDb();
+    const allApps = await db.select().from(apps).where(eq(apps.status, 'published'));
+    appPages = allApps.map((app) => ({
+      url: `${SITE_URL}/app/${app.slug}`,
+      lastModified: app.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+  } catch (error) {
+    console.warn('Failed to fetch apps for sitemap, skipping...', error);
+  }
 
   return [...staticPages, ...postPages, ...categoryPages, ...appPages];
 }
