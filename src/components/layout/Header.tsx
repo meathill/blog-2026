@@ -12,123 +12,61 @@ interface NavItem {
   children?: NavItem[];
 }
 
-const navLinks: NavItem[] = [
-  { href: '/about', label: '关于我' },
-  { href: '/app', label: 'Apps' },
-  { href: 'https://mizufinancial.com/', label: 'Mizu Financial', external: true },
-  {
-    href: '/tech',
-    label: '技术分享',
-    children: [
-      { href: '/category/js', label: 'JavaScript' },
-      { href: '/category/ai', label: 'AI' },
-      {
-        href: 'https://github.com/meathill/gitbook-design-patterns-in-jquery',
-        label: '从 jQuery 里学习设计模式',
-        external: true,
-      },
-      {
-        href: 'https://github.com/meathill/gitbook-javascript-async-tutorial',
-        label: 'JavaScript 异步开发全攻略',
-        external: true,
-      },
-    ],
-  },
-  {
-    href: '/works',
-    label: '作品集',
-    children: [
-      { href: 'https://space.bilibili.com/7409098', label: 'B 站视频', external: true },
-      { href: 'https://www.youtube.com/channel/UCBeD-XqErDK4tKy5FtZj8vg', label: '油管频道', external: true },
-      { href: 'https://github.com/meathill', label: 'GitHub', external: true },
-      { href: 'https://baifo.life', label: '拜拜-网上拜佛', external: true },
-      { href: 'https://muistory.com', label: '姆伊游戏书', external: true },
-      { href: 'https://battleship-game.com', label: 'Battleship', external: true },
-      { href: 'https://aigazou.net', label: 'AIGAZOU', external: true },
-      { href: 'https://minesweeper.meathill.com', label: '扫雷游戏', external: true },
-    ],
-  },
-  {
-    href: '/sponsors',
-    label: '各种代理',
-    children: [
-      { href: 'https://zeabur.com?referralCode=meathill', label: 'Zeabur（Vercel 竞品）', external: true },
-      { href: 'https://leancloud.cn/?source=F88KG861', label: '超好用的后端 LeanCloud', external: true },
-      { href: 'https://m.do.co/c/87df6b93ec1e', label: 'Digital Ocean', external: true },
-      { href: 'https://www.vultr.com/?ref=7124198', label: 'Vultr VPS', external: true },
-    ],
-  },
-];
-
-function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
-  if (item.external) {
-    return (
-      <a
-        href={item.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-colors"
-        onClick={onClick}
-      >
-        {item.label}
-      </a>
-    );
-  }
-  return (
-    <Link
-      href={item.href}
-      className="block px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-colors"
-      onClick={onClick}
-    >
-      {item.label}
-    </Link>
-  );
-}
-
-function DropdownMenu({ item }: { item: NavItem }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  function handleMouseEnter() {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    setIsOpen(true);
-  }
-
-  function handleMouseLeave() {
-    timeoutRef.current = setTimeout(() => {
-      setIsOpen(false);
-    }, 150);
-  }
-
-  return (
-    <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <button
-        className="flex items-center gap-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors text-sm font-medium"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {item.label}
-        <ChevronDownIcon size={14} className={cn('transition-transform', isOpen && 'rotate-180')} />
-      </button>
-      <div
-        className={cn(
-          'absolute top-full left-0 mt-2 min-w-48 rounded-lg glass border border-[var(--surface-border)] shadow-lg overflow-hidden transition-all duration-200',
-          isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2',
-        )}
-      >
-        {item.children?.map((child) => (
-          <NavLink key={child.href + child.label} item={child} onClick={() => setIsOpen(false)} />
-        ))}
-      </div>
-    </div>
-  );
-}
+import { useTranslations } from 'next-intl';
 
 export default function Header() {
+  const t = useTranslations('Header');
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedMobileItems, setExpandedMobileItems] = useState<string[]>([]);
+
+  const navLinks: NavItem[] = [
+    { href: '/about', label: t('about') },
+    { href: '/app', label: t('apps') },
+    { href: 'https://mizufinancial.com/', label: 'Mizu Financial', external: true },
+    {
+      href: '/tech',
+      label: t('tech'),
+      children: [
+        { href: '/category/js', label: 'JavaScript' },
+        { href: '/category/ai', label: 'AI' },
+        {
+          href: 'https://github.com/meathill/gitbook-design-patterns-in-jquery',
+          label: '从 jQuery 里学习设计模式',
+          external: true,
+        },
+        {
+          href: 'https://github.com/meathill/gitbook-javascript-async-tutorial',
+          label: 'JavaScript 异步开发全攻略',
+          external: true,
+        },
+      ],
+    },
+    {
+      href: '/works',
+      label: t('works'),
+      children: [
+        { href: 'https://space.bilibili.com/7409098', label: 'B 站视频', external: true },
+        { href: 'https://www.youtube.com/channel/UCBeD-XqErDK4tKy5FtZj8vg', label: '油管频道', external: true },
+        { href: 'https://github.com/meathill', label: 'GitHub', external: true },
+        { href: 'https://baifo.life', label: '拜拜-网上拜佛', external: true },
+        { href: 'https://muistory.com', label: '姆伊游戏书', external: true },
+        { href: 'https://battleship-game.com', label: 'Battleship', external: true },
+        { href: 'https://aigazou.net', label: 'AIGAZOU', external: true },
+        { href: 'https://minesweeper.meathill.com', label: '扫雷游戏', external: true },
+      ],
+    },
+    {
+      href: '/sponsors',
+      label: t('resources'),
+      children: [
+        { href: 'https://zeabur.com?referralCode=meathill', label: 'Zeabur（Vercel 竞品）', external: true },
+        { href: 'https://leancloud.cn/?source=F88KG861', label: '超好用的后端 LeanCloud', external: true },
+        { href: 'https://m.do.co/c/87df6b93ec1e', label: 'Digital Ocean', external: true },
+        { href: 'https://www.vultr.com/?ref=7124198', label: 'Vultr VPS', external: true },
+      ],
+    },
+  ];
 
   useEffect(() => {
     function handleScroll() {
@@ -140,6 +78,71 @@ export default function Header() {
 
   function toggleMobileExpand(label: string) {
     setExpandedMobileItems((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]));
+  }
+
+  function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
+    if (item.external) {
+      return (
+        <a
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-colors"
+          onClick={onClick}
+        >
+          {item.label}
+        </a>
+      );
+    }
+    return (
+      <Link
+        href={item.href}
+        className="block px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-colors"
+        onClick={onClick}
+      >
+        {item.label}
+      </Link>
+    );
+  }
+
+  function DropdownMenu({ item }: { item: NavItem }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    function handleMouseEnter() {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      setIsOpen(true);
+    }
+
+    function handleMouseLeave() {
+      timeoutRef.current = setTimeout(() => {
+        setIsOpen(false);
+      }, 150);
+    }
+
+    return (
+      <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+        <button
+          className="flex items-center gap-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors text-sm font-medium"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {item.label}
+          <ChevronDownIcon size={14} className={cn('transition-transform', isOpen && 'rotate-180')} />
+        </button>
+        <div
+          className={cn(
+            'absolute top-full left-0 mt-2 min-w-48 rounded-lg glass border border-[var(--surface-border)] shadow-lg overflow-hidden transition-all duration-200',
+            isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2',
+          )}
+        >
+          {item.children?.map((child) => (
+            <NavLink key={child.href + child.label} item={child} onClick={() => setIsOpen(false)} />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -189,7 +192,7 @@ export default function Header() {
             <Link
               href="/search"
               className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-all"
-              aria-label="搜索"
+              aria-label={t('search')}
             >
               <SearchIcon size={18} />
             </Link>
@@ -198,7 +201,7 @@ export default function Header() {
             <button
               className="md:hidden p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-all"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="菜单"
+              aria-label={t('toggle_menu')}
             >
               {isMobileMenuOpen ? <XIcon size={20} /> : <MenuIcon size={20} />}
             </button>

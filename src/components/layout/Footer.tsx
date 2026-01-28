@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/routing';
 import { GithubIcon, YoutubeIcon, TwitterIcon, HeartIcon } from 'lucide-react';
 import LanguageSwitcher from '../LanguageSwitcher';
+import { useTranslations } from 'next-intl';
 
 const socialLinks = [
   { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon },
@@ -8,15 +9,16 @@ const socialLinks = [
   { href: 'https://x.com/meathill1', label: 'X', icon: TwitterIcon },
 ];
 
-const footerLinks = [
-  { href: '/posts', label: '文章归档' },
-  { href: '/app', label: 'Apps' },
-  { href: '/about', label: '关于我' },
-  { href: 'https://github.com/sponsors/meathill', label: '赞助', external: true },
-];
-
 export default function Footer() {
+  const t = useTranslations('Footer');
   const currentYear = new Date().getFullYear();
+
+  const footerLinks = [
+    { href: '/posts', label: t('archives') },
+    { href: '/app', label: t('apps') },
+    { href: '/about', label: t('about') },
+    { href: 'https://github.com/sponsors/meathill', label: t('sponsor'), external: true },
+  ];
 
   return (
     <footer className="border-t border-[var(--surface-border)] mt-20">
@@ -27,9 +29,7 @@ export default function Footer() {
             <Link href="/" className="text-xl font-bold text-gradient inline-block">
               山维空间
             </Link>
-            <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
-              19年+ 全栈开发经验，热衷于构建有用的产品和分享知识。
-            </p>
+            <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{t('brand_desc')}</p>
             <div className="flex items-center gap-3">
               {socialLinks.map((link) => (
                 <a
@@ -48,7 +48,7 @@ export default function Footer() {
 
           {/* Links */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">快速链接</h3>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t('quick_links')}</h3>
             <ul className="space-y-2">
               {footerLinks.map((link) => (
                 <li key={link.href}>
@@ -76,7 +76,7 @@ export default function Footer() {
 
           {/* Newsletter or Extra */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">技术栈</h3>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t('tech_stack')}</h3>
             <div className="flex flex-wrap gap-2">
               {['Vue', 'React', 'Node.js', 'TypeScript', 'Next.js', 'Cloudflare'].map((tech) => (
                 <span
@@ -93,9 +93,9 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-[var(--surface-border)] flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-            © {currentYear} Meathill. Made with
+            © {currentYear} Meathill. {t('made_with')}
             <HeartIcon size={12} className="text-red-500" fill="currentColor" />
-            in Chongqing
+            {t('in_chongqing')}
           </p>
 
           <div className="flex items-center gap-4">

@@ -8,6 +8,26 @@
     "coming_soon": "更多应用即将推出...",
     "nav_label": "应用"
   },
+  "Header": {
+    "about": "关于我",
+    "apps": "Apps",
+    "tech": "技术分享",
+    "works": "作品集",
+    "resources": "各种代理",
+    "search": "搜索",
+    "toggle_menu": "菜单"
+  },
+  "Footer": {
+    "brand_desc": "19年+ 全栈开发经验，热衷于构建有用的产品和分享知识。",
+    "quick_links": "快速链接",
+    "archives": "文章归档",
+    "apps": "Apps",
+    "about": "关于我",
+    "sponsor": "赞助",
+    "tech_stack": "技术栈",
+    "made_with": "Made with",
+    "in_chongqing": "in Chongqing"
+  },
   "LocaleSwitcher": {
     "label": "语言",
     "en": "English",

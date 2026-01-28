@@ -18,7 +18,7 @@ export default function LanguageSwitcher() {
     <label className="flex gap-2 items-center text-sm text-muted-foreground">
       {t('label')}
       <select
-        defaultValue={locale}
+        value={locale}
         className="bg-transparent border-none outline-none cursor-pointer hover:text-foreground transition-colors"
         onChange={onSelectChange}
       >
