@@ -1,5 +1,8 @@
 import type { NextConfig } from 'next';
 import pkg from './package.json';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   // WordPress CMS 配置
@@ -23,4 +26,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

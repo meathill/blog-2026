@@ -1,5 +1,5 @@
 import { ArrowRightIcon, CalendarIcon, ClockIcon } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { getPosts, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { cn } from '@/lib/utils';
 

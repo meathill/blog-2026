@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useState, useEffect, useRef } from 'react';
 import { SearchIcon, MenuIcon, XIcon, ChevronDownIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';

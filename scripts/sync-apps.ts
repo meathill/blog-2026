@@ -13,6 +13,7 @@
  */
 
 import { execSync } from 'node:child_process';
+import { writeFileSync, unlinkSync } from 'node:fs';
 
 interface App {
   id: string;
@@ -76,7 +77,6 @@ async function main() {
   for (const app of apps) {
     console.log(`🔄 同步: ${app.name} (${app.slug})`);
 
-    // 使用 INSERT OR REPLACE 来处理更新
     const sql = `
       INSERT OR REPLACE INTO apps (
         id, slug, name, description, content, icon, url, repo_url,
@@ -95,19 +95,18 @@ async function main() {
         ${app.updated_at},
         ${app.published_at ?? 'NULL'}
       );
-    `
-      .replace(/\n/g, ' ')
-      .trim();
+    `;
 
     try {
-      run(`npx wrangler d1 execute DB --remote --command "${sql}"`);
+      const tempFile = '.temp_sync_app.sql';
+      writeFileSync(tempFile, sql);
+      run(`npx wrangler d1 execute DB --remote --file ${tempFile}`);
+      unlinkSync(tempFile);
       console.log(`   ✅ ${app.name} 同步成功`);
     } catch (e: any) {
       console.error(`   ❌ ${app.name} 同步失败:`, e.message);
     }
   }
-
-
 
   // 3. 同步 app_images
   console.log('\n📖 读取本地 app_images...');
@@ -136,10 +135,13 @@ async function main() {
           ${img.sort_order ?? 0},
           ${img.created_at}
         );
-      `.replace(/\n/g, ' ').trim();
+      `;
 
       try {
-        run(`npx wrangler d1 execute DB --remote --command "${sql}"`);
+        const tempFile = '.temp_sync_image.sql';
+        writeFileSync(tempFile, sql);
+        run(`npx wrangler d1 execute DB --remote --file ${tempFile}`);
+        unlinkSync(tempFile);
         console.log(`   ✅ Image 同步成功`);
       } catch (e: any) {
         console.error(`   ❌ Image 同步失败:`, e.message);

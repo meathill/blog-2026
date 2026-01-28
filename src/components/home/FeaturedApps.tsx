@@ -2,10 +2,13 @@ import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import AppCard from '@/components/AppCard';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { ArrowRight } from 'lucide-react';
+import { getAppTags } from '@/actions/tags';
+import { getTranslations } from 'next-intl/server';
 
 export default async function FeaturedApps() {
+  const t = await getTranslations('Apps');
   const db = await getDb();
   const featuredApps = await db
     .select()
@@ -22,23 +25,28 @@ export default async function FeaturedApps() {
         <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-              Apps & Tools
+              {t('title')}
             </h2>
-            <p className="mt-2 text-muted-foreground">Small utilities I built for fun and profit.</p>
+            <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
           </div>
 
           <Link
             href="/app"
             className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:text-amber-500 transition-colors"
           >
-            View All Apps <ArrowRight size={16} />
+            {t('view_all')} <ArrowRight size={16} />
           </Link>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredApps.map((app) => (
-            <AppCard key={app.id} app={app} />
-          ))}
+          {
+            await Promise.all(
+              featuredApps.map(async (app) => {
+                const tags = await getAppTags(app.id);
+                return <AppCard key={app.id} app={app} tags={tags} i18n={{ open_app: t('open_app') }} />;
+              }),
+            )
+          }
         </div>
 
         <div className="mt-8 text-center sm:hidden">
@@ -46,7 +54,7 @@ export default async function FeaturedApps() {
             href="/app"
             className="inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:text-amber-500 transition-colors"
           >
-            View All Apps <ArrowRight size={16} />
+            {t('view_all')} <ArrowRight size={16} />
           </Link>
         </div>
       </div>

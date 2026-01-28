@@ -43,13 +43,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+
+export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: { locale: string };
 }>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { locale } = (await params) as any;
+  const messages = await getMessages();
+
   return (
-    <html lang="zh-CN" className="antialiased">
+    <html lang={locale || 'zh'} className="antialiased">
       <head>
         <link rel="icon" href="/favicon.webp" type="image/webp" />
         <link rel="apple-touch-icon" href="/favicon.webp" />
@@ -58,7 +67,7 @@ export default function RootLayout({
       </head>
 
       <body className="antialiased">
-        {children}
+        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9946806099979342"

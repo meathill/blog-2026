@@ -1,0 +1,16 @@
+{
+  "Apps": {
+    "title": "Apps & Tools",
+    "subtitle": "Small utilities I built for fun and profit.",
+    "subtitle_page": "A collection of small utilities, experiments, and tools I've built.",
+    "view_all": "View All Apps",
+    "open_app": "Open App",
+    "coming_soon": "More apps coming soon...",
+    "nav_label": "Apps"
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "zh": "中文"
+  }
+}

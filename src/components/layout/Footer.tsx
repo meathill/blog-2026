@@ -1,5 +1,6 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { GithubIcon, YoutubeIcon, TwitterIcon, HeartIcon } from 'lucide-react';
+import LanguageSwitcher from '../LanguageSwitcher';
 
 const socialLinks = [
   { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon },
@@ -97,12 +98,15 @@ export default function Footer() {
             in Chongqing
           </p>
 
-          <p className="text-xs text-[var(--text-muted)]">
-            <span className="text-gray-500 me-2">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
-            <Link href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
-              粤ICP备15055091号-1
-            </Link>
-          </p>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <p className="text-xs text-[var(--text-muted)]">
+              <span className="text-gray-500 me-2">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
+              <Link href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+                粤ICP备15055091号-1
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

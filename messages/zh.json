@@ -1,0 +1,16 @@
+{
+  "Apps": {
+    "title": "应用与工具",
+    "subtitle": "为了乐趣和便利开发的小工具。",
+    "subtitle_page": "我构建的小工具、实验和应用集合。",
+    "view_all": "查看所有应用",
+    "open_app": "打开应用",
+    "coming_soon": "更多应用即将推出...",
+    "nav_label": "应用"
+  },
+  "LocaleSwitcher": {
+    "label": "语言",
+    "en": "English",
+    "zh": "中文"
+  }
+}

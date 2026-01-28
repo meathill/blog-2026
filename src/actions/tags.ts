@@ -85,8 +85,9 @@ export async function updateAppTags(appId: string, tagIds: string[]) {
 
   // Insert new associations
   if (tagIds.length > 0) {
+    const uniqueTagIds = [...new Set(tagIds)];
     await db.insert(appTags).values(
-      tagIds.map((tagId) => ({
+      uniqueTagIds.map((tagId) => ({
         appId,
         tagId,
       })),
