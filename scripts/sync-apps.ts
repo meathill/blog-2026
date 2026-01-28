@@ -59,7 +59,7 @@ async function main() {
 
   // Parse command line arguments
   const args = process.argv.slice(2);
-  const slugArg = args.find(arg => arg.startsWith('--slug='));
+  const slugArg = args.find((arg) => arg.startsWith('--slug='));
   const targetSlug = slugArg ? slugArg.split('=')[1] : null;
 
   let apps: App[];
@@ -72,7 +72,7 @@ async function main() {
   }
 
   if (targetSlug) {
-    apps = apps.filter(app => app.slug === targetSlug);
+    apps = apps.filter((app) => app.slug === targetSlug);
     if (apps.length === 0) {
       console.log(`⚠️ 未找到 slug 为 "${targetSlug}" 的 app`);
       return;
@@ -136,8 +136,8 @@ async function main() {
 
   // Filter images if targetSlug is set
   if (targetSlug && apps.length > 0) {
-    const appIds = new Set(apps.map(a => a.id));
-    images = images.filter(img => appIds.has(img.app_id));
+    const appIds = new Set(apps.map((a) => a.id));
+    images = images.filter((img) => appIds.has(img.app_id));
   }
 
   if (images.length > 0) {
