@@ -57,6 +57,11 @@ async function main() {
   console.log('📖 读取本地 D1 数据库...');
   const localResult = run(`npx wrangler d1 execute DB --local --command "SELECT * FROM apps" --json`);
 
+  // Parse command line arguments
+  const args = process.argv.slice(2);
+  const slugArg = args.find(arg => arg.startsWith('--slug='));
+  const targetSlug = slugArg ? slugArg.split('=')[1] : null;
+
   let apps: App[];
   try {
     const parsed = JSON.parse(localResult);
@@ -64,6 +69,15 @@ async function main() {
   } catch (e) {
     console.error('❌ 解析本地数据失败:', e);
     process.exit(1);
+  }
+
+  if (targetSlug) {
+    apps = apps.filter(app => app.slug === targetSlug);
+    if (apps.length === 0) {
+      console.log(`⚠️ 未找到 slug 为 "${targetSlug}" 的 app`);
+      return;
+    }
+    console.log(`🎯 只同步 slug 为 "${targetSlug}" 的 app`);
   }
 
   if (apps.length === 0) {
@@ -118,6 +132,12 @@ async function main() {
   } catch (e) {
     console.error('❌ 解析 app_images 失败:', e);
     images = []; // 继续执行
+  }
+
+  // Filter images if targetSlug is set
+  if (targetSlug && apps.length > 0) {
+    const appIds = new Set(apps.map(a => a.id));
+    images = images.filter(img => appIds.has(img.app_id));
   }
 
   if (images.length > 0) {
