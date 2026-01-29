@@ -11,10 +11,12 @@ interface AwesomeAuthModule {
 }
 
 interface AwesomeCommentModule {
-  init: (
-    selector: string,
-    config: { postId: string; apiUrl: string; awesomeAuth: unknown; locale: string }
-  ) => void;
+  default: {
+    init: (
+      selector: string,
+      config: { postId: string; apiUrl: string; awesomeAuth: unknown; locale: string }
+    ) => void;
+  };
 }
 
 export default function AwesomeComment() {
@@ -26,13 +28,22 @@ export default function AwesomeComment() {
     initializedRef.current = true;
 
     async function loadAndInit() {
+      // 动态加载 CSS
+      const cssUrl = 'https://unpkg.com/@roudanio/awesome-comment@0.10.3/dist/style.css';
+      if (!document.querySelector(`link[href="${cssUrl}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = cssUrl;
+        document.head.appendChild(link);
+      }
+
       try {
         // 使用 ESM 动态导入
         const [authModule, commentModule] = await Promise.all([
           // @ts-expect-error ESM 动态导入远程模块
-          import('https://unpkg.com/@roudanio/awesome-auth@0.1.5/dist/awesome-auth.js') as Promise<AwesomeAuthModule>,
+          import(/* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-auth@0.1.5/dist/awesome-auth.js') as Promise<AwesomeAuthModule>,
           // @ts-expect-error ESM 动态导入远程模块
-          import('https://unpkg.com/@roudanio/awesome-comment@0.10.3/dist/awesome-comment.js') as Promise<AwesomeCommentModule>,
+          import(/* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.10.3/dist/awesome-comment.js') as Promise<AwesomeCommentModule>,
         ]);
 
         const auth = authModule.getInstance({
@@ -41,7 +52,7 @@ export default function AwesomeComment() {
           prefix: 'acSaas',
         });
 
-        commentModule.init('#awesome-comment', {
+        commentModule.default.init('#awesome-comment', {
           postId: `${SITE_ID}:${location.pathname}`,
           apiUrl: API_URL,
           awesomeAuth: auth,
