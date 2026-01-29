@@ -63,6 +63,7 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.webp" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="stylesheet" href="https://unpkg.com/@roudanio/awesome-comment@0.1.5/dist/style.css" />
       </head>
 
       <body className="antialiased">
