@@ -18,6 +18,7 @@ import {
   WPTag,
 } from '@/lib/wordpress';
 import CodeHighlight from '@/components/CodeHighlight';
+import AwesomeComment from '@/components/AwesomeComment';
 
 interface PostPageProps {
   params: Promise<{ slug: string[] }>;
@@ -245,6 +246,8 @@ export default async function PostPage({ params }: PostPageProps) {
                 )}
               </div>
             </footer>
+
+            <AwesomeComment />
           </article>
         </div>
       </div>

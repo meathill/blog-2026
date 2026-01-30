@@ -9,6 +9,7 @@ import {
   DumbbellIcon,
   PlaneIcon,
 } from 'lucide-react';
+import AwesomeComment from '@/components/AwesomeComment';
 
 export const metadata: Metadata = {
   title: '关于我',
@@ -211,6 +212,8 @@ export default function AboutPage() {
             </a>
           </div>
         </section>
+
+        <AwesomeComment />
       </div>
     </div>
   );

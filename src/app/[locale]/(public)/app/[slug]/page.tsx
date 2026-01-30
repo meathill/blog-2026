@@ -7,6 +7,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { marked } from 'marked';
 import { getAppTags } from '@/actions/tags';
+import AwesomeComment from '@/components/AwesomeComment';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,6 +127,8 @@ export default async function AppDetailPage({ params }: PageProps) {
         {contentHtml && (
           <div className="mt-12 md:mt-16 prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
         )}
+
+        <AwesomeComment />
       </div>
     </div>
   );
