@@ -49,7 +49,7 @@ export default function AwesomeComment() {
 
         const auth = authModule.getInstance({
           googleId: GOOGLE_CLIENT_ID,
-          root: `${API_URL}/api`,
+          root: `${API_URL}/api/site/auth`,
           prefix: 'acSaas',
         });
 
