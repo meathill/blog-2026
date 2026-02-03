@@ -53,3 +53,16 @@ export default {
 - `posts.ts` - 文章与媒体操作
 - `taxonomies.ts` - 分类与标签操作
 - `index.ts` - 统一导出
+
+## 路由 (Routing)
+
+### 文章路径结构
+- **Canonical Structure:** `/:locale/posts/:category/:slug`
+- **Logic:** `src/app/[locale]/(public)/posts/[...slug]/page.tsx`
+- **View:** `src/views/PostView.tsx`
+
+### 重定向规则 (Middleware)
+在 `src/middleware.ts` 中处理：
+1. **HTML 后缀:** 自动去除 `.html` 并重定向 (e.g., `/tech/foo.html` -> `/posts/tech/foo`)
+2. **Legacy Path:** 自动添加 `/posts/` 前缀 (e.g., `/tech/foo` -> `/posts/tech/foo`)
+3. **Canonical Check:** 文章页面加载时检查 URL 是否匹配主分类，不匹配则 307 重定向。
