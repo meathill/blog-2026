@@ -53,7 +53,7 @@ describe('Middleware', () => {
     const res = middleware(req);
 
     expect(res?.status).toBe(307);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/zh/posts/tech/article`);
   });
 
   it('should NOT redirect standard paths like /about', () => {

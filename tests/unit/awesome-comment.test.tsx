@@ -47,4 +47,3 @@ describe('AwesomeComment', () => {
     expect(container?.tagName.toLowerCase()).toBe('div');
   });
 });
-

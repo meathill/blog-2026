@@ -1,10 +1,6 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import {
-  getPost,
-  stripHtml,
-  getCategories,
-} from '@/lib/wordpress';
+import { getPost, stripHtml, getCategories } from '@/lib/wordpress';
 import PostView from '@/views/PostView';
 
 interface PostPageProps {
@@ -55,7 +51,7 @@ export default async function PostPage({ params }: PostPageProps) {
   if (post.categories && post.categories.length > 0) {
     const allCategories = await getCategories();
     // Prefer matching category if present in URL, otherwise first one
-    const cat = allCategories.find(c => c.id === post.categories[0]);
+    const cat = allCategories.find((c) => c.id === post.categories[0]);
     if (cat) {
       primaryCategorySlug = cat.slug;
     }
