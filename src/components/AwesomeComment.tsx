@@ -41,11 +41,9 @@ export default function AwesomeComment() {
       try {
         // 使用 ESM 动态导入
         const [authModule, commentModule] = await Promise.all([
-          // @ts-expect-error ESM 动态导入远程模块
           import(
             /* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-auth@0.1.5/dist/awesome-auth.js'
           ) as Promise<AwesomeAuthModule>,
-          // @ts-expect-error ESM 动态导入远程模块
           import(
             /* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.10.3/dist/awesome-comment.js'
           ) as Promise<AwesomeCommentModule>,
