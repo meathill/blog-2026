@@ -56,10 +56,11 @@ export default function AwesomeComment() {
         });
 
         commentModule.default.init(containerRef.current!, {
-          postId: `${location.pathname}`,
           apiUrl: API_URL,
           awesomeAuth: auth,
           locale: navigator.language,
+          postId: `${location.pathname}`,
+          siteId: SITE_ID,
         });
       } catch (error) {
         console.error('Failed to load Awesome Comment:', error);
