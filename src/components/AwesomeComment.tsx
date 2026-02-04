@@ -7,18 +7,6 @@ const SITE_ID = '8a576462-a61c-492a-ad36-33fc48e281b3';
 const API_URL = 'https://awesomecomment.org';
 const GOOGLE_CLIENT_ID = '553490336811-e0lmqt2vkb0nqfc4fbm83lc6mjo4ahbf.apps.googleusercontent.com';
 
-interface AwesomeAuthModule {
-  getInstance: (config: { googleId: string; root: string; prefix: string }) => unknown;
-}
-
-interface AwesomeCommentModule {
-  default: {
-    init: (
-      selector: string | HTMLElement,
-      config: { postId: string; apiUrl: string; awesomeAuth: unknown; locale: string },
-    ) => void;
-  };
-}
 
 export default function AwesomeComment() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,10 +31,10 @@ export default function AwesomeComment() {
         const [authModule, commentModule] = await Promise.all([
           import(
             /* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-auth@0.1.5/dist/awesome-auth.js'
-          ) as Promise<AwesomeAuthModule>,
+          ),
           import(
             /* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.10.4/dist/awesome-comment.js'
-          ) as Promise<AwesomeCommentModule>,
+          ),
         ]);
 
         const auth = authModule.getInstance({
