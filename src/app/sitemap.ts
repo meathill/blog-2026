@@ -39,28 +39,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // 获取所有文章
-  const { posts } = await getPosts({
-    perPage: 100,
-    embed: false,
-    fields: ['slug', 'date'],
-  });
-  const postPages: MetadataRoute.Sitemap = posts.map((post) => ({
-    url: `${SITE_URL}/posts/${post.slug}`,
-    lastModified: new Date(post.date),
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }));
+  let postPages: MetadataRoute.Sitemap = [];
+  try {
+    const { posts } = await getPosts({
+      perPage: 100,
+      embed: false,
+      fields: ['slug', 'date'],
+    });
+    postPages = posts.map((post) => ({
+      url: `${SITE_URL}/posts/${post.slug}`,
+      lastModified: new Date(post.date),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+  } catch (error) {
+    console.warn('Failed to fetch posts for sitemap, skipping...', error);
+  }
 
   // 获取所有分类
-  const categories = await getCategories();
-  const categoryPages: MetadataRoute.Sitemap = categories
-    .filter((cat) => cat.count > 0)
-    .map((cat) => ({
-      url: `${SITE_URL}/category/${cat.slug}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
-    }));
+  let categoryPages: MetadataRoute.Sitemap = [];
+  try {
+    const categories = await getCategories();
+    categoryPages = categories
+      .filter((cat) => cat.count > 0)
+      .map((cat) => ({
+        url: `${SITE_URL}/category/${cat.slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      }));
+  } catch (error) {
+    console.warn('Failed to fetch categories for sitemap, skipping...', error);
+  }
 
   // 获取所有 Apps
   let appPages: MetadataRoute.Sitemap = [];

@@ -56,6 +56,6 @@ export const config = {
   matcher: [
     '/',
     '/(zh|en)/:path*',
-    '/((?!api|_next|.*\\.(?:png|jpg|jpeg|svg|css|js|ico|webp|json|woff|woff2|ttf|zip|gz)$).*)',
+    '/((?!api|_next|.*\\.(?:png|jpg|jpeg|svg|css|js|ico|webp|json|xml|woff|woff2|ttf|zip|gz)$).*)',
   ],
 };
