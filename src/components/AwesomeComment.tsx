@@ -30,7 +30,7 @@ export default function AwesomeComment() {
 
     async function loadAndInit() {
       // 动态加载 CSS
-      const cssUrl = 'https://unpkg.com/@roudanio/awesome-comment@0.10.3/dist/style.css';
+      const cssUrl = 'https://unpkg.com/@roudanio/awesome-comment@0.10.4/dist/style.css';
       if (!document.querySelector(`link[href="${cssUrl}"]`)) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -45,7 +45,7 @@ export default function AwesomeComment() {
             /* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-auth@0.1.5/dist/awesome-auth.js'
           ) as Promise<AwesomeAuthModule>,
           import(
-            /* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.10.3/dist/awesome-comment.js'
+            /* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.10.4/dist/awesome-comment.js'
           ) as Promise<AwesomeCommentModule>,
         ]);
 
@@ -56,7 +56,7 @@ export default function AwesomeComment() {
         });
 
         commentModule.default.init(containerRef.current!, {
-          postId: `${SITE_ID}:${location.pathname}`,
+          postId: `${location.pathname}`,
           apiUrl: API_URL,
           awesomeAuth: auth,
           locale: navigator.language,
