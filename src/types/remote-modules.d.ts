@@ -6,7 +6,14 @@ declare module 'https://unpkg.com/@roudanio/awesome-comment@0.10.4/dist/awesome-
   const AwesomeComment: {
     init: (
       root: HTMLElement,
-      options: { turnstileSiteKey?: string; postId: string; siteId: string; apiUrl: string; awesomeAuth: unknown; locale?: string },
+      options: {
+        turnstileSiteKey?: string;
+        postId: string;
+        siteId: string;
+        apiUrl: string;
+        awesomeAuth: unknown;
+        locale?: string;
+      },
     ) => void;
   };
   export default AwesomeComment;

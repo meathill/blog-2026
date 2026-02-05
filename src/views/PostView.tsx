@@ -24,7 +24,8 @@ interface PostViewProps {
 
 // 从 HTML 内容中提取标题生成 TOC
 function extractTOC(html: string): Array<{ id: string; text: string; level: number }> {
-  const headingRegex = /<h([2-4])[^>]*id="([^"]*)"[^>]*>([^<]*)<\/h[2-4]>/gi;
+  // 使用非贪婪匹配 (.*?) 允许标题中包含 HTML 标签
+  const headingRegex = /<h([2-4])[^>]*id="([^"]*)"[^>]*>(.*?)<\/h[2-4]>/gi;
   const toc: Array<{ id: string; text: string; level: number }> = [];
   let match;
 
@@ -32,7 +33,7 @@ function extractTOC(html: string): Array<{ id: string; text: string; level: numb
     toc.push({
       level: parseInt(match[1], 10),
       id: match[2],
-      text: match[3].trim(),
+      text: stripHtml(match[3]), // 清理标题文本中的 HTML 标签
     });
   }
 

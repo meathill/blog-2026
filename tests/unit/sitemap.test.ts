@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import sitemap from '@/app/sitemap';
 
@@ -21,7 +20,7 @@ vi.mock('@/lib/db', () => ({
 }));
 
 vi.mock('@/db/schema', () => ({
-  apps: { status: 'status', slug: 'slug', updatedAt: 'updatedAt' }
+  apps: { status: 'status', slug: 'slug', updatedAt: 'updatedAt' },
 }));
 
 vi.mock('drizzle-orm', () => ({
@@ -56,9 +55,7 @@ describe('Sitemap Generator', () => {
     mockGetDb.mockResolvedValue({
       select: () => ({
         from: () => ({
-          where: () => Promise.resolve([
-            { slug: 'app-1', updatedAt: new Date('2023-01-03') },
-          ]),
+          where: () => Promise.resolve([{ slug: 'app-1', updatedAt: new Date('2023-01-03') }]),
         }),
       }),
     });
@@ -68,30 +65,30 @@ describe('Sitemap Generator', () => {
     const result = await sitemap();
 
     // Check static pages
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: SITE_URL }),
-      expect.objectContaining({ url: `${SITE_URL}/posts` }),
-    ]));
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ url: SITE_URL }),
+        expect.objectContaining({ url: `${SITE_URL}/posts` }),
+      ]),
+    );
 
     // Check posts
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
-      expect.objectContaining({ url: `${SITE_URL}/posts/post-2` }),
-    ]));
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
+        expect.objectContaining({ url: `${SITE_URL}/posts/post-2` }),
+      ]),
+    );
 
     // Check categories
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: `${SITE_URL}/category/cat-1` }),
-    ]));
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/category/cat-1` })]));
     // Empty category should assume filtered (checking logic implicitly by absence or length)
     // But arrayContaining doesn't check absence. Let's check length approx or specific absence.
-    const cat2 = result.find(item => item.url === `${SITE_URL}/category/cat-2`);
+    const cat2 = result.find((item) => item.url === `${SITE_URL}/category/cat-2`);
     expect(cat2).toBeUndefined();
 
     // Check apps
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: `${SITE_URL}/app/app-1` }),
-    ]));
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/app/app-1` })]));
   });
 
   it('should handle WordPress API errors gracefully (getPosts failure)', async () => {
@@ -100,16 +97,12 @@ describe('Sitemap Generator', () => {
     const result = await sitemap();
 
     // Key assertion: Should not throw, should return static pages + apps + categories
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: SITE_URL }),
-    ]));
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: SITE_URL })]));
     // Should NOT have posts
-    const anyPost = result.find(item => item.url.includes('/posts/post-1'));
+    const anyPost = result.find((item) => item.url.includes('/posts/post-1'));
     expect(anyPost).toBeUndefined();
     // Should have categories (since that didn't fail)
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: `${SITE_URL}/category/cat-1` }),
-    ]));
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/category/cat-1` })]));
   });
 
   it('should handle WordPress API errors gracefully (getCategories failure)', async () => {
@@ -117,12 +110,14 @@ describe('Sitemap Generator', () => {
 
     const result = await sitemap();
 
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: SITE_URL }),
-      expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
-    ]));
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ url: SITE_URL }),
+        expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
+      ]),
+    );
     // Should NOT have categories
-    const anyCat = result.find(item => item.url.includes('/category/'));
+    const anyCat = result.find((item) => item.url.includes('/category/'));
     expect(anyCat).toBeUndefined();
   });
 
@@ -131,12 +126,14 @@ describe('Sitemap Generator', () => {
 
     const result = await sitemap();
 
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: SITE_URL }),
-      expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
-    ]));
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ url: SITE_URL }),
+        expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
+      ]),
+    );
     // Should NOT have apps
-    const anyApp = result.find(item => item.url.includes('/app/'));
+    const anyApp = result.find((item) => item.url.includes('/app/'));
     expect(anyApp).toBeUndefined();
   });
 
@@ -149,8 +146,6 @@ describe('Sitemap Generator', () => {
 
     // Should distinctively return just static pages
     expect(result.length).toBe(4); // 4 static pages defined in sitemap.ts
-    expect(result).toEqual(expect.arrayContaining([
-      expect.objectContaining({ url: SITE_URL }),
-    ]));
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: SITE_URL })]));
   });
 });
