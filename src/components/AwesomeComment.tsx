@@ -13,7 +13,7 @@ export default function AwesomeComment() {
 
   async function loadAndInit() {
     // 动态加载 CSS
-    const cssUrl = 'https://unpkg.com/@roudanio/awesome-comment@0.10.4/dist/style.css';
+    const cssUrl = 'https://unpkg.com/@roudanio/awesome-comment@0.10.5/dist/style.css';
     if (!document.querySelector(`link[href="${cssUrl}"]`)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -25,7 +25,7 @@ export default function AwesomeComment() {
       // 使用 ESM 动态导入
       const [authModule, commentModule] = await Promise.all([
         import(/* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-auth@0.1.5/dist/awesome-auth.js'),
-        import(/* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.10.4/dist/awesome-comment.js'),
+        import(/* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.10.5/dist/awesome-comment.js'),
       ]);
 
       const auth = authModule.getInstance({
