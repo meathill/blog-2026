@@ -1,4 +1,4 @@
-import { fetchReadyPosts, updateNotionPostStatus, NotionPost } from '@/lib/notion';
+import { fetchReadyPosts, updateNotionPostStatus } from '@/lib/notion';
 import { createPost, updatePost, getPost, getOrCreateCategory, getOrCreateTag, verifyAuth } from '@/lib/wordpress';
 import { processContentImages, downloadAndUploadImage } from '@/lib/content-processor';
 

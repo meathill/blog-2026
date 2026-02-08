@@ -89,7 +89,7 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
       }
     }
 
-    if (status === 'Published') {
+    if (status?.toLowerCase() === 'published') {
       if (lastPublished) {
         const edited = new Date(lastEditedTime).getTime();
         const published = new Date(lastPublished).getTime();
@@ -123,7 +123,7 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
       id: page.id,
       title,
       slug,
-      status: 'Ready',
+      status: status || 'Ready',
       tags,
       categories,
       date,
