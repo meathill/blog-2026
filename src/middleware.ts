@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
 
-const TOP_LEVEL_ROUTES = ['about', 'app', 'posts', 'category', 'tags', 'login', 'search', 'api', '_next'];
+const TOP_LEVEL_ROUTES = ['about', 'app', 'posts', 'category', 'tags', 'login', 'search', 'api', '_next', 'admin'];
 
 function getLocaleAndContent(pathname: string) {
   const match = pathname.match(/^\/(en|zh)\/(.*)$/);

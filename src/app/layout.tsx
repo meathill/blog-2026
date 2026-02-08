@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import './globals.css';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { GoogleAdsense } from '@/components/GoogleAdsense';
 
 export const metadata: Metadata = {
   title: {
@@ -67,12 +67,7 @@ export default async function RootLayout({
 
       <body className="antialiased">
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9946806099979342"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+        <GoogleAdsense />
       </body>
       <GoogleAnalytics gaId="G-1S0T1HF97B" />
     </html>
