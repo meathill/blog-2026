@@ -22,6 +22,9 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   const title = stripHtml(post.title.rendered);
   const description = stripHtml(post.excerpt.rendered).slice(0, 160);
 
+  const ogImageUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/og/post?slug=${cleanSlug}`;
+  const images = [ogImageUrl];
+
   return {
     title,
     description,
@@ -30,6 +33,13 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       description,
       type: 'article',
       publishedTime: post.date,
+      images,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images,
     },
   };
 }
