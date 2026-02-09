@@ -38,28 +38,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // 获取所有文章
-  let postPages: MetadataRoute.Sitemap = [];
-  try {
-    const { posts } = await getPosts({
-      perPage: 100,
-      embed: false,
-      fields: ['slug', 'date'],
-    });
-    postPages = posts.map((post) => ({
-      url: `${SITE_URL}/posts/${post.slug}`,
-      lastModified: new Date(post.date),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }));
-  } catch (error) {
-    console.warn('Failed to fetch posts for sitemap, skipping...', error);
-  }
-
   // 获取所有分类
+  let categoryMap = new Map<number, string>();
   let categoryPages: MetadataRoute.Sitemap = [];
   try {
     const categories = await getCategories();
+    categories.forEach((cat) => {
+      categoryMap.set(cat.id, cat.slug);
+    });
     categoryPages = categories
       .filter((cat) => cat.count > 0)
       .map((cat) => ({
@@ -67,9 +53,69 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(),
         changeFrequency: 'weekly' as const,
         priority: 0.6,
+        alternates: {
+          languages: {
+            zh: `${SITE_URL}/category/${cat.slug}`,
+            en: `${SITE_URL}/en/category/${cat.slug}`,
+          },
+        },
       }));
   } catch (error) {
     console.warn('Failed to fetch categories for sitemap, skipping...', error);
+  }
+
+  // 获取所有文章
+  let postPages: MetadataRoute.Sitemap = [];
+  try {
+    const firstPage = await getPosts({
+      perPage: 100,
+      embed: false,
+      fields: ['slug', 'date', 'categories'],
+    });
+    const allPostsMap = new Map();
+    firstPage.posts.forEach((post) => allPostsMap.set(post.slug, post));
+
+    if (firstPage.totalPages > 1) {
+      const remainingPages = Array.from({ length: firstPage.totalPages - 1 }, (_, i) => i + 2);
+      const results = await Promise.all(
+        remainingPages.map((page) =>
+          getPosts({
+            page,
+            perPage: 100,
+            embed: false,
+            fields: ['slug', 'date', 'categories'],
+          }),
+        ),
+      );
+      results.forEach((result) => {
+        result.posts.forEach((post) => allPostsMap.set(post.slug, post));
+      });
+    }
+
+    postPages = Array.from(allPostsMap.values()).map((post: any) => {
+      let categorySlug = 'uncategorized';
+      if (post.categories && post.categories.length > 0) {
+        const catId = post.categories.find((id: number) => categoryMap.has(id));
+        if (catId) {
+          categorySlug = categoryMap.get(catId)!;
+        }
+      }
+      const url = `${SITE_URL}/posts/${categorySlug}/${post.slug}`;
+      return {
+        url,
+        lastModified: new Date(post.date),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+        alternates: {
+          languages: {
+            zh: url,
+            en: `${SITE_URL}/en/posts/${categorySlug}/${post.slug}`,
+          },
+        },
+      };
+    });
+  } catch (error) {
+    console.warn('Failed to fetch posts for sitemap, skipping...', error);
   }
 
   // 获取所有 Apps

@@ -25,9 +25,28 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   const ogImageUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/og/post?slug=${cleanSlug}`;
   const images = [ogImageUrl];
 
+  // Determine primary category for canonical URL
+  let primaryCategorySlug = 'uncategorized';
+  if (post.categories && post.categories.length > 0) {
+    const allCategories = await getCategories();
+    const cat = allCategories.find((c) => c.id === post.categories[0]);
+    if (cat) {
+      primaryCategorySlug = cat.slug;
+    }
+  }
+
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/posts/${primaryCategorySlug}/${cleanSlug}`;
+
   return {
     title,
     description,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        zh: canonicalUrl,
+        en: `${process.env.NEXT_PUBLIC_SITE_URL}/en/posts/${primaryCategorySlug}/${cleanSlug}`,
+      },
+    },
     openGraph: {
       title,
       description,

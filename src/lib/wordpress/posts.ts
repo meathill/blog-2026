@@ -1,77 +1,80 @@
+import { cache } from 'react';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import slugify from 'slugify';
 import { wpFetch, getAccessHeaders, getBasicAuthHeader } from './client';
 import { WPPost } from './types';
 
-export async function getPosts(params?: {
-  page?: number;
-  perPage?: number;
-  categories?: number[];
-  tags?: number[];
-  search?: string;
-  embed?: boolean;
-  fields?: string[];
-}): Promise<{ posts: WPPost[]; total: number; totalPages: number }> {
-  const searchParams = new URLSearchParams();
-  const { embed = true, fields, ...rest } = params || {};
+export const getPosts = cache(
+  async (params?: {
+    page?: number;
+    perPage?: number;
+    categories?: number[];
+    tags?: number[];
+    search?: string;
+    embed?: boolean;
+    fields?: string[];
+  }): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
+    const searchParams = new URLSearchParams();
+    const { embed = true, fields, ...rest } = params || {};
 
-  if (embed) {
-    searchParams.set('_embed', 'true');
-  }
-  if (fields && fields.length > 0) {
-    searchParams.set('_fields', fields.join(','));
-  }
-  searchParams.set('per_page', String(params?.perPage || 10));
-  searchParams.set('page', String(params?.page || 1));
+    if (embed) {
+      searchParams.set('_embed', 'true');
+    }
+    if (fields && fields.length > 0) {
+      searchParams.set('_fields', fields.join(','));
+    }
+    searchParams.set('per_page', String(params?.perPage || 10));
+    searchParams.set('page', String(params?.page || 1));
 
-  if (params?.categories?.length) {
-    searchParams.set('categories', params.categories.join(','));
-  }
-  if (params?.tags?.length) {
-    searchParams.set('tags', params.tags.join(','));
-  }
-  if (params?.search) {
-    searchParams.set('search', params.search);
-  }
+    if (params?.categories?.length) {
+      searchParams.set('categories', params.categories.join(','));
+    }
+    if (params?.tags?.length) {
+      searchParams.set('tags', params.tags.join(','));
+    }
+    if (params?.search) {
+      searchParams.set('search', params.search);
+    }
 
-  const { env } = await getCloudflareContext({ async: true });
-  // We can't use wpFetch here efficiently because we need headers.
-  // Re-implementing fetch part or we could modify wpFetch to return headers.
-  // Given wpFetch returns Promise<T>, let's stick to raw fetch here for now to match original behavior.
+    const { env } = await getCloudflareContext({ async: true });
+    // We can't use wpFetch here efficiently because we need headers.
+    // Re-implementing fetch part or we could modify wpFetch to return headers.
+    // Given wpFetch returns Promise<T>, let's stick to raw fetch here for now to match original behavior.
 
-  const headers = getAccessHeaders(env);
-  const url = `${env.WORDPRESS_API_URL}/posts?${searchParams}`;
+    const headers = getAccessHeaders(env);
+    const url = `${env.WORDPRESS_API_URL}/posts?${searchParams}`;
 
-  const response = await fetch(url, {
-    headers,
-    next: { revalidate: 300 },
-  });
+    const response = await fetch(url, {
+      headers,
+      next: { revalidate: 300 },
+    });
 
-  if (!response.ok) {
-    const text = await response.text();
-    console.error('[WP API] Error Body:', text);
-    throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
-  }
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('[WP API] Error Body:', text);
+      throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
+    }
 
-  const posts: WPPost[] = await response.json();
-  const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
-  const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
+    const posts: WPPost[] = await response.json();
+    const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
+    const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
 
-  return { posts, total, totalPages };
-}
+    return { posts, total, totalPages };
+  },
+);
 
-export async function getPost(slug: string, options?: RequestInit): Promise<WPPost | null> {
+export const getPost = cache(async (slug: string, options?: RequestInit): Promise<WPPost | null> => {
   const posts = await wpFetch<WPPost[]>(`/posts?slug=${encodeURIComponent(slug)}&_embed=true`, options);
   return posts[0] || null;
-}
+});
 
-export async function getPostsByCategory(categoryId: number, page = 1, perPage = 20): Promise<WPPost[]> {
+export const getPostsByCategory = cache(async (categoryId: number, page = 1, perPage = 20): Promise<WPPost[]> => {
   return wpFetch<WPPost[]>(`/posts?categories=${categoryId}&page=${page}&per_page=${perPage}&_embed=true`);
-}
+});
 
-export async function getPostsByTag(tagId: number, page = 1, perPage = 20): Promise<WPPost[]> {
+export const getPostsByTag = cache(async (tagId: number, page = 1, perPage = 20): Promise<WPPost[]> => {
   return wpFetch<WPPost[]>(`/posts?tags=${tagId}&page=${page}&per_page=${perPage}&_embed=true`);
-}
+});
 
 export async function createPost(env: CloudflareEnv, postData: any): Promise<WPPost> {
   const url = `${env.WORDPRESS_API_URL}/posts`;

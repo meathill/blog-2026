@@ -10,8 +10,8 @@ vi.mock('@opennextjs/cloudflare', () => ({
 const mockGetPosts = vi.fn();
 const mockGetCategories = vi.fn();
 vi.mock('@/lib/wordpress', () => ({
-  getPosts: () => mockGetPosts(),
-  getCategories: () => mockGetCategories(),
+  getPosts: (...args: any[]) => mockGetPosts(...args),
+  getCategories: (...args: any[]) => mockGetCategories(...args),
 }));
 
 const mockGetDb = vi.fn();
@@ -40,16 +40,35 @@ describe('Sitemap Generator', () => {
     });
 
     // Default successful mocks
-    mockGetPosts.mockResolvedValue({
-      posts: [
-        { slug: 'post-1', date: '2023-01-01' },
-        { slug: 'post-2', date: '2023-01-02' },
-      ],
+    // Default successful mocks
+    mockGetPosts.mockImplementation((params) => {
+      const page = params?.page || 1;
+      if (page === 1) {
+        return Promise.resolve({
+          posts: [
+            { slug: 'post-1', date: '2023-01-01', categories: [101] },
+            { slug: 'post-2', date: '2023-01-02', categories: [101] },
+          ],
+          total: 4,
+          totalPages: 2,
+        });
+      }
+      if (page === 2) {
+        return Promise.resolve({
+          posts: [
+            { slug: 'post-2', date: '2023-01-02', categories: [101] }, // Duplicate
+            { slug: 'post-3', date: '2023-01-03', categories: [101] },
+          ],
+          total: 4,
+          totalPages: 2,
+        });
+      }
+      return Promise.resolve({ posts: [], total: 4, totalPages: 2 });
     });
 
     mockGetCategories.mockResolvedValue([
-      { slug: 'cat-1', count: 5 },
-      { slug: 'cat-2', count: 0 }, // Should be filtered out
+      { id: 101, slug: 'cat-1', count: 5 },
+      { id: 102, slug: 'cat-2', count: 0 }, // Should be filtered out
     ]);
 
     mockGetDb.mockResolvedValue({
@@ -75,13 +94,39 @@ describe('Sitemap Generator', () => {
     // Check posts
     expect(result).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
-        expect.objectContaining({ url: `${SITE_URL}/posts/post-2` }),
+        expect.objectContaining({
+          url: `${SITE_URL}/posts/cat-1/post-1`,
+          alternates: {
+            languages: {
+              zh: `${SITE_URL}/posts/cat-1/post-1`,
+              en: `${SITE_URL}/en/posts/cat-1/post-1`,
+            },
+          },
+        }),
+        expect.objectContaining({ url: `${SITE_URL}/posts/cat-1/post-2` }),
+        expect.objectContaining({ url: `${SITE_URL}/posts/cat-1/post-3` }),
       ]),
     );
+    // Should NOT contain post-4 (removed from mock)
+    const post4 = result.find((item) => item.url.includes('/posts/cat-1/post-4'));
+    expect(post4).toBeUndefined();
+    // Validate count: static(4) + posts(3) + category(1) + app(1) = 9
+    expect(result.length).toBe(9);
 
     // Check categories
-    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/category/cat-1` })]));
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          url: `${SITE_URL}/category/cat-1`,
+          alternates: {
+            languages: {
+              zh: `${SITE_URL}/category/cat-1`,
+              en: `${SITE_URL}/en/category/cat-1`,
+            },
+          },
+        }),
+      ]),
+    );
     // Empty category should assume filtered (checking logic implicitly by absence or length)
     // But arrayContaining doesn't check absence. Let's check length approx or specific absence.
     const cat2 = result.find((item) => item.url === `${SITE_URL}/category/cat-2`);
@@ -113,7 +158,7 @@ describe('Sitemap Generator', () => {
     expect(result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ url: SITE_URL }),
-        expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
+        expect.objectContaining({ url: `${SITE_URL}/posts/uncategorized/post-1` }),
       ]),
     );
     // Should NOT have categories
@@ -129,7 +174,7 @@ describe('Sitemap Generator', () => {
     expect(result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ url: SITE_URL }),
-        expect.objectContaining({ url: `${SITE_URL}/posts/post-1` }),
+        expect.objectContaining({ url: `${SITE_URL}/posts/cat-1/post-1` }),
       ]),
     );
     // Should NOT have apps

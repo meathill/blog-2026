@@ -1,11 +1,12 @@
+import { cache } from 'react';
 import { wpFetch, getAccessHeaders, getBasicAuthHeader } from './client';
 import { WPCategory, WPTag } from './types';
 
-export async function getCategories(): Promise<WPCategory[]> {
+export const getCategories = cache(async (): Promise<WPCategory[]> => {
   return wpFetch<WPCategory[]>('/categories?per_page=100');
-}
+});
 
-export async function getTags(params?: { perPage?: number; include?: number[] }): Promise<WPTag[]> {
+export const getTags = cache(async (params?: { perPage?: number; include?: number[] }): Promise<WPTag[]> => {
   const query = new URLSearchParams({
     per_page: String(params?.perPage || 100),
     orderby: 'count',
@@ -17,17 +18,17 @@ export async function getTags(params?: { perPage?: number; include?: number[] })
   }
 
   return wpFetch<WPTag[]>(`/tags?${query.toString()}`);
-}
+});
 
-export async function getCategoryBySlug(slug: string): Promise<WPCategory | null> {
+export const getCategoryBySlug = cache(async (slug: string): Promise<WPCategory | null> => {
   const categories = await wpFetch<WPCategory[]>(`/categories?slug=${encodeURIComponent(slug)}`);
   return categories[0] || null;
-}
+});
 
-export async function getTagBySlug(slug: string): Promise<WPTag | null> {
+export const getTagBySlug = cache(async (slug: string): Promise<WPTag | null> => {
   const tags = await wpFetch<WPTag[]>(`/tags?slug=${encodeURIComponent(slug)}`);
   return tags[0] || null;
-}
+});
 
 export async function createCategory(env: CloudflareEnv, name: string): Promise<WPCategory> {
   const url = `${env.WORDPRESS_API_URL}/categories`;
