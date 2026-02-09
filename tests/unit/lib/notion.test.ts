@@ -81,14 +81,7 @@ describe('fetchReadyPosts', () => {
   });
 
   it('should sync "Published" posts modified AFTER publish', async () => {
-    mockFetchResponse([
-      createMockPage(
-        '1',
-        'Published',
-        '2023-01-02T12:00:00Z',
-        '2023-01-01T12:00:00Z'
-      ),
-    ]);
+    mockFetchResponse([createMockPage('1', 'Published', '2023-01-02T12:00:00Z', '2023-01-01T12:00:00Z')]);
 
     const posts = await fetchReadyPosts(mockEnv);
     expect(posts).toHaveLength(1);
@@ -96,42 +89,21 @@ describe('fetchReadyPosts', () => {
   });
 
   it('should SKIP "Published" posts modified BEFORE/AT publish time (within 60s)', async () => {
-    mockFetchResponse([
-      createMockPage(
-        '1',
-        'Published',
-        '2023-01-01T12:00:00Z',
-        '2023-01-01T12:00:00Z'
-      ),
-    ]);
+    mockFetchResponse([createMockPage('1', 'Published', '2023-01-01T12:00:00Z', '2023-01-01T12:00:00Z')]);
 
     const posts = await fetchReadyPosts(mockEnv);
     expect(posts).toHaveLength(0);
   });
 
   it('should handle "published" (lowercase) status correctly', async () => {
-    mockFetchResponse([
-      createMockPage(
-        '1',
-        'published',
-        '2023-01-01T12:00:00Z',
-        '2023-01-01T12:00:00Z'
-      ),
-    ]);
+    mockFetchResponse([createMockPage('1', 'published', '2023-01-01T12:00:00Z', '2023-01-01T12:00:00Z')]);
 
     const posts = await fetchReadyPosts(mockEnv);
     expect(posts).toHaveLength(0); // Should be skipped because times match
   });
 
   it('should sync "published" (lowercase) if modified later', async () => {
-    mockFetchResponse([
-      createMockPage(
-        '1',
-        'published',
-        '2023-01-02T12:00:00Z',
-        '2023-01-01T12:00:00Z'
-      ),
-    ]);
+    mockFetchResponse([createMockPage('1', 'published', '2023-01-02T12:00:00Z', '2023-01-01T12:00:00Z')]);
 
     const posts = await fetchReadyPosts(mockEnv);
     expect(posts).toHaveLength(1);

@@ -8,6 +8,8 @@ import type { Metadata } from 'next';
 import { marked } from 'marked';
 import { getAppTags } from '@/actions/tags';
 import AwesomeComment from '@/components/AwesomeComment';
+import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
+import PostCard from '@/components/PostCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +52,12 @@ export default async function AppDetailPage({ params }: PageProps) {
 
   // Convert markdown to HTML
   const contentHtml = app.content ? await marked(app.content) : '';
+
+  const category = await getCategoryBySlug(slug);
+  let recentPosts: any[] = [];
+  if (category) {
+    recentPosts = await getPostsByCategory(category.id, 1, 3);
+  }
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
@@ -126,6 +134,17 @@ export default async function AppDetailPage({ params }: PageProps) {
 
         {contentHtml && (
           <div className="mt-12 md:mt-16 prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
+        )}
+
+        {recentPosts.length > 0 && (
+          <div className="mt-16 border-t border-zinc-200 dark:border-zinc-800 pt-16">
+            <h2 className="text-2xl font-bold mb-8">Related Posts</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {recentPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          </div>
         )}
 
         <AwesomeComment />

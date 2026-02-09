@@ -63,10 +63,22 @@ export default async function PostView({ post }: PostViewProps) {
   // check for app tag
   let relatedApp = null;
   const appTag = tags.find((t) => t.name.startsWith('app:'));
+  const db = await getDb();
+
   if (appTag) {
     const appSlug = appTag.name.replace('app:', '');
-    const db = await getDb();
     relatedApp = await db.select().from(apps).where(eq(apps.slug, appSlug)).get();
+  }
+
+  if (!relatedApp && categories.length > 0) {
+    // Check if any category matches an app slug
+    for (const category of categories) {
+      const app = await db.select().from(apps).where(eq(apps.slug, category.slug)).get();
+      if (app) {
+        relatedApp = app;
+        break;
+      }
+    }
   }
 
   return (
