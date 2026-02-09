@@ -1,14 +1,14 @@
 import { getDb } from '@/lib/db';
-import { apps } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { apps, appTranslations } from '@/db/schema';
+import { eq, desc, and } from 'drizzle-orm';
 import AppCard from '@/components/AppCard';
-import type { Metadata } from 'next';
 import { getAppTags } from '@/actions/tags';
 import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Apps' });
   return {
     title: t('title'),
@@ -16,10 +16,16 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   };
 }
 
-export default async function AppListPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function AppListPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Apps' });
   const db = await getDb();
-  const publishedApps = await db.select().from(apps).where(eq(apps.status, 'published')).orderBy(desc(apps.createdAt));
+  const result = await db
+    .select()
+    .from(apps)
+    .leftJoin(appTranslations, and(eq(appTranslations.appId, apps.id), eq(appTranslations.locale, locale)))
+    .where(eq(apps.status, 'published'))
+    .orderBy(desc(apps.createdAt));
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
@@ -33,15 +39,21 @@ export default async function AppListPage({ params: { locale } }: { params: { lo
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {
           await Promise.all(
-            publishedApps.map(async (app) => {
+            result.map(async ({ apps: app, app_translations: translation }) => {
               const tags = await getAppTags(app.id);
-              return <AppCard key={app.id} app={app} tags={tags} i18n={{ open_app: t('open_app') }} />;
+              const displayApp = {
+                ...app,
+                name: translation?.name || app.name,
+                description: translation?.description || app.description,
+                content: translation?.content || app.content,
+              };
+              return <AppCard key={app.id} app={displayApp} tags={tags} i18n={{ open_app: t('open_app') }} />;
             }),
           )
         }
       </div>
 
-      {publishedApps.length === 0 && <div className="text-center py-12 text-zinc-500 italic">{t('coming_soon')}</div>}
+      {result.length === 0 && <div className="text-center py-12 text-zinc-500 italic">{t('coming_soon')}</div>}
     </div>
   );
 }

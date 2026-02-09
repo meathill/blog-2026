@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, primaryKey, unique } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -102,5 +102,24 @@ export const appTags = sqliteTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.appId, t.tagId] }),
+  }),
+);
+
+export const appTranslations = sqliteTable(
+  'app_translations',
+  {
+    id: text('id').primaryKey(),
+    appId: text('app_id')
+      .notNull()
+      .references(() => apps.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    name: text('name'),
+    description: text('description'),
+    content: text('content'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => ({
+    unq: unique().on(t.appId, t.locale),
   }),
 );

@@ -32,5 +32,13 @@
     "label": "语言",
     "en": "English",
     "zh": "中文"
+  },
+  "AppDetail": {
+    "home": "首页",
+    "launch": "打开应用",
+    "source_code": "查看源码",
+    "related_posts": "相关文章",
+    "not_found_title": "应用未找到",
+    "not_found_desc": "无法找到该应用，可能已被删除或移动。"
   }
 }
