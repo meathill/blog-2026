@@ -53,7 +53,7 @@ describe('Middleware', () => {
     const res = middleware(req);
 
     expect(res?.status).toBe(307);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/zh/posts/tech/article`);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
   });
 
   it('should NOT redirect standard paths like /about', () => {
@@ -122,6 +122,47 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/tag/memory', BASE_URL));
     mockIntlMiddleware.mockClear();
     middleware(req);
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
+
+  it('should NOT redirect /posts/streaming-summary-march-and-bbchan', () => {
+    const req = new NextRequest(new URL('/posts/streaming-summary-march-and-bbchan', BASE_URL));
+    mockIntlMiddleware.mockClear();
+
+    const res = middleware(req);
+
+    // Should NOT redirect, but let international middleware handle it
+    expect(res).toBeUndefined();
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
+
+  it('should redirect /tech/interview-tutorial-how-to-use-github.html to /posts/tech/interview-tutorial-how-to-use-github', () => {
+    const req = new NextRequest(new URL('/tech/interview-tutorial-how-to-use-github.html', BASE_URL));
+    mockIntlMiddleware.mockClear();
+
+    const res = middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/interview-tutorial-how-to-use-github`);
+  });
+
+  it('should NOT redirect /posts/interview-tutorial-how-to-use-github', () => {
+    const req = new NextRequest(new URL('/posts/interview-tutorial-how-to-use-github', BASE_URL));
+    mockIntlMiddleware.mockClear();
+
+    const res = middleware(req);
+
+    expect(res).toBeUndefined();
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
+
+  it('should NOT redirect /posts/from-uiprint-co-to-how-to-learn-coding', () => {
+    const req = new NextRequest(new URL('/posts/from-uiprint-co-to-how-to-learn-coding', BASE_URL));
+    mockIntlMiddleware.mockClear();
+
+    const res = middleware(req);
+
+    expect(res).toBeUndefined();
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 });

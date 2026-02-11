@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getPost, stripHtml, getCategories } from '@/lib/wordpress';
 import PostView from '@/views/PostView';
+import { routing } from '@/i18n/routing';
 
 interface PostPageProps {
   params: Promise<{ slug: string[]; locale: string }>;
@@ -88,24 +89,9 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const expectedPath = `${primaryCategorySlug}/${cleanSlug}`;
   const currentPath = slug.join('/');
-
-  // Check if we need to redirect
-  // We compare the *content* path (after /posts/).
-  // If slug is `['tech', 'article.html']`, currentPath is `tech/article.html`. Expected: `tech/article`.
-  // If slug is `['article']`, currentPath is `article`. Expected: `tech/article`.
-  // We must redirect if they don't match.
-
   if (currentPath !== expectedPath) {
-    // Construct absolute path for redirect to be safe and explicit
-    // Path structure: /:{locale}/posts/:{expectedPath}
-    // Note: if routing prefix is 'as-needed' and locale is default, it might duplicate.
-    // Better to use `redirect` from `i18n/routing` if possible, but that's for Client Components usually?
-    // Or `redirect` from `next-intl/server`?
-    // `next/navigation`'s `redirect` takes a URL string.
-    // If we manually construct `/${locale}/posts/${expectedPath}`, Next.js middleware handles it.
-
-    // IMPORTANT: `redirect` throws internally.
-    redirect(`/${locale}/posts/${expectedPath}`);
+    const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
+    redirect(`${prefix}/posts/${expectedPath}`);
   }
 
   return <PostView post={post} />;

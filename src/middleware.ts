@@ -30,7 +30,8 @@ export default function middleware(req: NextRequest) {
     const finalPath = cleanPath.startsWith('posts/') ? cleanPath : `posts/${cleanPath}`;
 
     const url = req.nextUrl.clone();
-    url.pathname = `/${locale}/${finalPath}`;
+    const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
+    url.pathname = `${prefix}/${finalPath}`;
     return NextResponse.redirect(url);
   }
 
@@ -54,7 +55,8 @@ export default function middleware(req: NextRequest) {
     const pathContent = contentSegments.join('/');
 
     const url = req.nextUrl.clone();
-    url.pathname = `/${locale}/posts/${pathContent}`;
+    const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
+    url.pathname = `${prefix}/posts/${pathContent}`;
     return NextResponse.redirect(url);
   }
 
