@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     const allCategories = await getCategories();
     const cat = allCategories.find((c) => c.id === post.categories[0]);
     if (cat) {
-      primaryCategorySlug = cat.slug;
+      primaryCategorySlug = decodeURIComponent(cat.slug);
     }
   }
 
@@ -83,7 +83,7 @@ export default async function PostPage({ params }: PostPageProps) {
     // Prefer matching category if present in URL, otherwise first one
     const cat = allCategories.find((c) => c.id === post.categories[0]);
     if (cat) {
-      primaryCategorySlug = cat.slug;
+      primaryCategorySlug = decodeURIComponent(cat.slug);
     }
   }
 
