@@ -89,7 +89,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const expectedPath = `${primaryCategorySlug}/${cleanSlug}`;
   const currentPath = slug.join('/');
-  if (currentPath !== expectedPath) {
+  if (currentPath !== expectedPath && decodeURIComponent(currentPath) !== decodeURIComponent(expectedPath)) {
     const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
     redirect(`${prefix}/posts/${expectedPath}`);
   }

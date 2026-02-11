@@ -3,13 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, CalendarIcon, ClockIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
-import {
-  getTagBySlug,
-  getPostsByTag,
-  calculateReadingTime,
-  formatDate,
-  stripHtml,
-} from '@/lib/wordpress';
+import { getTagBySlug, getPostsByTag, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 
 interface TagPageProps {
   params: Promise<{ slug: string; num: string }>;

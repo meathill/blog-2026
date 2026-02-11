@@ -86,7 +86,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn('Failed to fetch tags for sitemap, skipping...', error);
   }
 
-
   // 获取所有文章
   let postPages: MetadataRoute.Sitemap = [];
   try {

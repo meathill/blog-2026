@@ -60,7 +60,6 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-
   return intlMiddleware(req);
 }
 

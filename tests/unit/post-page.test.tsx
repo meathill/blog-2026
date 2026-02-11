@@ -98,4 +98,34 @@ describe('PostPage', () => {
     // Verify
     expect(navigation.redirect).toHaveBeenCalledWith('/posts/tech/my-amazing-post');
   });
+
+  it('should NOT redirect for CJK slugs (e.g. 学习)', async () => {
+    // Setup
+    const encodedSlug = '%E5%AD%A6%E4%B9%A0'; // 学习
+    const decodedSlug = '学习';
+    const postSlug = 'how-to-learn';
+
+    const mockPost = {
+      id: 1,
+      title: { rendered: 'Learn' },
+      categories: [123],
+    };
+    const mockCategory = {
+      id: 123,
+      slug: encodedSlug,
+      name: 'Learn',
+    };
+
+    (wordpress.getPost as any).mockResolvedValue(mockPost);
+    (wordpress.getCategories as any).mockResolvedValue([mockCategory]);
+
+    const params = Promise.resolve({
+      locale: 'zh',
+      slug: [decodedSlug, postSlug],
+    });
+
+    await PostPage({ params });
+
+    expect(navigation.redirect).not.toHaveBeenCalled();
+  });
 });
