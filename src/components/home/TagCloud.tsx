@@ -22,7 +22,7 @@ export default async function TagCloud() {
           {tags.map((tag) => (
             <Link
               key={tag.id}
-              href={`/tags/${tag.slug}`}
+              href={`/tag/${tag.slug}`}
               className={`
                 px-4 py-2 rounded-full
                 bg-[var(--surface)] border border-[var(--surface-border)]

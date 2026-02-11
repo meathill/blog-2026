@@ -41,7 +41,7 @@ interface AppImage {
 }
 
 function escapeSQL(value: string | null): string {
-  if (value === null) return 'NULL';
+  if (value === null || value === 'null') return 'NULL';
   return `'${value.replace(/'/g, "''")}'`;
 }
 
@@ -144,8 +144,12 @@ async function main() {
     console.log(`📊 找到 ${images.length} 个 images\n`);
     for (const img of images) {
       console.log(`🔄 同步 image: ${img.url}`);
+      if (!img.url || img.url === 'null') {
+        console.warn(`⚠️ 跳过无效图片: ${img.id}`);
+        continue;
+      }
       const sql = `
-        INSERT OR REPLACE INTO app_images (id, app_id, url, alt, type, sort_order, created_at)
+        INSERT INTO app_images (id, app_id, url, alt, type, sort_order, created_at)
         VALUES (
           ${escapeSQL(img.id)},
           ${escapeSQL(img.app_id)},
@@ -154,7 +158,14 @@ async function main() {
           ${escapeSQL(img.type)},
           ${img.sort_order ?? 0},
           ${img.created_at}
-        );
+        )
+        ON CONFLICT(id) DO UPDATE SET
+          app_id=excluded.app_id,
+          url=COALESCE(excluded.url, app_images.url),
+          alt=excluded.alt,
+          type=excluded.type,
+          sort_order=excluded.sort_order,
+          created_at=excluded.created_at;
       `;
 
       try {
@@ -165,6 +176,62 @@ async function main() {
         console.log(`   ✅ Image 同步成功`);
       } catch (e: any) {
         console.error(`   ❌ Image 同步失败:`, e.message);
+      }
+    }
+  }
+
+  // 4. Synchronization app_translations
+  console.log('\n📖 读取本地 app_translations...');
+  const localTransResult = run(`npx wrangler d1 execute DB --local --command "SELECT * FROM app_translations" --json`);
+  let translations: any[];
+  try {
+    const parsed = JSON.parse(localTransResult);
+    translations = parsed[0]?.results || [];
+  } catch (e) {
+    console.error('❌ 解析 app_translations 失败:', e);
+    translations = [];
+  }
+
+  if (targetSlug && apps.length > 0) {
+    const appIds = new Set(apps.map((a) => a.id));
+    translations = translations.filter((t) => appIds.has(t.app_id));
+  }
+
+  if (translations.length > 0) {
+    console.log(`📊 找到 ${translations.length} 个 translations\n`);
+    for (const t of translations) {
+      console.log(`🔄 同步 translation: ${t.locale} for ${t.app_id}`);
+      const sql = `
+        INSERT INTO app_translations (
+          id, app_id, locale, name, description, content, created_at, updated_at
+        ) VALUES (
+          ${escapeSQL(t.id)},
+          ${escapeSQL(t.app_id)},
+          ${escapeSQL(t.locale)},
+          ${escapeSQL(t.name)},
+          ${escapeSQL(t.description)},
+          ${escapeSQL(t.content)},
+          ${t.created_at},
+          ${t.updated_at}
+        )
+        ON CONFLICT(id) DO UPDATE SET
+          app_id=excluded.app_id,
+          locale=excluded.locale,
+          name=excluded.name,
+          description=excluded.description,
+          content=excluded.content,
+          created_at=excluded.created_at,
+          updated_at=excluded.updated_at;
+      `;
+
+      try {
+        const tempFile = '.temp_sync_trans.sql';
+        writeFileSync(tempFile, sql);
+        run(`npx wrangler d1 execute DB --remote --file ${tempFile}`);
+        unlinkSync(tempFile);
+        console.log(`   ✅ Translation 同步成功`);
+      } catch (e: any) {
+        console.error(`   ❌ Translation 同步失败:`, e.message);
       }
     }
   }

@@ -58,7 +58,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
           {tags.map((tag: any) => (
             <Link
               key={tag.id}
-              href={`/tags/${tag.slug}`}
+              href={`/tag/${tag.slug}`}
               className="px-3 py-1 text-xs font-medium rounded-md bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 transition-colors z-10 relative"
             >
               {tag.name}

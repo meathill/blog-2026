@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
 
-const TOP_LEVEL_ROUTES = ['about', 'app', 'posts', 'category', 'tags', 'login', 'search', 'api', '_next', 'admin'];
+const TOP_LEVEL_ROUTES = ['about', 'app', 'posts', 'category', 'tag', 'login', 'search', 'api', '_next', 'admin'];
 
 function getLocaleAndContent(pathname: string) {
   const match = pathname.match(/^\/(en|zh)\/(.*)$/);
@@ -40,6 +40,15 @@ export default function middleware(req: NextRequest) {
   const contentSegments = isLocale ? segments.slice(1) : segments;
   const rootSegment = contentSegments[0];
 
+  // Redirect /tags/xxx -> /tag/xxx
+  if (rootSegment === 'tags' && contentSegments.length >= 2) {
+    const locale = isLocale ? segments[0] : routing.defaultLocale;
+    const pathContent = contentSegments.slice(1).join('/');
+    const url = req.nextUrl.clone();
+    url.pathname = `/${locale}/tag/${pathContent}`;
+    return NextResponse.redirect(url);
+  }
+
   if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment) && contentSegments.length >= 2) {
     const locale = isLocale ? segments[0] : routing.defaultLocale;
     const pathContent = contentSegments.join('/');
@@ -48,6 +57,7 @@ export default function middleware(req: NextRequest) {
     url.pathname = `/${locale}/posts/${pathContent}`;
     return NextResponse.redirect(url);
   }
+
 
   return intlMiddleware(req);
 }

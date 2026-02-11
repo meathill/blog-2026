@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getPosts, getCategories } from '@/lib/wordpress';
+import { getPosts, getCategories, getTags } from '@/lib/wordpress';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
@@ -63,6 +63,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch (error) {
     console.warn('Failed to fetch categories for sitemap, skipping...', error);
   }
+
+  // 获取所有标签
+  let tagPages: MetadataRoute.Sitemap = [];
+  try {
+    const tags = await getTags({ perPage: 100 });
+    tagPages = tags
+      .filter((tag) => tag.count > 0)
+      .map((tag) => ({
+        url: `${SITE_URL}/tag/${tag.slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+        alternates: {
+          languages: {
+            zh: `${SITE_URL}/tag/${tag.slug}`,
+            en: `${SITE_URL}/en/tag/${tag.slug}`,
+          },
+        },
+      }));
+  } catch (error) {
+    console.warn('Failed to fetch tags for sitemap, skipping...', error);
+  }
+
 
   // 获取所有文章
   let postPages: MetadataRoute.Sitemap = [];
@@ -133,5 +156,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn('Failed to fetch apps for sitemap, skipping...', error);
   }
 
-  return [...staticPages, ...postPages, ...categoryPages, ...appPages];
+  return [...staticPages, ...postPages, ...categoryPages, ...tagPages, ...appPages];
 }

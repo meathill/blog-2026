@@ -84,4 +84,34 @@ describe('Middleware', () => {
     middleware(req);
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
+
+  it('should redirect /tags/xxx to /tag/xxx', () => {
+    const req = new NextRequest(new URL('/tags/memory', BASE_URL));
+    // Reset mock
+    mockIntlMiddleware.mockClear();
+
+    const res = middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/zh/tag/memory`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should redirect /en/tags/xxx to /en/tag/xxx', () => {
+    const req = new NextRequest(new URL('/en/tags/memory', BASE_URL));
+    mockIntlMiddleware.mockClear();
+
+    const res = middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/tag/memory`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should NOT redirect /tag/xxx', () => {
+    const req = new NextRequest(new URL('/tag/memory', BASE_URL));
+    mockIntlMiddleware.mockClear();
+    middleware(req);
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
 });
