@@ -108,6 +108,16 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
+  it('should NOT redirect /tag/xxx/page/2', () => {
+    const req = new NextRequest(new URL('/tag/memory/page/2', BASE_URL));
+    mockIntlMiddleware.mockClear();
+
+    const res = middleware(req);
+
+    expect(res).toBeUndefined();
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
+
   it('should NOT redirect /tag/xxx', () => {
     const req = new NextRequest(new URL('/tag/memory', BASE_URL));
     mockIntlMiddleware.mockClear();

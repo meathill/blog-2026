@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, CalendarIcon, ClockIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
@@ -9,19 +9,17 @@ import {
   calculateReadingTime,
   formatDate,
   stripHtml,
-  // WPTag,
 } from '@/lib/wordpress';
 
 interface TagPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; num: string }>;
 }
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, num } = await params;
   let tag = await getTagBySlug(slug);
 
   if (!tag) {
-    // 尝试处理 slug: Next.js -> next-js
     const normalizedSlug = slug.toLowerCase().replace(/\./g, '-');
     tag = await getTagBySlug(normalizedSlug);
   }
@@ -33,15 +31,23 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
   }
 
   return {
-    title: `${tag.name} - 文章标签`,
-    description: `查看 ${tag.name} 标签下的所有文章`,
+    title: `${tag.name} - 文章标签 - 第 ${num} 页`,
+    description: `查看 ${tag.name} 标签下的所有文章 - 第 ${num} 页`,
   };
 }
 
-export default async function TagPage({ params }: TagPageProps) {
-  const { slug } = await params;
-  // fix: link in TagCloud is using name instead of slug
-  // manually fix it
+export default async function TagPageNum({ params }: TagPageProps) {
+  const { slug, num } = await params;
+  const pageNum = parseInt(num, 10);
+
+  if (isNaN(pageNum) || pageNum < 1) {
+    notFound();
+  }
+
+  if (pageNum === 1) {
+    redirect(`/tag/${slug}`);
+  }
+
   let tag = await getTagBySlug(slug);
   if (!tag) {
     const normalizedSlug = slug.toLowerCase().replace(/\./g, '-');
@@ -52,7 +58,11 @@ export default async function TagPage({ params }: TagPageProps) {
     notFound();
   }
 
-  const { posts, totalPages } = await getPostsByTag(tag.id, 1, 50);
+  const { posts, totalPages } = await getPostsByTag(tag.id, pageNum, 50);
+
+  if (pageNum > totalPages && totalPages > 0) {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -71,7 +81,10 @@ export default async function TagPage({ params }: TagPageProps) {
           <h1 className="text-responsive-title mb-4">
             <span className="text-gradient">标签：{tag.name}</span>
           </h1>
-          <p className="text-[var(--text-secondary)]">共 {tag.count} 篇文章</p>
+          <p className="text-[var(--text-secondary)]">
+            共 {tag.count} 篇文章
+            {totalPages > 1 && `，当前第 ${pageNum}/${totalPages} 页`}
+          </p>
         </header>
 
         {/* Posts List */}
@@ -80,7 +93,6 @@ export default async function TagPage({ params }: TagPageProps) {
             const title = stripHtml(post.title.rendered);
             const readingTime = calculateReadingTime(post.content.rendered);
             const dateFormatted = formatDate(post.date);
-            // 从链接提取本地 slug
             const localSlug = post.slug;
 
             return (
@@ -110,7 +122,7 @@ export default async function TagPage({ params }: TagPageProps) {
 
         {posts.length === 0 && <div className="text-center py-12 text-[var(--text-muted)]">该标签暂无文章</div>}
 
-        <Pagination currentPage={1} totalPages={totalPages} baseUrl={`/tag/${slug}`} />
+        <Pagination currentPage={pageNum} totalPages={totalPages} baseUrl={`/tag/${slug}`} />
       </div>
     </div>
   );
