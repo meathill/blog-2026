@@ -123,3 +123,19 @@ export const appTranslations = sqliteTable(
     unq: unique().on(t.appId, t.locale),
   }),
 );
+
+export const notionPostBackups = sqliteTable('notion_post_backups', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  slug: text('slug').notNull(),
+  status: text('status').notNull(),
+  tags: text('tags').notNull().default('[]'),
+  categories: text('categories').notNull().default('[]'),
+  date: text('date'),
+  content: text('content').notNull(),
+  coverImage: text('cover_image'),
+  lastUpdateTime: integer('last_update_time', { mode: 'timestamp' }).notNull(),
+  publishedAt: integer('published_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});

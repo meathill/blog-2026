@@ -11,23 +11,32 @@ const mockUpdatePost = vi.fn();
 const mockProcessContentImages = vi.fn();
 const mockGetOrCreateCategory = vi.fn();
 const mockGetOrCreateTag = vi.fn();
+const mockUpsertNotionPostsToBackup = vi.fn();
+const mockGetBackupPostsPendingSync = vi.fn();
+const mockMarkBackupPostPublished = vi.fn();
 
 vi.mock('@/lib/notion', () => ({
-  fetchReadyPosts: (...args: any[]) => mockFetchReadyPosts(...args),
-  updateNotionPostStatus: (...args: any[]) => mockUpdateNotionPostStatus(...args),
+  fetchReadyPosts: (...args: unknown[]) => mockFetchReadyPosts(...args),
+  updateNotionPostStatus: (...args: unknown[]) => mockUpdateNotionPostStatus(...args),
+}));
+
+vi.mock('@/lib/notion-post-backup', () => ({
+  upsertNotionPostsToBackup: (...args: unknown[]) => mockUpsertNotionPostsToBackup(...args),
+  getBackupPostsPendingSync: (...args: unknown[]) => mockGetBackupPostsPendingSync(...args),
+  markBackupPostPublished: (...args: unknown[]) => mockMarkBackupPostPublished(...args),
 }));
 
 vi.mock('@/lib/wordpress', () => ({
-  getPost: (...args: any[]) => mockGetPost(...args),
-  createPost: (...args: any[]) => mockCreatePost(...args),
-  updatePost: (...args: any[]) => mockUpdatePost(...args),
-  getOrCreateCategory: (...args: any[]) => mockGetOrCreateCategory(...args),
-  getOrCreateTag: (...args: any[]) => mockGetOrCreateTag(...args),
+  getPost: (...args: unknown[]) => mockGetPost(...args),
+  createPost: (...args: unknown[]) => mockCreatePost(...args),
+  updatePost: (...args: unknown[]) => mockUpdatePost(...args),
+  getOrCreateCategory: (...args: unknown[]) => mockGetOrCreateCategory(...args),
+  getOrCreateTag: (...args: unknown[]) => mockGetOrCreateTag(...args),
   verifyAuth: vi.fn().mockResolvedValue({ success: true, user: { name: 'Test', roles: ['admin'] } }),
 }));
 
 vi.mock('@/lib/content-processor', () => ({
-  processContentImages: (...args: any[]) => mockProcessContentImages(...args),
+  processContentImages: (...args: unknown[]) => mockProcessContentImages(...args),
 }));
 
 vi.mock('@opennextjs/cloudflare', () => ({
@@ -37,11 +46,14 @@ vi.mock('@opennextjs/cloudflare', () => ({
 }));
 
 describe('Sync Notion Route', () => {
-  const env = { CRON_SECRET: 'secret123' };
-
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NODEJS_ENV = 'production'; // Simulate prod by default to test auth
+
+    mockFetchReadyPosts.mockResolvedValue([]);
+    mockUpsertNotionPostsToBackup.mockResolvedValue(0);
+    mockGetBackupPostsPendingSync.mockResolvedValue([]);
+    mockProcessContentImages.mockImplementation((env: unknown, html: string) => Promise.resolve(`${html}_processed`));
   });
 
   it('should return 401 if key is missing or invalid', async () => {
@@ -54,17 +66,14 @@ describe('Sync Notion Route', () => {
     process.env.NODEJS_ENV = 'development';
     const req = new NextRequest('http://localhost/api/sync-notion');
 
-    mockFetchReadyPosts.mockResolvedValue([]); // Setup minimal success
-
     const res = await GET(req);
     expect(res.status).toBe(200);
   });
 
-  it('should process ready posts with taxonomies', async () => {
+  it('should backup Notion posts to D1 first, then sync pending backup posts to WordPress', async () => {
     const req = new NextRequest('http://localhost/api/sync-notion?key=secret123');
 
-    // Mock Data
-    const posts = [
+    const notionPosts = [
       {
         id: 'p1',
         title: 'P1',
@@ -72,43 +81,54 @@ describe('Sync Notion Route', () => {
         content: 'content',
         categories: ['Cat1'],
         tags: ['Tag1'],
+        lastEditedTime: '2025-02-01T00:00:00.000Z',
+      },
+    ];
+    mockFetchReadyPosts.mockResolvedValue(notionPosts);
+
+    const backupPendingPosts = [
+      {
+        id: 'p1',
+        title: 'P1',
+        slug: 'p1',
+        content: 'content',
+        categories: ['Cat1'],
+        tags: ['Tag1'],
+        date: '2025-02-01',
       },
       {
         id: 'p2',
         title: 'P2',
         slug: 'p2',
-        content: 'content',
+        content: 'content2',
         categories: [],
         tags: [],
+        date: '2025-02-02',
       },
     ];
-    mockFetchReadyPosts.mockResolvedValue(posts);
-    mockProcessContentImages.mockImplementation((env, html) => Promise.resolve(html + '_processed'));
+    mockGetBackupPostsPendingSync.mockResolvedValue(backupPendingPosts);
 
-    // Mock Taxonomy Resolution
     mockGetOrCreateCategory.mockResolvedValue({ id: 10, name: 'Cat1' });
     mockGetOrCreateTag.mockResolvedValue({ id: 20, name: 'Tag1' });
 
-    // P1 exists -> Update
     mockGetPost.mockResolvedValueOnce({ id: 101 });
-    // P2 new -> Create
     mockGetPost.mockResolvedValueOnce(null);
+    mockCreatePost.mockResolvedValue({ id: 102 });
 
     const res = await GET(req);
-    const json = (await res.json()) as any;
+    const json = (await res.json()) as { success: boolean };
 
     expect(res.status).toBe(200);
     expect(json.success).toBe(true);
 
-    // Verify Process flow
     expect(mockFetchReadyPosts).toHaveBeenCalled();
-    expect(mockProcessContentImages).toHaveBeenCalledTimes(2);
+    expect(mockUpsertNotionPostsToBackup).toHaveBeenCalledWith(notionPosts);
+    expect(mockGetBackupPostsPendingSync).toHaveBeenCalledTimes(1);
 
-    // Verify Taxonomy Calls
+    expect(mockProcessContentImages).toHaveBeenCalledTimes(2);
     expect(mockGetOrCreateCategory).toHaveBeenCalledWith(expect.anything(), 'Cat1');
     expect(mockGetOrCreateTag).toHaveBeenCalledWith(expect.anything(), 'Tag1');
 
-    // Verify P1 Update with Taxonomies
     expect(mockUpdatePost).toHaveBeenCalledWith(
       expect.anything(),
       101,
@@ -120,18 +140,19 @@ describe('Sync Notion Route', () => {
       }),
     );
 
-    // Verify P2 Create without Taxonomies
     expect(mockCreatePost).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         title: 'P2',
-        content: 'content_processed',
+        content: 'content2_processed',
         categories: [],
         tags: [],
       }),
     );
 
-    // Verify Notion Status Update
+    expect(mockMarkBackupPostPublished).toHaveBeenCalledTimes(2);
+    expect(mockMarkBackupPostPublished).toHaveBeenCalledWith('p1');
+    expect(mockMarkBackupPostPublished).toHaveBeenCalledWith('p2');
     expect(mockUpdateNotionPostStatus).toHaveBeenCalledTimes(2);
   });
 
@@ -140,7 +161,7 @@ describe('Sync Notion Route', () => {
     mockFetchReadyPosts.mockRejectedValue(new Error('Notion Down'));
 
     const res = await GET(req);
-    const json = (await res.json()) as any;
+    const json = (await res.json()) as { success: boolean; error: string };
 
     expect(res.status).toBe(500);
     expect(json.success).toBe(false);
@@ -149,10 +170,14 @@ describe('Sync Notion Route', () => {
 
   it('should skip posts without slugs', async () => {
     const req = new NextRequest('http://localhost/api/sync-notion?key=secret123');
-    mockFetchReadyPosts.mockResolvedValue([{ id: 'p1', title: 'No Slug' }]); // No slug
+    const notionPosts = [{ id: 'p1', title: 'No Slug', slug: '', lastEditedTime: '2025-01-01T00:00:00.000Z' }];
+    const backupPendingPosts = [{ id: 'p1', title: 'No Slug', slug: '' }];
+
+    mockFetchReadyPosts.mockResolvedValue(notionPosts);
+    mockGetBackupPostsPendingSync.mockResolvedValue(backupPendingPosts);
 
     const res = await GET(req);
-    const json = (await res.json()) as any;
+    const json = (await res.json()) as { success: boolean };
 
     expect(json.success).toBe(true);
     expect(mockProcessContentImages).not.toHaveBeenCalled();

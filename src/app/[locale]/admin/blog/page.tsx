@@ -11,7 +11,9 @@ export default function BlogAdminPage() {
       </div>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-zinc-500">Sync your latest posts from Notion. More features coming soon.</p>
+        <p className="text-zinc-500">
+          Sync your latest posts from Notion to D1 backup first, then publish to WordPress with last-update checks.
+        </p>
       </div>
     </div>
   );
