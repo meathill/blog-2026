@@ -1,9 +1,11 @@
 import { notionPostBackups } from '@/db/schema';
 import { getDb } from '@/lib/db';
 import type { NotionPost } from '@/lib/notion';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 const SYNC_TIME_TOLERANCE_MS = 60_000;
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 50;
 
 export interface NotionBackupPost {
   id: string;
@@ -17,6 +19,18 @@ export interface NotionBackupPost {
   coverImage: string | null;
   lastUpdateTime: Date;
   publishedAt: Date | null;
+}
+
+export interface NotionBackupPostListItem extends NotionBackupPost {
+  needsSyncToWordPress: boolean;
+}
+
+export interface NotionBackupPostListResult {
+  posts: NotionBackupPostListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 function parseJsonArray(value: string): string[] {
@@ -44,6 +58,20 @@ export function shouldSyncToWordPress(lastUpdateTime: Date, publishedAt: Date | 
     return true;
   }
   return lastUpdateTime.getTime() > publishedAt.getTime() + SYNC_TIME_TOLERANCE_MS;
+}
+
+function normalizePageNumber(page: number | undefined): number {
+  if (!page || Number.isNaN(page) || page < 1) {
+    return 1;
+  }
+  return Math.floor(page);
+}
+
+function normalizePageSize(pageSize: number | undefined): number {
+  if (!pageSize || Number.isNaN(pageSize) || pageSize < 1) {
+    return DEFAULT_PAGE_SIZE;
+  }
+  return Math.min(Math.floor(pageSize), MAX_PAGE_SIZE);
 }
 
 export async function upsertNotionPostsToBackup(posts: NotionPost[]): Promise<number> {
@@ -112,6 +140,56 @@ export async function getBackupPostsPendingSync(): Promise<NotionBackupPost[]> {
       lastUpdateTime: row.lastUpdateTime,
       publishedAt: row.publishedAt,
     }));
+}
+
+export async function listBackupPosts(options?: {
+  page?: number;
+  pageSize?: number;
+}): Promise<NotionBackupPostListResult> {
+  const db = await getDb();
+  const pageSize = normalizePageSize(options?.pageSize);
+  const requestedPage = normalizePageNumber(options?.page);
+
+  const countRow = await db
+    .select({
+      count: sql<number>`count(*)`,
+    })
+    .from(notionPostBackups)
+    .get();
+  const total = Number(countRow?.count ?? 0);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(requestedPage, totalPages);
+  const offset = (page - 1) * pageSize;
+
+  const rows = await db
+    .select()
+    .from(notionPostBackups)
+    .orderBy(desc(notionPostBackups.lastUpdateTime))
+    .limit(pageSize)
+    .offset(offset);
+
+  const posts: NotionBackupPostListItem[] = rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    status: row.status,
+    tags: parseJsonArray(row.tags),
+    categories: parseJsonArray(row.categories),
+    date: row.date,
+    content: row.content,
+    coverImage: row.coverImage,
+    lastUpdateTime: row.lastUpdateTime,
+    publishedAt: row.publishedAt,
+    needsSyncToWordPress: shouldSyncToWordPress(row.lastUpdateTime, row.publishedAt),
+  }));
+
+  return {
+    posts,
+    total,
+    page,
+    pageSize,
+    totalPages,
+  };
 }
 
 export async function markBackupPostPublished(id: string): Promise<void> {
