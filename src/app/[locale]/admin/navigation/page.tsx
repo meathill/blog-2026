@@ -1,4 +1,6 @@
 import { getNavigationEditorData, resetNavigationConfig, saveNavigationConfig } from '@/actions/navigation';
+import { NavigationEditor } from '@/components/admin/navigation-editor';
+import { getDefaultNavigationItems, parseNavigationItemsJson } from '@/lib/navigation-config';
 
 interface NavigationAdminPageProps {
   searchParams: Promise<{
@@ -36,13 +38,23 @@ export default async function NavigationAdminPage({ searchParams }: NavigationAd
   const locale = params.locale ?? 'zh';
   const status = buildStatusMessage(params);
   const editorData = await getNavigationEditorData(locale);
+  let parseWarning: string | null = null;
+  let initialItems = getDefaultNavigationItems(editorData.locale);
+
+  try {
+    initialItems = parseNavigationItemsJson(editorData.itemsJson);
+  } catch {
+    parseWarning = '检测到数据库中的导航配置格式异常，已自动回退到默认导航。保存后可覆盖异常数据。';
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold">Navigation</h2>
-          <p className="text-sm text-zinc-500">在这里编辑站点导航 JSON。保存后，前台 Header 会优先使用 D1 配置。</p>
+          <p className="text-sm text-zinc-500">
+            所见即所得编辑导航，支持拖拽排序。保存后前台 Header 会优先使用 D1 配置。
+          </p>
         </div>
         <div className="flex gap-2">
           <a
@@ -83,29 +95,12 @@ export default async function NavigationAdminPage({ searchParams }: NavigationAd
       <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
         <form action={saveNavigationConfig} className="space-y-4">
           <input type="hidden" name="locale" value={editorData.locale} />
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              当前语言：<span className="font-medium text-zinc-700">{editorData.locale.toUpperCase()}</span>
-              {editorData.hasCustomConfig ? '（使用自定义配置）' : '（使用默认配置）'}
-            </p>
-          </div>
-          <textarea
-            name="itemsJson"
-            defaultValue={editorData.itemsJson}
-            className="min-h-[420px] w-full rounded-md border border-zinc-300 bg-zinc-50 p-3 font-mono text-sm leading-6 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-            spellCheck={false}
+          <NavigationEditor
+            locale={editorData.locale}
+            hasCustomConfig={editorData.hasCustomConfig}
+            initialItems={initialItems}
+            parseWarning={parseWarning}
           />
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500"
-            >
-              保存导航配置
-            </button>
-            <p className="text-xs text-zinc-500">
-              支持字段：`href`、`label`、`external`、`children`。`children` 需为数组。
-            </p>
-          </div>
         </form>
       </div>
 

@@ -42,3 +42,10 @@
 - [x] 导航编辑迁移到 `/admin/navigation`，支持按 `zh/en` 保存、恢复默认，并在前台 Header 动态读取。
 - [x] 新增 `navigation_configs` 表迁移与导航配置解析单测。
 - [x] 执行 `pnpm test:run` 与 `pnpm build`，确认通过。
+
+## 第五轮维护（进行中）
+- [x] 用 `zustand` 重构导航编辑器状态管理，替换 JSON 文本编辑为可视化编辑。
+- [x] 支持顶级导航与子导航的拖拽排序、增删改、外链开关。
+- [x] 提供实时预览（桌面导航/移动导航视图）。
+- [x] 保持后端存储结构不变，继续复用 `saveNavigationConfig` / `resetNavigationConfig`。
+- [x] 为核心编辑逻辑补单测并执行 `pnpm test:run`、`pnpm build`、`pnpm test:coverage` 验证。
