@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeftIcon, CalendarIcon, ClockIcon } from 'lucide-react';
+import { ArrowLeftIcon } from 'lucide-react';
+import { PostListItem } from '@/components/posts/post-list-item';
 import {
   getCategoryBySlug,
   getPostsByCategory,
@@ -67,30 +68,15 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             const title = stripHtml(post.title.rendered);
             const readingTime = calculateReadingTime(post.content.rendered);
             const dateFormatted = formatDate(post.date);
-            // 从链接提取本地 slug
-            const localSlug = post.slug;
 
             return (
-              <li key={post.id}>
-                <Link
-                  href={`/posts/${localSlug}`}
-                  className="group block p-4 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all card-hover"
-                >
-                  <h2 className="font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-2">
-                    {title}
-                  </h2>
-                  <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarIcon size={14} />
-                      {dateFormatted}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <ClockIcon size={14} />
-                      {readingTime} 分钟
-                    </span>
-                  </div>
-                </Link>
-              </li>
+              <PostListItem
+                key={post.id}
+                href={`/posts/${post.slug}`}
+                title={title}
+                dateText={dateFormatted}
+                readingTimeText={`${readingTime} 分钟`}
+              />
             );
           })}
         </ul>

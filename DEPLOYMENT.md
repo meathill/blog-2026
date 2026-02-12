@@ -1,59 +1,69 @@
 # 部署指南
 
-本项目使用 OpenNext 部署到 Cloudflare Workers。
-
+本项目使用 OpenNext 构建并部署到 Cloudflare Workers。
 
 ## 前置要求
 
-1. Node.js >= 24
-2. pnpm
-3. Cloudflare 账号
+- Node.js >= 24
+- pnpm
+- Wrangler CLI（可通过 `npx wrangler` 使用）
+- Cloudflare 账号与对应权限
 
+## 关键配置
 
-## 本地预览
+- `wrangler.jsonc`：Workers 绑定（D1 / R2 / DO / vars）
+- `open-next.config.ts`：OpenNext 构建配置
+- `migrations/`：D1 迁移文件
+
+## 首次部署
+
+1. 登录 Cloudflare
 
 ```bash
-# 构建并启动本地 Workers 环境
-pnpm preview
+npx wrangler login
 ```
 
+2. 安装依赖并确认测试通过
 
-## 部署到 Cloudflare
+```bash
+pnpm install
+pnpm test:run
+```
 
-### 首次部署
+3. 构建
 
-1. 登录 Cloudflare：
-   ```bash
-   npx wrangler login
-   ```
+```bash
+pnpm build
+```
 
-2. 创建 KV 命名空间（用于缓存）：
-   ```bash
-   npx wrangler kv:namespace create NEXT_CACHE_WORKERS_KV
-   ```
+4. 执行生产数据库迁移
 
-3. 将返回的 ID 填入 `wrangler.jsonc` 中的 `kv_namespaces[0].id`
+```bash
+pnpm db:migrate:prod
+```
 
-4. 部署：
-   ```bash
-   pnpm deploy
-   ```
-
-### 后续部署
+5. 部署
 
 ```bash
 pnpm deploy
 ```
 
+## 日常发布
 
-## 环境变量
+```bash
+pnpm test:run
+pnpm build
+pnpm db:migrate:prod   # 如有新迁移
+pnpm deploy
+```
 
-如需配置环境变量，在 Cloudflare Dashboard 中设置，或创建 `.dev.vars` 文件用于本地开发。
+## 本地预览
 
+```bash
+pnpm preview
+```
 
-## 域名配置
+## 同步任务说明
 
-部署完成后，在 Cloudflare Dashboard 中配置自定义域名：
-1. 进入 Workers & Pages
-2. 选择 `blog-2026` 项目
-3. 设置 → 域和路由 → 添加自定义域名
+Notion 同步接口受 `CRON_SECRET` 保护。
+如果接入外部定时任务，请调用 `/api/sync-notion` 并携带对应密钥参数。

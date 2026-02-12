@@ -26,6 +26,7 @@
   /* 强调色 */
   --accent: oklch(0.77 0.16 70.07);
   --accent-hover: oklch(0.77 0.16 70.07);
+  --accent-dark: oklch(0.69 0.14 70.07);
 
   /* 其他 */
   --success: #10b981;
@@ -96,6 +97,7 @@
     /* 强调色 */
     --accent: oklch(0.77 0.16 70.07);
     --accent-hover: oklch(0.77 0.16 70.07);
+    --accent-dark: oklch(0.69 0.14 70.07);
 
     /* 其他 */
     --success: #10b981;

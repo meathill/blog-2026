@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
-import { CalendarIcon, ClockIcon, TagIcon, SearchIcon } from 'lucide-react';
+import { SearchIcon } from 'lucide-react';
+import { PostSummaryItem } from '@/components/posts/post-summary-item';
 import { getPosts, getCategories, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 
 interface PageProps {
@@ -86,44 +86,22 @@ export default async function SearchPage({ searchParams }: PageProps) {
               <ul className="space-y-4">
                 {posts.map((post) => {
                   const title = stripHtml(post.title.rendered);
-                  const excerpt = stripHtml(post.excerpt.rendered).slice(0, 150);
+                  const excerpt = `${stripHtml(post.excerpt.rendered).slice(0, 150)}...`;
                   const date = formatDate(post.date);
                   const readingTime = calculateReadingTime(post.content.rendered);
                   const categoryName = post.categories?.[0] ? categoryMap.get(post.categories[0]) : undefined;
 
                   return (
-                    <li key={post.id}>
-                      <Link
-                        href={`/posts/${post.slug}`}
-                        className="group block p-5 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all card-hover"
-                      >
-                        {/* Title */}
-                        <h3 className="font-semibold text-lg text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-2">
-                          {title}
-                        </h3>
-
-                        {/* Excerpt */}
-                        <p className="text-[var(--text-secondary)] text-sm mb-3 line-clamp-2">{excerpt}...</p>
-
-                        {/* Meta */}
-                        <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                          <span className="inline-flex items-center gap-1">
-                            <CalendarIcon size={12} />
-                            {date}
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <ClockIcon size={12} />
-                            {readingTime}分钟
-                          </span>
-                          {categoryName && (
-                            <span className="inline-flex items-center gap-1">
-                              <TagIcon size={12} />
-                              {categoryName}
-                            </span>
-                          )}
-                        </div>
-                      </Link>
-                    </li>
+                    <PostSummaryItem
+                      key={post.id}
+                      href={`/posts/${post.slug}`}
+                      title={title}
+                      excerptText={excerpt}
+                      dateText={date}
+                      readingTimeText={`${readingTime}分钟`}
+                      categoryText={categoryName}
+                      variant="search"
+                    />
                   );
                 })}
               </ul>

@@ -168,6 +168,30 @@ describe('Sync Notion Route', () => {
     expect(json.error).toBe('Notion Down');
   });
 
+  it('should treat create failure as idempotent success when post appears by slug after failure', async () => {
+    const req = new NextRequest('http://localhost/api/sync-notion?key=secret123');
+    const notionPosts = [
+      { id: 'p9', title: 'Retry Post', slug: 'retry-post', lastEditedTime: '2025-01-01T00:00:00.000Z' },
+    ];
+    const backupPendingPosts = [
+      { id: 'p9', title: 'Retry Post', slug: 'retry-post', content: 'c', categories: [], tags: [] },
+    ];
+
+    mockFetchReadyPosts.mockResolvedValue(notionPosts);
+    mockGetBackupPostsPendingSync.mockResolvedValue(backupPendingPosts);
+    mockGetPost.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 999, slug: 'retry-post' });
+    mockCreatePost.mockRejectedValueOnce(new Error('ECONNRESET'));
+
+    const res = await GET(req);
+    const json = (await res.json()) as { success: boolean };
+
+    expect(res.status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(mockCreatePost).toHaveBeenCalledTimes(1);
+    expect(mockMarkBackupPostPublished).toHaveBeenCalledWith('p9');
+    expect(mockUpdateNotionPostStatus).toHaveBeenCalledWith(expect.anything(), 'p9', 'Published');
+  });
+
   it('should skip posts without slugs', async () => {
     const req = new NextRequest('http://localhost/api/sync-notion?key=secret123');
     const notionPosts = [{ id: 'p1', title: 'No Slug', slug: '', lastEditedTime: '2025-01-01T00:00:00.000Z' }];

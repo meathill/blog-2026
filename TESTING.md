@@ -1,81 +1,50 @@
 # 测试指南
 
-本项目使用 Vitest 作为测试框架。
-
+本项目使用 `Vitest + Testing Library`。
 
 ## 运行测试
 
 ```bash
-# 监听模式（开发时使用）
+# 监听模式
 pnpm test
 
-# 单次运行
+# 单次执行
 pnpm test:run
 
-# 生成覆盖率报告
+# 覆盖率
 pnpm test:coverage
 ```
 
+## 测试目录
 
-## 测试文件结构
+测试文件统一放在 `tests/` 目录：
 
-测试文件与源文件同目录，使用 `.test.ts` 或 `.test.tsx` 后缀：
-
-```
-src/
-├── lib/
-│   ├── utils.ts
-│   ├── utils.test.ts      # 工具函数测试
-│   ├── wordpress.ts
-│   └── wordpress.test.ts  # WordPress API 测试
-└── components/
-    └── home/
-        ├── PostCard.tsx
-        └── PostCard.test.tsx  # 组件测试（可选）
+```text
+tests/
+├── app/         # route / action 相关
+├── lib/         # 工具与服务层
+└── unit/        # 页面和组件的单元测试
 ```
 
+命名规则：`*.test.ts` 或 `*.test.tsx`。
 
-## 编写测试
+## 重点覆盖范围
 
-### 工具函数测试
+- `src/lib/**`：业务规则、第三方 API 适配
+- `src/app/api/**`：接口路由
+- `src/middleware.ts`：路由重写/重定向规则
 
-```typescript
-import { describe, it, expect } from "vitest";
-import { myFunction } from "./my-module";
+## 覆盖率门槛
 
-describe("myFunction", () => {
-  it("应该正确处理输入", () => {
-    expect(myFunction("input")).toBe("expected");
-  });
-});
-```
+在 `vitest.config.ts` 中配置覆盖率阈值，目的是防止覆盖率持续回退。
 
-### 组件测试
+说明：当前仓库仍存在较多历史页面/UI 文件未覆盖，阈值先以“防回退”为目标，后续逐步提高。
 
-```typescript
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
-import MyComponent from "./MyComponent";
+## Mock 约定
 
-describe("MyComponent", () => {
-  it("应该渲染标题", () => {
-    render(<MyComponent title="测试标题" />);
-    expect(screen.getByText("测试标题")).toBeInTheDocument();
-  });
-});
-```
+基础 mock 在 `vitest.setup.ts`：
 
-
-## 覆盖率要求
-
-- 工具函数：80%+
-- 核心组件：60%+
-- 页面组件：可选
-
-
-## Mock 配置
-
-常用 mock 已在 `vitest.setup.ts` 中配置：
-- `next/navigation` - 路由 mock
-- `next/image` - 图片组件 mock
-- `next/link` - 链接组件 mock
+- `next/navigation`
+- `next/image`
+- `next/link`
+- `IntersectionObserver`

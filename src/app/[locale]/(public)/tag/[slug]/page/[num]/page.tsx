@@ -1,9 +1,11 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeftIcon, CalendarIcon, ClockIcon } from 'lucide-react';
+import { ArrowLeftIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
+import { PostListItem } from '@/components/posts/post-list-item';
 import { getTagBySlug, getPostsByTag, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
+import { resolveBySlugWithNormalizedFallback } from '@/lib/tag-slug';
 
 interface TagPageProps {
   params: Promise<{ slug: string; num: string }>;
@@ -11,12 +13,7 @@ interface TagPageProps {
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
   const { slug, num } = await params;
-  let tag = await getTagBySlug(slug);
-
-  if (!tag) {
-    const normalizedSlug = slug.toLowerCase().replace(/\./g, '-');
-    tag = await getTagBySlug(normalizedSlug);
-  }
+  const tag = await resolveBySlugWithNormalizedFallback(slug, getTagBySlug);
 
   if (!tag) {
     return {
@@ -42,11 +39,7 @@ export default async function TagPageNum({ params }: TagPageProps) {
     redirect(`/tag/${slug}`);
   }
 
-  let tag = await getTagBySlug(slug);
-  if (!tag) {
-    const normalizedSlug = slug.toLowerCase().replace(/\./g, '-');
-    tag = await getTagBySlug(normalizedSlug);
-  }
+  const tag = await resolveBySlugWithNormalizedFallback(slug, getTagBySlug);
 
   if (!tag) {
     notFound();
@@ -87,29 +80,15 @@ export default async function TagPageNum({ params }: TagPageProps) {
             const title = stripHtml(post.title.rendered);
             const readingTime = calculateReadingTime(post.content.rendered);
             const dateFormatted = formatDate(post.date);
-            const localSlug = post.slug;
 
             return (
-              <li key={post.id}>
-                <Link
-                  href={`/posts/${localSlug}`}
-                  className="group block p-4 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all card-hover"
-                >
-                  <h2 className="font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-2">
-                    {title}
-                  </h2>
-                  <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarIcon size={14} />
-                      {dateFormatted}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <ClockIcon size={14} />
-                      {readingTime} 分钟
-                    </span>
-                  </div>
-                </Link>
-              </li>
+              <PostListItem
+                key={post.id}
+                href={`/posts/${post.slug}`}
+                title={title}
+                dateText={dateFormatted}
+                readingTimeText={`${readingTime} 分钟`}
+              />
             );
           })}
         </ul>

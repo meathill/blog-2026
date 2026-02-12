@@ -1,65 +1,63 @@
-博客 2026
-===
+# 博客 2026
 
-这是我的博客 2026 新版。
+基于 `Next.js 16 + OpenNext + Cloudflare` 的个人博客项目。
 
+## 项目目标
 
-老站
----
+- 前端页面与交互使用 Next.js 重构
+- 使用 WordPress 作为 Headless CMS 数据源
+- 部分后台能力（如应用管理、同步备份）落在 Cloudflare D1
+- 统一部署到 Cloudflare Workers
 
-1. 基于 WordPress 开发
-2. 使用官方模版
-3. 问题：
-    1. 天天被扫，烦得很
-    2. 因为被扫，PHP + MySQL 压力很大
-    3. 前端功能很难添加
-    4. 缓存性能一般
-    5. UI 比较老旧，且难以更新
+## 核心能力
 
+- 文章列表、详情、分类、标签、搜索
+- Open Graph 动态图片
+- 后台 Notion 同步：`Notion -> D1 备份 -> WordPress`
+- 应用（Apps）管理与标签管理
 
-目标
----
+## 技术栈
 
-1. 使用 Next.js 重构网站页面
-2. 使用老的 WordPress 作为 Headless
-3. 部署在 Cloudflare Workers
-4. 网站高端大气上档次，打开速度很快，还能整合各种我最近开发的玩具
+- Next.js 16
+- OpenNext (`@opennextjs/cloudflare`)
+- Tailwind CSS v4
+- Drizzle ORM + Cloudflare D1
+- Vitest + Testing Library
 
-
-技术栈
----
-
-1. Next.js 16 + OpenNext
-2. TailwindCSS v4
-3. Lucide React 图标
-4. Cloudflare Workers 部署
-
-
-开发
----
+## 本地开发
 
 ```bash
-# 安装依赖
 pnpm install
-
-# 启动开发服务器
 pnpm dev
+```
 
+## 常用命令
+
+```bash
 # 构建
 pnpm build
 
-# 本地预览 Cloudflare Workers
+# 预览（Cloudflare Workers 本地预览）
 pnpm preview
 
-# 部署到 Cloudflare
+# 测试
+pnpm test
+pnpm test:run
+pnpm test:coverage
+
+# 生成/执行 D1 迁移
+pnpm db:generate
+pnpm db:migrate:local
+pnpm db:migrate:prod
+
+# 部署
 pnpm deploy
 ```
 
+## 文档索引
 
-相关资料
----
-
-- 我的博客：https://blog.meathill.com
-- 个人首页：https://meathill.com
-- GitHub：https://github.com/meathill
-- X：https://x.com/meathill1
+- `TESTING.md`：测试策略与覆盖率
+- `DEPLOYMENT.md`：部署流程
+- `DEV_NOTE.md`：开发中长期约定与关键决策
+- `WIP.md`：当前任务拆解
+- `TODO.md`：长期维护事项

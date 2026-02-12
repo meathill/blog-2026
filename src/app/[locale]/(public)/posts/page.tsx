@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { CalendarIcon, ClockIcon, TagIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { PostSummaryItem } from '@/components/posts/post-summary-item';
 import { getPosts, getCategories, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 
 const POSTS_PER_PAGE = 20;
@@ -80,39 +81,15 @@ export function PostList({
                   const categoryName = post.categories?.[0] ? categoryMap.get(post.categories[0]) : undefined;
 
                   return (
-                    <li key={post.id}>
-                      <Link
-                        href={`/posts/${post.slug}`}
-                        className="group block p-4 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all card-hover"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                          {/* Date */}
-                          <div className="flex items-center gap-1 text-sm text-[var(--text-muted)] sm:w-24 flex-shrink-0">
-                            <CalendarIcon size={14} />
-                            {date.slice(5)}
-                          </div>
-
-                          {/* Title */}
-                          <h3 className="flex-1 font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                            {title}
-                          </h3>
-
-                          {/* Meta */}
-                          <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                            {categoryName && (
-                              <span className="inline-flex items-center gap-1">
-                                <TagIcon size={12} />
-                                {categoryName}
-                              </span>
-                            )}
-                            <span className="inline-flex items-center gap-1">
-                              <ClockIcon size={12} />
-                              {readingTime}分钟
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                    </li>
+                    <PostSummaryItem
+                      key={post.id}
+                      href={`/posts/${post.slug}`}
+                      title={title}
+                      dateText={date.slice(5)}
+                      readingTimeText={`${readingTime}分钟`}
+                      categoryText={categoryName}
+                      variant="timeline"
+                    />
                   );
                 })}
               </ul>

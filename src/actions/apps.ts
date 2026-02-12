@@ -2,21 +2,12 @@
 
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
-
-function slugify(text: string) {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-    .replace(/\-\-+/g, '-'); // Replace multiple - with single -
-}
+import { buildAppSlug } from '@/lib/app-slug';
 
 async function checkAuth() {
   const auth = await getAuth();
@@ -39,7 +30,7 @@ export async function createApp(formData: FormData) {
   const repoUrl = formData.get('repoUrl') as string;
   const icon = formData.get('icon') as string;
   const status = formData.get('status') as 'published' | 'draft' | 'archived';
-  const slug = (formData.get('slug') as string) || slugify(name);
+  const slug = (formData.get('slug') as string) || buildAppSlug(name);
   const tagIds = (formData.get('tagIds') as string)?.split(',').filter(Boolean) || [];
 
   const db = await getDb();
