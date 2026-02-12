@@ -139,3 +139,9 @@ export const notionPostBackups = sqliteTable('notion_post_backups', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
+
+export const navigationConfigs = sqliteTable('navigation_configs', {
+  locale: text('locale').primaryKey(),
+  items: text('items').notNull().default('[]'),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});

@@ -35,3 +35,10 @@
 - [x] 上调全局 coverage 阈值，并新增 `src/lib/**` 与 `src/app/api/**` 分目录阈值。
 - [x] 执行 `pnpm test:run` 与 `pnpm test:coverage`，确认阈值生效且通过。
 - [x] 统一文章列表展示组件，覆盖 `posts/search` 页面并补组件单测。
+
+## 第四轮维护（已完成）
+- [x] Notion 同步流程改为先写入 D1 备份，再基于 `last_update_time` 与 `published_at` 决定是否推送 WordPress。
+- [x] 文章详情页分类与标签补齐链接（正文 meta 与 footer 标签区）。
+- [x] 导航编辑迁移到 `/admin/navigation`，支持按 `zh/en` 保存、恢复默认，并在前台 Header 动态读取。
+- [x] 新增 `navigation_configs` 表迁移与导航配置解析单测。
+- [x] 执行 `pnpm test:run` 与 `pnpm build`，确认通过。

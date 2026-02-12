@@ -4,22 +4,30 @@ import { Link } from '@/i18n/routing';
 import { useState, useEffect } from 'react';
 import { SearchIcon, MenuIcon, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { DesktopNav } from '@/components/layout/header/desktop-nav';
 import { MobileNav } from '@/components/layout/header/mobile-nav';
 import { getHeaderNavItems } from '@/components/layout/header/nav-items';
+import type { NavItem } from '@/components/layout/header/types';
+
+interface NavigationResponse {
+  items?: NavItem[];
+}
 
 export default function Header() {
   const t = useTranslations('Header');
+  const locale = useLocale();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navItems = getHeaderNavItems({
+  const [customNavItems, setCustomNavItems] = useState<NavItem[] | null>(null);
+  const defaultNavItems = getHeaderNavItems({
     about: t('about'),
     apps: t('apps'),
     tech: t('tech'),
     works: t('works'),
     resources: t('resources'),
   });
+  const navItems = customNavItems ?? defaultNavItems;
 
   useEffect(() => {
     function handleScroll() {
@@ -28,6 +36,35 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+    setCustomNavItems(null);
+
+    async function loadNavigation() {
+      try {
+        const response = await fetch(`/api/navigation?locale=${encodeURIComponent(locale)}`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as NavigationResponse;
+        if (isCancelled || !Array.isArray(data.items) || data.items.length === 0) {
+          return;
+        }
+        setCustomNavItems(data.items);
+      } catch {
+        // Keep default navigation silently when request fails.
+      }
+    }
+
+    loadNavigation();
+    return () => {
+      isCancelled = true;
+    };
+  }, [locale]);
 
   function toggleMobileMenu() {
     setIsMobileMenuOpen((prev) => !prev);

@@ -145,15 +145,35 @@ export default async function PostView({ post }: PostViewProps) {
                   {readingTime} 分钟阅读
                 </span>
                 {categories.length > 0 && (
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-2">
                     <FolderIcon size={14} />
-                    {categories.map((cat) => cat.name).join(', ')}
+                    <span className="inline-flex flex-wrap items-center gap-2">
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat.id}
+                          href={`/category/${cat.slug}`}
+                          className="hover:text-[var(--accent)] transition-colors"
+                        >
+                          {cat.name}
+                        </Link>
+                      ))}
+                    </span>
                   </span>
                 )}
                 {tags.length > 0 && (
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-2">
                     <TagIcon size={14} />
-                    {tags.map((tag) => tag.name).join(', ')}
+                    <span className="inline-flex flex-wrap items-center gap-2">
+                      {tags.map((tag) => (
+                        <Link
+                          href={`/tag/${tag.slug}`}
+                          key={tag.id}
+                          className="hover:text-[var(--accent)] transition-colors"
+                        >
+                          {tag.name}
+                        </Link>
+                      ))}
+                    </span>
                   </span>
                 )}
               </div>
@@ -215,6 +235,19 @@ export default async function PostView({ post }: PostViewProps) {
                         className="px-3 py-1 text-xs font-medium rounded-full bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all"
                       >
                         {cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <Link
+                        key={tag.id}
+                        href={`/tag/${tag.slug}`}
+                        className="px-3 py-1 text-xs font-medium rounded-full bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all"
+                      >
+                        #{tag.name}
                       </Link>
                     ))}
                   </div>
