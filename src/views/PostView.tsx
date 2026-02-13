@@ -190,7 +190,7 @@ export default async function PostView({ post }: PostViewProps) {
                 prose-a:text-[var(--accent)] prose-a:no-underline hover:prose-a:underline
                 prose-strong:text-[var(--text-primary)]
                 prose-code:text-[var(--accent)] prose-code:bg-[var(--surface)] prose-code:px-1 prose-code:py-0.5 prose-code:rounded
-                prose-pre:bg-[var(--surface)] prose-pre:border prose-pre:border-[var(--surface-border)]
+                prose-pre:bg-[var(--surface)] prose-pre:border prose-pre:border-[var(--surface-border)] prose-pre:p-0
                 prose-img:rounded-xl
                 prose-blockquote:border-l-[var(--accent)] prose-blockquote:text-[var(--text-muted)]
                 prose-li:text-[var(--text-secondary)]
@@ -200,10 +200,10 @@ export default async function PostView({ post }: PostViewProps) {
 
             {/* Footer */}
             <footer className="mt-12 pt-8 border-t border-[var(--surface-border)]">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <Link
                   href="/posts"
-                  className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                  className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors text-nowrap"
                 >
                   返回文章列表
                 </Link>
@@ -222,7 +222,7 @@ export default async function PostView({ post }: PostViewProps) {
                   </div>
                 )}
                 {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 w-1/2">
                     {tags.map((tag) => (
                       <Link
                         key={tag.id}
