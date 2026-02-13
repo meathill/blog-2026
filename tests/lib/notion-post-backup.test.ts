@@ -6,7 +6,12 @@ vi.mock('@/lib/db', () => ({
   getDb: (...args: unknown[]) => mockGetDb(...args),
 }));
 
-import { listBackupPosts, shouldSyncToWordPress, upsertNotionPostsToBackup } from '@/lib/notion-post-backup';
+import {
+  listBackupPosts,
+  shouldSyncStatusToWordPress,
+  shouldSyncToWordPress,
+  upsertNotionPostsToBackup,
+} from '@/lib/notion-post-backup';
 
 interface MockBackupRow {
   id: string;
@@ -141,6 +146,13 @@ describe('shouldSyncToWordPress', () => {
     expect(shouldSync).toBe(true);
   });
 
+  it('shouldSyncStatusToWordPress 仅允许 Ready 和 Published', () => {
+    expect(shouldSyncStatusToWordPress('Ready')).toBe(true);
+    expect(shouldSyncStatusToWordPress('published')).toBe(true);
+    expect(shouldSyncStatusToWordPress(' Draft ')).toBe(false);
+    expect(shouldSyncStatusToWordPress('In Progress')).toBe(false);
+  });
+
   it('listBackupPosts 应归一化分页参数并计算 needsSyncToWordPress', async () => {
     const rows = [
       buildMockRow(1, {
@@ -156,13 +168,17 @@ describe('shouldSyncToWordPress', () => {
         lastUpdateTime: new Date('2025-01-03T00:01:01.000Z'),
         publishedAt: new Date('2025-01-03T00:00:00.000Z'),
       }),
+      buildMockRow(4, {
+        status: 'Draft',
+        publishedAt: null,
+      }),
     ];
     const queryState: QueryState = { limit: 0, offset: 0 };
     mockGetDb.mockResolvedValue(createMockDb(rows, queryState));
 
     const result = await listBackupPosts({ page: 0 });
 
-    expect(result.total).toBe(3);
+    expect(result.total).toBe(4);
     expect(result.page).toBe(1);
     expect(result.pageSize).toBe(10);
     expect(result.totalPages).toBe(1);
@@ -170,8 +186,8 @@ describe('shouldSyncToWordPress', () => {
       limit: 10,
       offset: 0,
     });
-    expect(result.posts).toHaveLength(3);
-    expect(result.posts.map((post) => post.needsSyncToWordPress)).toEqual([true, false, true]);
+    expect(result.posts).toHaveLength(4);
+    expect(result.posts.map((post) => post.needsSyncToWordPress)).toEqual([true, false, true, false]);
     expect(result.posts[0]?.tags).toEqual(['Tag A']);
     expect(result.posts[0]?.categories).toEqual(['Cat A']);
   });

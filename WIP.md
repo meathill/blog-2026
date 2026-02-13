@@ -49,3 +49,11 @@
 - [x] 提供实时预览（桌面导航/移动导航视图）。
 - [x] 保持后端存储结构不变，继续复用 `saveNavigationConfig` / `resetNavigationConfig`。
 - [x] 为核心编辑逻辑补单测并执行 `pnpm test:run`、`pnpm build`、`pnpm test:coverage` 验证。
+
+## 第六轮维护（已完成）
+- [x] Notion -> D1 改为全量同步（包含未完成状态），不再按 Status 过滤拉取。
+- [x] D1 -> WordPress 保持受控：仅 `Ready/Published` 且满足 `last_update_time > published_at + 60s` 才标记待同步。
+- [x] `/admin/blog` 改为紧凑三列卡片布局，保留分页、前台预览与折叠 HTML 预览。
+- [x] 文章页 TOC 增加滚动跟随高亮（轻量实现，不引入新依赖）。
+- [x] 更新并通过相关测试：`tests/lib/notion*.test.ts`、`tests/unit/notion*.test.ts`、`tests/lib/notion-post-backup.test.ts`。
+- [x] 执行 `pnpm test -- --run` 与 `pnpm build`，确认通过。

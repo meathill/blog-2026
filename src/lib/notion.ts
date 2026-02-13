@@ -45,12 +45,7 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      filter: {
-        or: [
-          { property: 'Status', status: { equals: 'Ready' } },
-          { property: 'Status', status: { equals: 'Published' } },
-        ],
-      },
+      // 同步全量（含未完成状态），本地 D1 作为完整备份源。
       sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
     }),
   });

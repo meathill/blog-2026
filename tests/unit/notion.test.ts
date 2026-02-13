@@ -33,7 +33,7 @@ describe('fetchReadyPosts', () => {
     global.fetch = vi.fn();
   });
 
-  it('should include published posts without comparing publish timestamp', async () => {
+  it('should include published and draft posts without status filtering', async () => {
     // Mock Notion Response
     const mockResponse = {
       results: [
@@ -66,6 +66,15 @@ describe('fetchReadyPosts', () => {
             Status: { status: { name: 'Ready' } },
           },
         },
+        {
+          id: 'page-4',
+          last_edited_time: '2026-01-27T12:00:00Z',
+          properties: {
+            Name: { title: [{ plain_text: 'Test Post 4' }] },
+            Slug: { rich_text: [{ plain_text: 'test-post-4' }] },
+            Status: { status: { name: 'Draft' } },
+          },
+        },
       ],
     };
 
@@ -76,7 +85,7 @@ describe('fetchReadyPosts', () => {
 
     const posts = await fetchReadyPosts(env);
 
-    expect(posts).toHaveLength(3);
-    expect(posts.map((p) => p.title)).toEqual(['Test Post 1', 'Test Post 2', 'Test Post 3']);
+    expect(posts).toHaveLength(4);
+    expect(posts.map((p) => p.title)).toEqual(['Test Post 1', 'Test Post 2', 'Test Post 3', 'Test Post 4']);
   });
 });

@@ -71,6 +71,11 @@ describe('fetchReadyPosts', () => {
     });
   }
 
+  function getLastRequestBody(): Record<string, unknown> {
+    const [, init] = (global.fetch as any).mock.calls.at(-1);
+    return JSON.parse(init.body);
+  }
+
   it('should sync "Ready" posts', async () => {
     mockFetchResponse([createMockPage('1', 'Ready', '2023-01-01T12:00:00Z')]);
 
@@ -107,5 +112,22 @@ describe('fetchReadyPosts', () => {
 
     const posts = await fetchReadyPosts(mockEnv);
     expect(posts).toHaveLength(1);
+  });
+
+  it('should also sync draft posts into D1 backup', async () => {
+    mockFetchResponse([createMockPage('1', 'Draft', '2023-01-02T12:00:00Z')]);
+
+    const posts = await fetchReadyPosts(mockEnv);
+    expect(posts).toHaveLength(1);
+    expect(posts[0].status).toBe('Draft');
+  });
+
+  it('should query notion with sorts only and no status filter', async () => {
+    mockFetchResponse([createMockPage('1', 'Ready', '2023-01-01T12:00:00Z')]);
+
+    await fetchReadyPosts(mockEnv);
+    expect(getLastRequestBody()).toEqual({
+      sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
+    });
   });
 });

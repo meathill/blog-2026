@@ -6,6 +6,7 @@ import { desc, eq, inArray, sql } from 'drizzle-orm';
 const SYNC_TIME_TOLERANCE_MS = 60_000;
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
+const WORDPRESS_SYNC_STATUS_SET = new Set(['ready', 'published']);
 
 export interface NotionBackupPost {
   id: string;
@@ -58,6 +59,17 @@ export function shouldSyncToWordPress(lastUpdateTime: Date, publishedAt: Date | 
     return true;
   }
   return lastUpdateTime.getTime() > publishedAt.getTime() + SYNC_TIME_TOLERANCE_MS;
+}
+
+export function shouldSyncStatusToWordPress(status: string): boolean {
+  return WORDPRESS_SYNC_STATUS_SET.has(status.trim().toLowerCase());
+}
+
+function shouldSyncBackupPostToWordPress(status: string, lastUpdateTime: Date, publishedAt: Date | null): boolean {
+  if (!shouldSyncStatusToWordPress(status)) {
+    return false;
+  }
+  return shouldSyncToWordPress(lastUpdateTime, publishedAt);
 }
 
 function normalizePageNumber(page: number | undefined): number {
@@ -148,7 +160,7 @@ export async function getBackupPostsPendingSync(): Promise<NotionBackupPost[]> {
   const rows = await db.select().from(notionPostBackups).orderBy(desc(notionPostBackups.lastUpdateTime));
 
   return rows
-    .filter((row) => shouldSyncToWordPress(row.lastUpdateTime, row.publishedAt))
+    .filter((row) => shouldSyncBackupPostToWordPress(row.status, row.lastUpdateTime, row.publishedAt))
     .map((row) => ({
       id: row.id,
       title: row.title,
@@ -202,7 +214,7 @@ export async function listBackupPosts(options?: {
     coverImage: row.coverImage,
     lastUpdateTime: row.lastUpdateTime,
     publishedAt: row.publishedAt,
-    needsSyncToWordPress: shouldSyncToWordPress(row.lastUpdateTime, row.publishedAt),
+    needsSyncToWordPress: shouldSyncBackupPostToWordPress(row.status, row.lastUpdateTime, row.publishedAt),
   }));
 
   return {

@@ -4,7 +4,7 @@ import { NotionSyncButton } from '@/components/admin/NotionSyncButton';
 import { routing } from '@/i18n/routing';
 import { listBackupPosts } from '@/lib/notion-post-backup';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 interface BlogAdminPageProps {
   params: Promise<{
@@ -66,6 +66,20 @@ function formatDateTime(date: Date | null, locale: string): string {
   return formatter.format(date);
 }
 
+function getVisibleItems(items: string[], maxCount: number): { visible: string[]; hiddenCount: number } {
+  if (items.length <= maxCount) {
+    return {
+      visible: items,
+      hiddenCount: 0,
+    };
+  }
+
+  return {
+    visible: items.slice(0, maxCount),
+    hiddenCount: items.length - maxCount,
+  };
+}
+
 export default async function BlogAdminPage({ params, searchParams }: BlogAdminPageProps) {
   const { locale } = await params;
   const query = await searchParams;
@@ -90,14 +104,12 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
         </div>
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-zinc-500">
-          当前共有 <span className="font-medium text-zinc-700 dark:text-zinc-100">{result.total}</span>{' '}
-          篇备份文章，当前第{' '}
-          <span className="font-medium text-zinc-700 dark:text-zinc-100">
-            {result.page} / {result.totalPages}
-          </span>{' '}
-          页，每页 {result.pageSize} 条。
+      <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <p className="text-sm text-zinc-500">
+          当前共有 <span className="font-medium text-zinc-700 dark:text-zinc-100">{result.total}</span> 篇备份文章， 第{' '}
+          <span className="font-medium text-zinc-700 dark:text-zinc-100">{result.page}</span> /{' '}
+          <span className="font-medium text-zinc-700 dark:text-zinc-100">{result.totalPages}</span> 页， 每页{' '}
+          {result.pageSize} 条。
         </p>
       </div>
 
@@ -107,116 +119,129 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
         </div>
       ) : (
         <>
-          <div className="space-y-4">
-            {result.posts.map((post) => (
-              <article
-                key={post.id}
-                className="rounded-lg border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{post.title}</h3>
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span
-                        className={`rounded-full px-2 py-1 font-medium ${
-                          post.needsSyncToWordPress
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                        }`}
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {result.posts.map((post) => {
+              const visibleCategories = getVisibleItems(post.categories, 4);
+              const visibleTags = getVisibleItems(post.tags, 4);
+
+              return (
+                <article
+                  key={post.id}
+                  className="rounded-lg border border-zinc-200 bg-white p-3 shadow-xs dark:border-zinc-800 dark:bg-zinc-900"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="line-clamp-2 text-sm font-semibold text-zinc-900 dark:text-zinc-50">{post.title}</h3>
+                    {post.slug ? (
+                      <Link
+                        href={buildPostPreviewHref(locale, post.slug)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                       >
-                        {post.needsSyncToWordPress ? '待同步到 WordPress' : '已同步到 WordPress'}
+                        预览
+                        <ExternalLinkIcon size={12} />
+                      </Link>
+                    ) : (
+                      <span className="rounded-md border border-zinc-200 px-2 py-1 text-xs text-zinc-400 dark:border-zinc-700 dark:text-zinc-500">
+                        无预览
                       </span>
-                      <span className="rounded-full bg-zinc-100 px-2 py-1 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                        Status: {post.status}
-                      </span>
-                    </div>
+                    )}
                   </div>
 
-                  {post.slug ? (
-                    <Link
-                      href={buildPostPreviewHref(locale, post.slug)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span
+                      className={`rounded-full px-2 py-0.5 font-medium ${
+                        post.needsSyncToWordPress
+                          ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                      }`}
                     >
-                      前台预览
-                      <ExternalLinkIcon size={14} />
-                    </Link>
-                  ) : (
-                    <span className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm text-zinc-400 dark:border-zinc-700 dark:text-zinc-500">
-                      无 slug，无法预览
+                      {post.needsSyncToWordPress ? '待同步 WP' : '已同步 WP'}
                     </span>
-                  )}
-                </div>
+                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                      {post.status}
+                    </span>
+                  </div>
 
-                <dl className="mt-4 grid gap-2 text-sm text-zinc-600 dark:text-zinc-300 sm:grid-cols-2">
-                  <div>
-                    <dt className="font-medium text-zinc-800 dark:text-zinc-100">Slug</dt>
-                    <dd>{post.slug || '（空）'}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-zinc-800 dark:text-zinc-100">Notion 更新时间</dt>
-                    <dd>{formatDateTime(post.lastUpdateTime, locale)}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-zinc-800 dark:text-zinc-100">WordPress 发布时间</dt>
-                    <dd>{formatDateTime(post.publishedAt, locale)}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-zinc-800 dark:text-zinc-100">业务日期</dt>
-                    <dd>{post.date || '未设置'}</dd>
-                  </div>
-                </dl>
+                  <dl className="mt-3 space-y-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+                    <div className="flex items-start justify-between gap-2">
+                      <dt className="shrink-0 font-medium text-zinc-700 dark:text-zinc-100">Slug</dt>
+                      <dd className="line-clamp-1 text-right">{post.slug || '（空）'}</dd>
+                    </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <dt className="shrink-0 font-medium text-zinc-700 dark:text-zinc-100">Notion 更新</dt>
+                      <dd className="text-right">{formatDateTime(post.lastUpdateTime, locale)}</dd>
+                    </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <dt className="shrink-0 font-medium text-zinc-700 dark:text-zinc-100">WP 发布时间</dt>
+                      <dd className="text-right">{formatDateTime(post.publishedAt, locale)}</dd>
+                    </div>
+                  </dl>
 
-                <div className="mt-4 space-y-3 text-sm">
-                  <div>
-                    <p className="mb-1 font-medium text-zinc-800 dark:text-zinc-100">分类</p>
-                    <div className="flex flex-wrap gap-2">
-                      {post.categories.length > 0 ? (
-                        post.categories.map((category) => (
-                          <span
-                            key={`${post.id}-${category}`}
-                            className="rounded-full bg-sky-100 px-2 py-1 text-xs text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
-                          >
-                            {category}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-zinc-400 dark:text-zinc-500">无分类</span>
-                      )}
+                  <div className="mt-3 space-y-2">
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-100">分类</p>
+                      <div className="flex flex-wrap gap-1">
+                        {post.categories.length > 0 ? (
+                          <>
+                            {visibleCategories.visible.map((category) => (
+                              <span
+                                key={`${post.id}-${category}`}
+                                className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
+                              >
+                                {category}
+                              </span>
+                            ))}
+                            {visibleCategories.hiddenCount > 0 && (
+                              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                +{visibleCategories.hiddenCount}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">无分类</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-100">标签</p>
+                      <div className="flex flex-wrap gap-1">
+                        {post.tags.length > 0 ? (
+                          <>
+                            {visibleTags.visible.map((tag) => (
+                              <span
+                                key={`${post.id}-${tag}`}
+                                className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {visibleTags.hiddenCount > 0 && (
+                              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                +{visibleTags.hiddenCount}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">无标签</span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <p className="mb-1 font-medium text-zinc-800 dark:text-zinc-100">标签</p>
-                    <div className="flex flex-wrap gap-2">
-                      {post.tags.length > 0 ? (
-                        post.tags.map((tag) => (
-                          <span
-                            key={`${post.id}-${tag}`}
-                            className="rounded-full bg-violet-100 px-2 py-1 text-xs text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
-                          >
-                            {tag}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-zinc-400 dark:text-zinc-500">无标签</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <details className="mt-4 rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
-                  <summary className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                    展开 HTML 预览
-                  </summary>
-                  <div
-                    className="prose prose-sm mt-3 max-w-none overflow-auto rounded-md border border-zinc-200 p-3 dark:prose-invert dark:border-zinc-700"
-                    dangerouslySetInnerHTML={{ __html: post.content || '<p>暂无内容</p>' }}
-                  />
-                </details>
-              </article>
-            ))}
+                  <details className="mt-3 rounded-md border border-zinc-200 px-2.5 py-2 dark:border-zinc-700">
+                    <summary className="cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-200">
+                      HTML 预览
+                    </summary>
+                    <div
+                      className="prose prose-sm mt-2 max-h-44 max-w-none overflow-auto rounded-md border border-zinc-200 p-2 text-xs dark:prose-invert dark:border-zinc-700"
+                      dangerouslySetInnerHTML={{ __html: post.content || '<p>暂无内容</p>' }}
+                    />
+                  </details>
+                </article>
+              );
+            })}
           </div>
 
           {result.totalPages > 1 && (

@@ -101,12 +101,6 @@ describe('notion utils', () => {
       });
       // Parse body to avoid stringify formatting issues
       expect(JSON.parse(init.body)).toEqual({
-        filter: {
-          or: [
-            { property: 'Status', status: { equals: 'Ready' } },
-            { property: 'Status', status: { equals: 'Published' } },
-          ],
-        },
         sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
       });
 
@@ -132,6 +126,38 @@ describe('notion utils', () => {
       });
       const posts = await fetchReadyPosts(mockEnv);
       expect(posts).toHaveLength(0);
+    });
+
+    it('should include draft or in-progress statuses for D1 backup', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: [
+            {
+              id: 'page-draft',
+              last_edited_time: '2023-01-01T00:00:00.000Z',
+              properties: {
+                Name: { title: [{ plain_text: 'Draft Post' }] },
+                Slug: { rich_text: [{ plain_text: 'draft-post' }] },
+                Status: { status: { name: 'Draft' } },
+                Tags: { multi_select: [] },
+                Categories: { type: 'multi_select', multi_select: [] },
+              },
+            },
+          ],
+        }),
+      });
+      mockPageToMarkdown.mockResolvedValueOnce(['block-draft']);
+      mockToMarkdownString.mockReturnValueOnce({ parent: 'Draft Content' });
+
+      const posts = await fetchReadyPosts(mockEnv);
+
+      expect(posts).toHaveLength(1);
+      expect(posts[0]).toMatchObject({
+        id: 'page-draft',
+        title: 'Draft Post',
+        status: 'Draft',
+      });
     });
 
     it('should handle fetch errors', async () => {

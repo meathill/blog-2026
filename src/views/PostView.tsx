@@ -17,16 +17,17 @@ import {
 import CodeHighlight from '@/components/CodeHighlight';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getDb } from '@/lib/db';
+import { PostToc, type TocItem } from '@/components/posts/post-toc';
 
 interface PostViewProps {
   post: WPPost;
 }
 
 // 从 HTML 内容中提取标题生成 TOC
-function extractTOC(html: string): Array<{ id: string; text: string; level: number }> {
+function extractTOC(html: string): TocItem[] {
   // 使用非贪婪匹配 (.*?) 允许标题中包含 HTML 标签
   const headingRegex = /<h([2-4])[^>]*id="([^"]*)"[^>]*>(.*?)<\/h[2-4]>/gi;
-  const toc: Array<{ id: string; text: string; level: number }> = [];
+  const toc: TocItem[] = [];
   let match;
 
   while ((match = headingRegex.exec(html)) !== null) {
@@ -85,26 +86,7 @@ export default async function PostView({ post }: PostViewProps) {
     <div className="min-h-screen pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className={`lg:flex lg:gap-8 ${toc.length === 0 ? 'lg:justify-center' : ''}`}>
-          {/* Left Sidebar - TOC (宽屏显示) */}
-          {toc.length > 0 && (
-            <aside className="hidden lg:block lg:w-64 flex-shrink-0">
-              <nav className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto">
-                <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">目录</h2>
-                <ul className="space-y-2 text-sm">
-                  {toc.map((item) => (
-                    <li key={item.id} style={{ paddingLeft: `${(item.level - 2) * 0.75}rem` }}>
-                      <a
-                        href={`#${item.id}`}
-                        className="block py-1 text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors line-clamp-2"
-                      >
-                        {item.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </aside>
-          )}
+          <PostToc items={toc} />
 
           {/* Main Content */}
           <article className="flex-1 max-w-3xl">
