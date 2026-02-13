@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { getPost, stripHtml, getCategories } from '@/lib/wordpress';
+import { getPost, stripHtml, getCategories, getMediaBySlug } from '@/lib/wordpress';
 import PostView from '@/views/PostView';
+import AttachmentView from '@/views/AttachmentView';
 import { routing } from '@/i18n/routing';
 
 interface PostPageProps {
@@ -10,6 +11,31 @@ interface PostPageProps {
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
+
+  // Check for attachment pattern: .../attachment/[slug]
+  if (slug.length >= 2 && slug[slug.length - 2] === 'attachment') {
+    const attachmentSlug = slug[slug.length - 1];
+    const media = await getMediaBySlug(attachmentSlug);
+
+    if (media) {
+      const title = stripHtml(media.title.rendered);
+      const description = media.description?.rendered
+        ? stripHtml(media.description.rendered).slice(0, 160)
+        : `Attachment: ${title}`;
+
+      return {
+        title,
+        description,
+        openGraph: {
+          title,
+          description,
+          type: 'website',
+          images: [media.source_url],
+        },
+      };
+    }
+  }
+
   const postSlug = slug[slug.length - 1];
   const cleanSlug = postSlug.endsWith('.html') ? postSlug.replace('.html', '') : postSlug;
   const post = await getPost(cleanSlug);
@@ -66,6 +92,21 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug, locale } = await params;
+
+  // Check for attachment pattern: .../attachment/[slug]
+  if (slug.length >= 2 && slug[slug.length - 2] === 'attachment') {
+    const attachmentSlug = slug[slug.length - 1];
+    const media = await getMediaBySlug(attachmentSlug);
+
+    if (media) {
+      const parentPathSegments = slug.slice(0, slug.length - 2);
+      let parentPostSlug = parentPathSegments.join('/');
+      if (parentPostSlug.endsWith('.html')) {
+        parentPostSlug = parentPostSlug.replace('.html', '');
+      }
+      return <AttachmentView media={media} parentPostSlug={parentPostSlug} />;
+    }
+  }
 
   const lastSegment = slug[slug.length - 1];
   const cleanSlug = lastSegment.endsWith('.html') ? lastSegment.replace('.html', '') : lastSegment;
