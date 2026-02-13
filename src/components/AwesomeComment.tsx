@@ -69,7 +69,7 @@ export default function AwesomeComment() {
   return (
     <section className="mt-12 pt-8 border-t border-[var(--surface-border)]">
       <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6">评论</h2>
-      <div id="awesome-comment" ref={containerRef} />
+      <div id="awesome-comment" ref={containerRef} className="min-h-[200px]" />
     </section>
   );
 }

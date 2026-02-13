@@ -17,7 +17,7 @@ interface NavigationResponse {
   items?: NavItem[];
 }
 
-export default function Footer() {
+export default function Footer({ initialNavItems }: { initialNavItems?: NavItem[] }) {
   const t = useTranslations('Footer');
   const locale = useLocale();
   const currentYear = new Date().getFullYear();
@@ -29,9 +29,11 @@ export default function Footer() {
     { href: '/about', label: t('about') },
     { href: 'https://github.com/sponsors/meathill', label: t('sponsor'), external: true },
   ];
-  const footerLinks = customNavItems ?? defaultFooterLinks;
+  const footerLinks = customNavItems ?? initialNavItems ?? defaultFooterLinks;
 
   useEffect(() => {
+    if (initialNavItems) return;
+
     let isCancelled = false;
     setCustomNavItems(null);
 

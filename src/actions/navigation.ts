@@ -76,6 +76,40 @@ function buildRedirectUrl(params: {
   return `/admin/navigation?${search.toString()}`;
 }
 
+export async function getHeaderNavigation(localeInput: string) {
+  const locale = resolveNavigationLocale(localeInput);
+  const db = await getDb();
+  const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
+
+  if (!row) {
+    return getDefaultNavigationItems(locale, 'header');
+  }
+
+  try {
+    const config = parseNavigationConfigJson(row.items, locale);
+    return config.header;
+  } catch {
+    return getDefaultNavigationItems(locale, 'header');
+  }
+}
+
+export async function getFooterNavigation(localeInput: string) {
+  const locale = resolveNavigationLocale(localeInput);
+  const db = await getDb();
+  const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
+
+  if (!row) {
+    return getDefaultNavigationItems(locale, 'footer');
+  }
+
+  try {
+    const config = parseNavigationConfigJson(row.items, locale);
+    return config.footer;
+  } catch {
+    return getDefaultNavigationItems(locale, 'footer');
+  }
+}
+
 export async function getNavigationEditorData(
   localeInput: string | null | undefined,
   sectionInput: string | null | undefined,

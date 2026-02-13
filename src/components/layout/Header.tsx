@@ -14,7 +14,7 @@ interface NavigationResponse {
   items?: NavItem[];
 }
 
-export default function Header() {
+export default function Header({ initialNavItems }: { initialNavItems?: NavItem[] }) {
   const t = useTranslations('Header');
   const locale = useLocale();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -27,7 +27,7 @@ export default function Header() {
     works: t('works'),
     resources: t('resources'),
   });
-  const navItems = customNavItems ?? defaultNavItems;
+  const navItems = customNavItems ?? initialNavItems ?? defaultNavItems;
 
   useEffect(() => {
     function handleScroll() {
@@ -38,6 +38,8 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    if (initialNavItems) return;
+
     let isCancelled = false;
     setCustomNavItems(null);
 

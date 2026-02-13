@@ -2,6 +2,7 @@
 
 import { Link } from '@/i18n/routing';
 import { ExternalLink } from 'lucide-react';
+import Image from 'next/image';
 
 interface AppCardProps {
   app: {
@@ -28,7 +29,13 @@ export default function AppCard({ app, tags = [], i18n }: AppCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-4">
           {app.icon ? (
-            <img src={app.icon} alt={app.name} className="h-12 w-12 rounded-xl object-cover shadow-sm" />
+            <Image
+              src={app.icon}
+              alt={app.name}
+              width={48}
+              height={48}
+              className="rounded-xl object-cover shadow-sm"
+            />
           ) : (
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white font-bold text-xl shadow-md">
               {app.name.charAt(0).toUpperCase()}

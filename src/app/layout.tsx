@@ -45,6 +45,12 @@ export const metadata: Metadata = {
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export default async function RootLayout({
   children,
@@ -61,11 +67,9 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.webp" type="image/webp" />
         <link rel="apple-touch-icon" href="/favicon.webp" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
 
-      <body className="antialiased">
+      <body className={`antialiased ${inter.className}`}>
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
         <GoogleAdsense />
       </body>

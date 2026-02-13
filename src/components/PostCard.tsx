@@ -3,6 +3,7 @@ import { Link } from '@/i18n/routing';
 import { calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { cn } from '@/lib/utils';
 import { WPPost } from '@/lib/wordpress/types';
+import Image from 'next/image';
 
 interface PostCardProps {
   post: WPPost;
@@ -32,7 +33,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
     >
       {/* 推荐标记 */}
       {featured && (
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <span className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-amber-600 to-orange-600 text-white">
             推荐
           </span>
@@ -41,12 +42,14 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
 
       {/* 缩略图 */}
       {thumbnail && (
-        <div className="mb-4 overflow-hidden rounded-t-xl -mx-6 -mt-6 md:-mx-8 md:-mt-8">
-          <Link href={`/posts/${slug}`}>
-            <img
+        <div className="mb-4 overflow-hidden rounded-t-xl -mx-6 -mt-6 md:-mx-8 md:-mt-8 relative h-48 md:h-64">
+          <Link href={`/posts/${slug}`} className="block w-full h-full relative">
+            <Image
               src={thumbnail}
               alt={title}
-              className="w-full object-cover transition-transform group-hover:scale-105 h-48 md:h-64"
+              fill
+              className="object-cover transition-transform group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </Link>
         </div>
