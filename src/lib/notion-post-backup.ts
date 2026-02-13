@@ -1,7 +1,7 @@
 import { notionPostBackups } from '@/db/schema';
 import { getDb } from '@/lib/db';
 import type { NotionPost } from '@/lib/notion';
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, inArray, sql } from 'drizzle-orm';
 
 const SYNC_TIME_TOLERANCE_MS = 60_000;
 const DEFAULT_PAGE_SIZE = 10;
@@ -81,9 +81,29 @@ export async function upsertNotionPostsToBackup(posts: NotionPost[]): Promise<nu
 
   const db = await getDb();
   const now = new Date();
+  const existingRows = await db
+    .select({
+      id: notionPostBackups.id,
+      lastUpdateTime: notionPostBackups.lastUpdateTime,
+    })
+    .from(notionPostBackups)
+    .where(
+      inArray(
+        notionPostBackups.id,
+        posts.map((post) => post.id),
+      ),
+    );
+  const existingById = new Map(existingRows.map((row) => [row.id, row.lastUpdateTime]));
+  let upsertedCount = 0;
 
   for (const post of posts) {
     const lastUpdateTime = parseDateOrFallback(post.lastEditedTime, now);
+    const existingLastUpdateTime = existingById.get(post.id);
+
+    // 本地备份已经是同版本或更新版本时，跳过写入。
+    if (existingLastUpdateTime && existingLastUpdateTime.getTime() >= lastUpdateTime.getTime()) {
+      continue;
+    }
 
     await db
       .insert(notionPostBackups)
@@ -116,9 +136,11 @@ export async function upsertNotionPostsToBackup(posts: NotionPost[]): Promise<nu
           updatedAt: now,
         },
       });
+
+    upsertedCount += 1;
   }
 
-  return posts.length;
+  return upsertedCount;
 }
 
 export async function getBackupPostsPendingSync(): Promise<NotionBackupPost[]> {

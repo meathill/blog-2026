@@ -43,7 +43,7 @@ export default function Header() {
 
     async function loadNavigation() {
       try {
-        const response = await fetch(`/api/navigation?locale=${encodeURIComponent(locale)}`, {
+        const response = await fetch(`/api/navigation?locale=${encodeURIComponent(locale)}&section=header`, {
           cache: 'no-store',
         });
         if (!response.ok) {

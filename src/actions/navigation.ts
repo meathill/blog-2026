@@ -8,11 +8,41 @@ import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
+  formatNavigationConfigJson,
   formatNavigationItemsJson,
   getDefaultNavigationItems,
+  parseNavigationConfigJson,
   parseNavigationItemsJson,
   resolveNavigationLocale,
+  resolveNavigationSection,
 } from '@/lib/navigation-config';
+
+function getDefaultNavigationConfig(locale: 'zh' | 'en') {
+  return {
+    header: getDefaultNavigationItems(locale, 'header'),
+    footer: getDefaultNavigationItems(locale, 'footer'),
+  };
+}
+
+function normalizeItemsForSection(items: ReturnType<typeof parseNavigationItemsJson>, section: 'header' | 'footer') {
+  if (section === 'header') {
+    return items;
+  }
+
+  return items.map((item) => {
+    if (item.external) {
+      return {
+        href: item.href,
+        label: item.label,
+        external: true,
+      };
+    }
+    return {
+      href: item.href,
+      label: item.label,
+    };
+  });
+}
 
 async function checkAuth() {
   const auth = await getAuth();
@@ -24,9 +54,16 @@ async function checkAuth() {
   }
 }
 
-function buildRedirectUrl(params: { locale: 'zh' | 'en'; saved?: '1'; reset?: '1'; error?: string }): string {
+function buildRedirectUrl(params: {
+  locale: 'zh' | 'en';
+  section: 'header' | 'footer';
+  saved?: '1';
+  reset?: '1';
+  error?: string;
+}): string {
   const search = new URLSearchParams();
   search.set('locale', params.locale);
+  search.set('section', params.section);
   if (params.saved) {
     search.set('saved', params.saved);
   }
@@ -39,33 +76,42 @@ function buildRedirectUrl(params: { locale: 'zh' | 'en'; saved?: '1'; reset?: '1
   return `/admin/navigation?${search.toString()}`;
 }
 
-export async function getNavigationEditorData(localeInput: string | null | undefined) {
+export async function getNavigationEditorData(
+  localeInput: string | null | undefined,
+  sectionInput: string | null | undefined,
+) {
   await checkAuth();
 
   const locale = resolveNavigationLocale(localeInput);
+  const section = resolveNavigationSection(sectionInput);
   const db = await getDb();
   const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
+  const defaultItems = getDefaultNavigationItems(locale, section);
 
   if (!row) {
     return {
       locale,
+      section,
       hasCustomConfig: false,
-      itemsJson: formatNavigationItemsJson(getDefaultNavigationItems(locale)),
+      itemsJson: formatNavigationItemsJson(defaultItems),
     };
   }
 
   try {
-    const parsedItems = parseNavigationItemsJson(row.items);
+    const config = parseNavigationConfigJson(row.items, locale);
+    const parsedItems = normalizeItemsForSection(config[section], section);
     return {
       locale,
-      hasCustomConfig: true,
+      section,
+      hasCustomConfig: JSON.stringify(parsedItems) !== JSON.stringify(defaultItems),
       itemsJson: formatNavigationItemsJson(parsedItems),
     };
   } catch {
     return {
       locale,
+      section,
       hasCustomConfig: true,
-      itemsJson: row.items,
+      itemsJson: formatNavigationItemsJson(defaultItems),
     };
   }
 }
@@ -74,12 +120,29 @@ export async function saveNavigationConfig(formData: FormData) {
   await checkAuth();
 
   const locale = resolveNavigationLocale(formData.get('locale') as string | null | undefined);
+  const section = resolveNavigationSection(formData.get('section') as string | null | undefined);
   const itemsJson = (formData.get('itemsJson') as string | null)?.trim() ?? '';
 
   try {
-    const parsedItems = parseNavigationItemsJson(itemsJson);
-    const normalizedJson = JSON.stringify(parsedItems);
+    const parsedItems = normalizeItemsForSection(parseNavigationItemsJson(itemsJson), section);
     const db = await getDb();
+    const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
+
+    let currentConfig = getDefaultNavigationConfig(locale);
+    if (row) {
+      try {
+        currentConfig = parseNavigationConfigJson(row.items, locale);
+      } catch {
+        currentConfig = getDefaultNavigationConfig(locale);
+      }
+    }
+
+    const nextConfig = {
+      ...currentConfig,
+      [section]: parsedItems,
+    };
+
+    const normalizedJson = formatNavigationConfigJson(nextConfig);
     await db
       .insert(navigationConfigs)
       .values({
@@ -98,10 +161,10 @@ export async function saveNavigationConfig(formData: FormData) {
     revalidatePath('/');
     revalidatePath('/en');
     revalidatePath('/admin/navigation');
-    redirect(buildRedirectUrl({ locale, saved: '1' }));
+    redirect(buildRedirectUrl({ locale, section, saved: '1' }));
   } catch (error) {
     const message = error instanceof Error ? error.message : '保存失败';
-    redirect(buildRedirectUrl({ locale, error: message }));
+    redirect(buildRedirectUrl({ locale, section, error: message }));
   }
 }
 
@@ -109,11 +172,41 @@ export async function resetNavigationConfig(formData: FormData) {
   await checkAuth();
 
   const locale = resolveNavigationLocale(formData.get('locale') as string | null | undefined);
+  const section = resolveNavigationSection(formData.get('section') as string | null | undefined);
   const db = await getDb();
-  await db.delete(navigationConfigs).where(eq(navigationConfigs.locale, locale));
+  const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
+
+  let currentConfig = getDefaultNavigationConfig(locale);
+  if (row) {
+    try {
+      currentConfig = parseNavigationConfigJson(row.items, locale);
+    } catch {
+      currentConfig = getDefaultNavigationConfig(locale);
+    }
+  }
+
+  const nextConfig = {
+    ...currentConfig,
+    [section]: getDefaultNavigationItems(locale, section),
+  };
+
+  await db
+    .insert(navigationConfigs)
+    .values({
+      locale,
+      items: formatNavigationConfigJson(nextConfig),
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: navigationConfigs.locale,
+      set: {
+        items: formatNavigationConfigJson(nextConfig),
+        updatedAt: new Date(),
+      },
+    });
 
   revalidatePath('/');
   revalidatePath('/en');
   revalidatePath('/admin/navigation');
-  redirect(buildRedirectUrl({ locale, reset: '1' }));
+  redirect(buildRedirectUrl({ locale, section, reset: '1' }));
 }

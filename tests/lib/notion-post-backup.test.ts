@@ -6,7 +6,7 @@ vi.mock('@/lib/db', () => ({
   getDb: (...args: unknown[]) => mockGetDb(...args),
 }));
 
-import { listBackupPosts, shouldSyncToWordPress } from '@/lib/notion-post-backup';
+import { listBackupPosts, shouldSyncToWordPress, upsertNotionPostsToBackup } from '@/lib/notion-post-backup';
 
 interface MockBackupRow {
   id: string;
@@ -81,6 +81,34 @@ function createMockDb(rows: MockBackupRow[], queryState: QueryState) {
                   };
                 },
               };
+            },
+          };
+        },
+      };
+    },
+  };
+}
+
+function createMockDbForUpsert(existingRows: Array<{ id: string; lastUpdateTime: Date }>, insertedIds: string[]) {
+  return {
+    select() {
+      return {
+        from() {
+          return {
+            async where() {
+              return existingRows;
+            },
+          };
+        },
+      };
+    },
+    insert() {
+      return {
+        values(payload: { id: string }) {
+          insertedIds.push(payload.id);
+          return {
+            async onConflictDoUpdate() {
+              return;
             },
           };
         },
@@ -166,5 +194,54 @@ describe('shouldSyncToWordPress', () => {
     expect(result.posts).toHaveLength(10);
     expect(result.posts[0]?.id).toBe('post-51');
     expect(result.posts[9]?.id).toBe('post-60');
+  });
+
+  it('upsertNotionPostsToBackup 应跳过本地时间相同或更新的记录', async () => {
+    const insertedIds: string[] = [];
+    mockGetDb.mockResolvedValue(
+      createMockDbForUpsert(
+        [
+          { id: 'p-local-newer', lastUpdateTime: new Date('2025-01-03T00:00:00.000Z') },
+          { id: 'p-local-equal', lastUpdateTime: new Date('2025-01-02T00:00:00.000Z') },
+        ],
+        insertedIds,
+      ),
+    );
+
+    const count = await upsertNotionPostsToBackup([
+      {
+        id: 'p-local-newer',
+        title: 'newer',
+        slug: 'newer',
+        status: 'Ready',
+        tags: [],
+        categories: [],
+        content: '<p>a</p>',
+        lastEditedTime: '2025-01-02T00:00:00.000Z',
+      },
+      {
+        id: 'p-local-equal',
+        title: 'equal',
+        slug: 'equal',
+        status: 'Ready',
+        tags: [],
+        categories: [],
+        content: '<p>b</p>',
+        lastEditedTime: '2025-01-02T00:00:00.000Z',
+      },
+      {
+        id: 'p-need-update',
+        title: 'update',
+        slug: 'update',
+        status: 'Ready',
+        tags: [],
+        categories: [],
+        content: '<p>c</p>',
+        lastEditedTime: '2025-01-02T00:00:00.000Z',
+      },
+    ]);
+
+    expect(count).toBe(1);
+    expect(insertedIds).toEqual(['p-need-update']);
   });
 });

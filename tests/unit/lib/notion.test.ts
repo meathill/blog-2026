@@ -80,7 +80,7 @@ describe('fetchReadyPosts', () => {
     expect(posts[0].status).toBe('Ready');
   });
 
-  it('should sync "Published" posts modified AFTER publish', async () => {
+  it('should sync "Published" posts regardless of publish timestamp comparison', async () => {
     mockFetchResponse([createMockPage('1', 'Published', '2023-01-02T12:00:00Z', '2023-01-01T12:00:00Z')]);
 
     const posts = await fetchReadyPosts(mockEnv);
@@ -88,18 +88,18 @@ describe('fetchReadyPosts', () => {
     expect(posts[0].id).toBe('1');
   });
 
-  it('should SKIP "Published" posts modified BEFORE/AT publish time (within 60s)', async () => {
+  it('should keep syncing "Published" posts even when edited time is same as published time', async () => {
     mockFetchResponse([createMockPage('1', 'Published', '2023-01-01T12:00:00Z', '2023-01-01T12:00:00Z')]);
 
     const posts = await fetchReadyPosts(mockEnv);
-    expect(posts).toHaveLength(0);
+    expect(posts).toHaveLength(1);
   });
 
   it('should handle "published" (lowercase) status correctly', async () => {
     mockFetchResponse([createMockPage('1', 'published', '2023-01-01T12:00:00Z', '2023-01-01T12:00:00Z')]);
 
     const posts = await fetchReadyPosts(mockEnv);
-    expect(posts).toHaveLength(0); // Should be skipped because times match
+    expect(posts).toHaveLength(1);
   });
 
   it('should sync "published" (lowercase) if modified later', async () => {

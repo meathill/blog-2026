@@ -71,7 +71,6 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
     const props = page.properties;
 
     const lastEditedTime = page.last_edited_time;
-    const lastPublished = props['published_at']?.date?.start;
     const status = props.Status?.status?.name;
 
     let coverImage = null;
@@ -86,17 +85,6 @@ export async function fetchReadyPosts(env: CloudflareEnv): Promise<NotionPost[]>
         coverImage = page.cover.external.url;
       } else if (page.cover.type === 'file') {
         coverImage = page.cover.file.url;
-      }
-    }
-
-    if (status?.toLowerCase() === 'published') {
-      if (lastPublished) {
-        const edited = new Date(lastEditedTime).getTime();
-        const published = new Date(lastPublished).getTime();
-        if (edited <= published + 60000) {
-          continue;
-        }
-        console.log(`[Notion] Post "${page.id}" Modified (${lastEditedTime}) > Published (${lastPublished}). Syncing.`);
       }
     }
 

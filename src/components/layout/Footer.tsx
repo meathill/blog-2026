@@ -1,7 +1,11 @@
+'use client';
+
 import { Link } from '@/i18n/routing';
 import { GithubIcon, YoutubeIcon, TwitterIcon, HeartIcon } from 'lucide-react';
 import LanguageSwitcher from '../LanguageSwitcher';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+import type { NavItem } from '@/components/layout/header/types';
 
 const socialLinks = [
   { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon },
@@ -9,16 +13,52 @@ const socialLinks = [
   { href: 'https://x.com/meathill1', label: 'X', icon: TwitterIcon },
 ];
 
+interface NavigationResponse {
+  items?: NavItem[];
+}
+
 export default function Footer() {
   const t = useTranslations('Footer');
+  const locale = useLocale();
   const currentYear = new Date().getFullYear();
+  const [customNavItems, setCustomNavItems] = useState<NavItem[] | null>(null);
 
-  const footerLinks = [
+  const defaultFooterLinks: NavItem[] = [
     { href: '/posts', label: t('archives') },
     { href: '/app', label: t('apps') },
     { href: '/about', label: t('about') },
     { href: 'https://github.com/sponsors/meathill', label: t('sponsor'), external: true },
   ];
+  const footerLinks = customNavItems ?? defaultFooterLinks;
+
+  useEffect(() => {
+    let isCancelled = false;
+    setCustomNavItems(null);
+
+    async function loadNavigation() {
+      try {
+        const response = await fetch(`/api/navigation?locale=${encodeURIComponent(locale)}&section=footer`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as NavigationResponse;
+        if (isCancelled || !Array.isArray(data.items) || data.items.length === 0) {
+          return;
+        }
+        setCustomNavItems(data.items);
+      } catch {
+        // 请求失败时静默回退到默认 Footer 导航。
+      }
+    }
+
+    loadNavigation();
+    return () => {
+      isCancelled = true;
+    };
+  }, [locale]);
 
   return (
     <footer className="border-t border-[var(--surface-border)] mt-20">
@@ -51,8 +91,8 @@ export default function Footer() {
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t('quick_links')}</h3>
             <ul className="space-y-2">
               {footerLinks.map((link) => (
-                <li key={link.href}>
-                  {link.external ? (
+                <li key={`${link.href}-${link.label}`}>
+                  {link.external || /^https?:\/\//.test(link.href) ? (
                     <a
                       href={link.href}
                       target="_blank"

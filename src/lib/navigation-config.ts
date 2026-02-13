@@ -9,6 +9,20 @@ interface HeaderNavLabels {
   resources: string;
 }
 
+interface FooterNavLabels {
+  archives: string;
+  apps: string;
+  about: string;
+  sponsor: string;
+}
+
+export type NavigationSection = 'header' | 'footer';
+
+export interface NavigationConfigBySection {
+  header: NavItem[];
+  footer: NavItem[];
+}
+
 const DEFAULT_LABELS_BY_LOCALE: Record<string, HeaderNavLabels> = {
   zh: {
     about: '关于',
@@ -23,6 +37,21 @@ const DEFAULT_LABELS_BY_LOCALE: Record<string, HeaderNavLabels> = {
     tech: 'Tech',
     works: 'Works',
     resources: 'Resources',
+  },
+};
+
+const DEFAULT_FOOTER_LABELS_BY_LOCALE: Record<string, FooterNavLabels> = {
+  zh: {
+    archives: '归档',
+    apps: '应用',
+    about: '关于',
+    sponsor: '赞助',
+  },
+  en: {
+    archives: 'Archives',
+    apps: 'Apps',
+    about: 'About',
+    sponsor: 'Sponsor',
   },
 };
 
@@ -71,9 +100,30 @@ export function resolveNavigationLocale(input: string | null | undefined): 'zh' 
   return input === 'en' ? 'en' : 'zh';
 }
 
-export function getDefaultNavigationItems(locale: string): NavItem[] {
+export function resolveNavigationSection(input: string | null | undefined): NavigationSection {
+  return input === 'footer' ? 'footer' : 'header';
+}
+
+function getDefaultHeaderNavigationItems(locale: string): NavItem[] {
   const labels = DEFAULT_LABELS_BY_LOCALE[locale] ?? DEFAULT_LABELS_BY_LOCALE.zh;
   return getHeaderNavItems(labels);
+}
+
+function getDefaultFooterNavigationItems(locale: string): NavItem[] {
+  const labels = DEFAULT_FOOTER_LABELS_BY_LOCALE[locale] ?? DEFAULT_FOOTER_LABELS_BY_LOCALE.zh;
+  return [
+    { href: '/posts', label: labels.archives },
+    { href: '/app', label: labels.apps },
+    { href: '/about', label: labels.about },
+    { href: 'https://github.com/sponsors/meathill', label: labels.sponsor, external: true },
+  ];
+}
+
+export function getDefaultNavigationItems(locale: string, section: NavigationSection = 'header'): NavItem[] {
+  if (section === 'footer') {
+    return getDefaultFooterNavigationItems(locale);
+  }
+  return getDefaultHeaderNavigationItems(locale);
 }
 
 export function parseNavigationItemsJson(itemsJson: string): NavItem[] {
@@ -93,4 +143,48 @@ export function parseNavigationItemsJson(itemsJson: string): NavItem[] {
 
 export function formatNavigationItemsJson(items: NavItem[]): string {
   return JSON.stringify(items, null, 2);
+}
+
+function parseUnknownItems(candidate: unknown): NavItem[] {
+  if (!Array.isArray(candidate)) {
+    throw new Error('导航配置必须是数组');
+  }
+  return candidate.map((item) => sanitizeNavItem(item));
+}
+
+export function parseNavigationConfigJson(itemsJson: string, locale: string): NavigationConfigBySection {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(itemsJson);
+  } catch {
+    throw new Error('JSON 格式错误');
+  }
+
+  if (Array.isArray(parsed)) {
+    return {
+      header: parseUnknownItems(parsed),
+      footer: getDefaultNavigationItems(locale, 'footer'),
+    };
+  }
+
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error('导航配置必须是对象或数组');
+  }
+
+  const candidate = parsed as {
+    header?: unknown;
+    footer?: unknown;
+  };
+
+  const header = candidate.header ? parseUnknownItems(candidate.header) : getDefaultNavigationItems(locale, 'header');
+  const footer = candidate.footer ? parseUnknownItems(candidate.footer) : getDefaultNavigationItems(locale, 'footer');
+
+  return {
+    header,
+    footer,
+  };
+}
+
+export function formatNavigationConfigJson(config: NavigationConfigBySection): string {
+  return JSON.stringify(config);
 }
