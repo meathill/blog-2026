@@ -10,6 +10,8 @@ import {
   PlaneIcon,
 } from 'lucide-react';
 import AwesomeComment from '@/components/AwesomeComment';
+import { getAboutContent } from '@/actions/about';
+import { marked } from 'marked';
 
 export const metadata: Metadata = {
   title: '关于我',
@@ -36,7 +38,10 @@ const timeline = [
   { year: '2017', event: '专注远程工作' },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const aboutContent = await getAboutContent(locale);
+
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
@@ -94,21 +99,26 @@ export default function AboutPage() {
         {/* About Section */}
         <section className="mb-16">
           <h2 className="text-xl font-bold text-gradient mb-6">关于我</h2>
-          <div className="prose prose-invert max-w-none space-y-4 text-[var(--text-secondary)]">
-            <p>
-              大家好，我是肉山（Meathill），一名拥有 19 年以上经验的全栈开发者。 目前主要从事 Web 全栈开发，专注于
-              Vue.js、React、Node.js 等现代技术栈。
-            </p>
-            <p>
-              我热爱技术，喜欢探索新工具和新方法。同时也热衷于技术分享， 在 YouTube 和 B
-              站上发布视频教程，帮助更多人学习编程。
-            </p>
-            <p>
-              工作之余，我是一名力量举爱好者。目前的最好成绩是： 深蹲 172.5kg、卧推 130kg、硬拉 210kg，总重量 512.5kg。
-              目标是突破 530kg！
-            </p>
-          </div>
+          <div
+            className="prose prose-invert max-w-none text-[var(--text-secondary)]"
+            dangerouslySetInnerHTML={{
+              __html: aboutContent?.content
+                ? marked(aboutContent.content)
+                : `<p>大家好，我是肉山（Meathill），一名拥有 19 年以上经验的全栈开发者。 目前主要从事 Web 全栈开发，专注于 Vue.js、React、Node.js 等现代技术栈。</p>`,
+            }}
+          />
         </section>
+
+        {/* GitHub Section */}
+        {aboutContent?.githubContent && (
+          <section className="mb-16">
+            <h2 className="text-xl font-bold text-gradient mb-6">GitHub Profile</h2>
+            <div
+              className="prose prose-invert max-w-none p-6 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)]"
+              dangerouslySetInnerHTML={{ __html: marked(aboutContent.githubContent) }}
+            />
+          </section>
+        )}
 
         {/* Skills Section */}
         <section className="mb-16">

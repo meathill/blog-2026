@@ -197,6 +197,9 @@ export async function saveNavigationConfig(formData: FormData) {
     revalidatePath('/admin/navigation');
     redirect(buildRedirectUrl({ locale, section, saved: '1' }));
   } catch (error) {
+    if (error instanceof Error && (error as any).digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
     const message = error instanceof Error ? error.message : '保存失败';
     redirect(buildRedirectUrl({ locale, section, error: message }));
   }
@@ -207,40 +210,49 @@ export async function resetNavigationConfig(formData: FormData) {
 
   const locale = resolveNavigationLocale(formData.get('locale') as string | null | undefined);
   const section = resolveNavigationSection(formData.get('section') as string | null | undefined);
-  const db = await getDb();
-  const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
 
-  let currentConfig = getDefaultNavigationConfig(locale);
-  if (row) {
-    try {
-      currentConfig = parseNavigationConfigJson(row.items, locale);
-    } catch {
-      currentConfig = getDefaultNavigationConfig(locale);
+  try {
+    const db = await getDb();
+    const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
+
+    let currentConfig = getDefaultNavigationConfig(locale);
+    if (row) {
+      try {
+        currentConfig = parseNavigationConfigJson(row.items, locale);
+      } catch {
+        currentConfig = getDefaultNavigationConfig(locale);
+      }
     }
-  }
 
-  const nextConfig = {
-    ...currentConfig,
-    [section]: getDefaultNavigationItems(locale, section),
-  };
+    const nextConfig = {
+      ...currentConfig,
+      [section]: getDefaultNavigationItems(locale, section),
+    };
 
-  await db
-    .insert(navigationConfigs)
-    .values({
-      locale,
-      items: formatNavigationConfigJson(nextConfig),
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: navigationConfigs.locale,
-      set: {
+    await db
+      .insert(navigationConfigs)
+      .values({
+        locale,
         items: formatNavigationConfigJson(nextConfig),
         updatedAt: new Date(),
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: navigationConfigs.locale,
+        set: {
+          items: formatNavigationConfigJson(nextConfig),
+          updatedAt: new Date(),
+        },
+      });
 
-  revalidatePath('/');
-  revalidatePath('/en');
-  revalidatePath('/admin/navigation');
-  redirect(buildRedirectUrl({ locale, section, reset: '1' }));
+    revalidatePath('/');
+    revalidatePath('/en');
+    revalidatePath('/admin/navigation');
+    redirect(buildRedirectUrl({ locale, section, reset: '1' }));
+  } catch (error) {
+    if (error instanceof Error && (error as any).digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
+    const message = error instanceof Error ? error.message : '保存失败';
+    redirect(buildRedirectUrl({ locale, section, error: message }));
+  }
 }

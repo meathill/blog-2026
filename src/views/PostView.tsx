@@ -198,6 +198,22 @@ export default async function PostView({ post }: PostViewProps) {
               dangerouslySetInnerHTML={{ __html: processedContent }}
             />
 
+            {/* Sponsor Section */}
+            <div className="mt-12 p-8 rounded-2xl glass glow text-center">
+              <h3 className="text-xl font-bold text-gradient mb-4">觉得文章有帮助？</h3>
+              <p className="text-[var(--text-secondary)] mb-6">
+                如果我的分享对你有所启发，欢迎通过赞助来支持我持续创作。
+              </p>
+              <Link
+                href="https://github.com/sponsors/meathill"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
+              >
+                ❤️ 赞助我
+              </Link>
+            </div>
+
             {/* Footer */}
             <footer className="mt-12 pt-8 border-t border-[var(--surface-border)]">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">

@@ -1,4 +1,4 @@
-import { Home, Settings, LogOut, FileText, NavigationIcon } from 'lucide-react';
+import { Home, Settings, LogOut, FileText, NavigationIcon, User } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +27,11 @@ const items = [
     title: 'Blog',
     url: '/admin/blog',
     icon: FileText,
+  },
+  {
+    title: 'About',
+    url: '/admin/about',
+    icon: User,
   },
   {
     title: 'Navigation',

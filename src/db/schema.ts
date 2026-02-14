@@ -145,3 +145,11 @@ export const navigationConfigs = sqliteTable('navigation_configs', {
   items: text('items').notNull().default('[]'),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
+
+export const aboutContents = sqliteTable('about_contents', {
+  locale: text('locale').primaryKey(),
+  content: text('content').notNull().default(''),
+  githubContent: text('github_content').notNull().default(''),
+  sponsorContent: text('sponsor_content').notNull().default(''),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
