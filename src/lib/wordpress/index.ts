@@ -3,3 +3,4 @@ export * from './client';
 export * from './posts';
 export * from './taxonomies';
 export * from './media';
+export * from './users';

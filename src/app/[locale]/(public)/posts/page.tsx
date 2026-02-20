@@ -25,12 +25,14 @@ export function PostList({
   totalPages,
   currentPage,
   categories,
+  basePath = '/posts',
 }: {
   posts: any[];
   total: number;
   totalPages: number;
   currentPage: number;
   categories: any[];
+  basePath?: string;
 }) {
   // 按年份分组
   const postsByYear: Record<string, typeof posts> = {};
@@ -102,7 +104,7 @@ export function PostList({
           <nav className="mt-12 flex items-center justify-center gap-2">
             {currentPage > 1 ? (
               <Link
-                href={currentPage === 2 ? '/posts' : `/posts/page/${currentPage - 1}`}
+                href={currentPage === 2 ? basePath : `${basePath}/page/${currentPage - 1}`}
                 className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface)] border border-[var(--surface-border)] text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all"
               >
                 <ChevronLeftIcon size={16} />
@@ -121,7 +123,7 @@ export function PostList({
 
             {currentPage < totalPages ? (
               <Link
-                href={`/posts/page/${currentPage + 1}`}
+                href={`${basePath}/page/${currentPage + 1}`}
                 className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface)] border border-[var(--surface-border)] text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all"
               >
                 下一页

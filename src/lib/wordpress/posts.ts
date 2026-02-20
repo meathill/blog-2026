@@ -10,6 +10,7 @@ export const getPosts = cache(
     perPage?: number;
     categories?: number[];
     tags?: number[];
+    author?: number;
     search?: string;
     embed?: boolean;
     fields?: string[];
@@ -31,6 +32,9 @@ export const getPosts = cache(
     }
     if (params?.tags?.length) {
       searchParams.set('tags', params.tags.join(','));
+    }
+    if (params?.author) {
+      searchParams.set('author', String(params.author));
     }
     if (params?.search) {
       searchParams.set('search', params.search);

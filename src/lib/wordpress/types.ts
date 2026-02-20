@@ -55,3 +55,13 @@ export interface WPMedia {
   };
   post?: number;
 }
+
+export interface WPUser {
+  id: number;
+  name: string;
+  url: string;
+  description: string;
+  link: string;
+  slug: string;
+  avatar_urls?: Record<string, string>;
+}
