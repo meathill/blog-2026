@@ -50,3 +50,34 @@ Notion 博文同步采用两阶段：
 - 优先抽离重复业务逻辑，再考虑样式层重构
 - 基础 UI 封装（`src/components/ui/*`）视为设计系统层，非必要不频繁改动
 - 大改动前先补测试，再落代码
+
+## 已知限制与解法
+
+### next/og (Satori) 不支持 WebP
+
+`next/og` 的 `ImageResponse` 底层使用 Satori，只支持 PNG/JPEG。遇到 WebP 格式的 featured image 时，
+通过 Cloudflare Image Resizing 在边缘转换为 PNG：
+
+```
+原始：https://blog.meathill.com/wp-content/uploads/2024/03/1-2.webp
+转换：https://blog.meathill.com/cdn-cgi/image/format=png,width=1200/wp-content/uploads/2024/03/1-2.webp
+```
+
+实现位置：`src/app/api/og/post/route.tsx`
+
+### Feed 代理
+
+站内 RSS feed 通过 `src/app/feed/[[...path]]/route.ts` 代理到源站 WordPress：
+
+- 从 `WORDPRESS_API_URL` 推导 origin（取 `new URL(apiUrl).origin`）
+- 中间件将 `/tag/xxx/feed` 等路径 rewrite 为 `/feed/tag/xxx`
+
+### Middleware 是 async
+
+`src/middleware.ts` 现在是 `async function`（为支持 `?attachment_id` 的 fetch 调用）。
+测试中需要 `await middleware(req)`。
+
+### 公共常量
+
+`SITE_URL` 统一从 `src/lib/constants.ts` 导出，避免各文件重复写 `process.env.NEXT_PUBLIC_SITE_URL || '...'`。
+

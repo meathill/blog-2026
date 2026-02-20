@@ -6,6 +6,7 @@ import { Pagination } from '@/components/Pagination';
 import { PostListItem } from '@/components/posts/post-list-item';
 import { getTagBySlug, getPostsByTag, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { resolveBySlugWithNormalizedFallback } from '@/lib/tag-slug';
+import { SITE_URL } from '@/lib/constants';
 
 interface TagPageProps {
   params: Promise<{ slug: string; num: string }>;
@@ -21,9 +22,18 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     };
   }
 
+  const canonicalUrl = `${SITE_URL}/tag/${slug}/page/${num}`;
+
   return {
     title: `${tag.name} - 文章标签 - 第 ${num} 页`,
     description: `查看 ${tag.name} 标签下的所有文章 - 第 ${num} 页`,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        zh: canonicalUrl,
+        en: `${SITE_URL}/en/tag/${slug}/page/${num}`,
+      },
+    },
   };
 }
 

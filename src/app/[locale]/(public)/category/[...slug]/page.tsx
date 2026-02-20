@@ -11,30 +11,14 @@ import {
   formatDate,
   stripHtml,
 } from '@/lib/wordpress';
+import { parseCategorySlug } from '@/lib/category-slug';
+import { SITE_URL } from '@/lib/constants';
 
 interface CategoryPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-/**
- * 从 slug 数组中解析出分类路径和页码。
- * 例如:
- *   ['life', 'cartoon'] -> categoryPath: ['life', 'cartoon'], pageNum: 1
- *   ['life', 'cartoon', 'page', '2'] -> categoryPath: ['life', 'cartoon'], pageNum: 2
- */
-function parseCategorySlug(slugParts: string[]): { categoryPath: string[]; pageNum: number } {
-  const len = slugParts.length;
-  if (len >= 2 && slugParts[len - 2] === 'page') {
-    const num = parseInt(slugParts[len - 1], 10);
-    if (!isNaN(num) && num >= 1) {
-      return {
-        categoryPath: slugParts.slice(0, len - 2),
-        pageNum: num,
-      };
-    }
-  }
-  return { categoryPath: slugParts, pageNum: 1 };
-}
+
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -51,6 +35,12 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     return { title: '分类未找到' };
   }
 
+  const siteUrl = SITE_URL;
+  const basePath = `/category/${categoryPath.join('/')}`;
+  const canonicalUrl = pageNum > 1
+    ? `${siteUrl}${basePath}/page/${pageNum}`
+    : `${siteUrl}${basePath}`;
+
   const title = pageNum > 1
     ? `${category.name} - 文章分类 - 第 ${pageNum} 页`
     : `${category.name} - 文章分类`;
@@ -58,6 +48,15 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   return {
     title,
     description: `查看 ${category.name} 分类下的所有文章`,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        zh: canonicalUrl,
+        en: pageNum > 1
+          ? `${siteUrl}/en${basePath}/page/${pageNum}`
+          : `${siteUrl}/en${basePath}`,
+      },
+    },
   };
 }
 

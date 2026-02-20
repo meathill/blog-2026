@@ -1,27 +1,31 @@
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { NextRequest, NextResponse } from 'next/server';
+import { TOP_LEVEL_ROUTES, getLocaleAndContent } from '@/lib/middleware-helpers';
 
 const intlMiddleware = createMiddleware(routing);
 
-const TOP_LEVEL_ROUTES = ['about', 'app', 'posts', 'category', 'tag', 'login', 'search', 'api', '_next', 'admin'];
+export default async function middleware(req: NextRequest) {
+  const { pathname, searchParams } = req.nextUrl;
 
-function getLocaleAndContent(pathname: string) {
-  const match = pathname.match(/^\/(en|zh)\/(.*)$/);
-  if (match) {
-    return {
-      locale: match[1] as (typeof routing.locales)[number],
-      content: match[2],
-    };
+  // Handle ?attachment_id=X -> redirect to actual media URL
+  const attachmentId = searchParams.get('attachment_id');
+  if (attachmentId && pathname === '/') {
+    try {
+      const apiUrl = process.env.WORDPRESS_API_URL || 'https://blog.meathill.com/wp-json/wp/v2';
+      const res = await fetch(`${apiUrl}/media/${attachmentId}`);
+      if (res.ok) {
+        const media: { source_url?: string } = await res.json();
+        if (media.source_url) {
+          return NextResponse.redirect(media.source_url, 301);
+        }
+      }
+    } catch {
+      // 记录错误或进行默认处理（返回404）
+    }
+    // API查不到或出错了，返回 404
+    return new NextResponse('Not Found', { status: 404 });
   }
-  return {
-    locale: routing.defaultLocale,
-    content: pathname.startsWith('/') ? pathname.slice(1) : pathname,
-  };
-}
-
-export default function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
 
   // Redirect legacy .html to canonical URL
   if (pathname.endsWith('.html')) {
@@ -69,11 +73,13 @@ export default function middleware(req: NextRequest) {
     const locale = isLocale ? segments[0] : routing.defaultLocale;
     const pathContent = contentSegments.join('/');
     const url = req.nextUrl.clone();
-
-    // Check if the prefix is needed. Next-intl matcher might already include it,
-    // but just in case, we format it properly via the explicit /{locale}/posts/page/x.
     url.pathname = `/${locale}/posts/${pathContent}`;
     return NextResponse.redirect(url);
+  }
+
+  // Return 410 Gone for single-segment unknown paths (e.g. /img_0226, old WP attachment pages)
+  if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment) && contentSegments.length === 1) {
+    return new NextResponse('Gone', { status: 410 });
   }
 
   if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment) && contentSegments.length >= 2) {

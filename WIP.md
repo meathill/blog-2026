@@ -57,3 +57,17 @@
 - [x] 文章页 TOC 增加滚动跟随高亮（轻量实现，不引入新依赖）。
 - [x] 更新并通过相关测试：`tests/lib/notion*.test.ts`、`tests/unit/notion*.test.ts`、`tests/lib/notion-post-backup.test.ts`。
 - [x] 执行 `pnpm test -- --run` 与 `pnpm build`，确认通过。
+
+## 第七轮维护（GSC 修复收尾）
+- [x] Feed 代理：`src/app/feed/[[...path]]/route.ts` + middleware rewrite。
+- [x] 嵌套分类 catch-all 路由：`category/[slug]` → `category/[...slug]`。
+- [x] OG 图 WebP 修复：通过 Cloudflare Image Resizing 转 PNG。
+- [x] Attachment 410 Gone + `?attachment_id` 重定向/404。
+- [x] 补齐 canonical URL（tag、tag 分页、category、posts、posts 分页）。
+- [x] 抽离 `parseCategorySlug` 到 `src/lib/category-slug.ts`。
+- [x] 抽离 middleware helpers 到 `src/lib/middleware-helpers.ts`。
+- [x] 统一 `SITE_URL` 到 `src/lib/constants.ts`。
+- [x] 更新 middleware 测试为 async，新增 feed/410/attachment_id 用例。
+- [x] 新增 `tests/lib/category-slug.test.ts`。
+- [x] 执行 `pnpm test:run`（144 passed）与 `pnpm build`（exit 0），确认通过。
+

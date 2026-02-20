@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPosts, getCategories } from '@/lib/wordpress';
 import { PostList } from '@/components/posts/post-list';
+import { SITE_URL } from '@/lib/constants';
 
 const POSTS_PER_PAGE = 20;
 
@@ -13,9 +14,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { num } = await params;
   const pageNum = parseInt(num, 10);
 
+  const canonicalUrl = `${SITE_URL}/posts/page/${pageNum}`;
+
   return {
     title: `文章归档 - 第 ${pageNum} 页`,
     description: `山维空间技术文章归档 - 第 ${pageNum} 页`,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        zh: canonicalUrl,
+        en: `${SITE_URL}/en/posts/page/${pageNum}`,
+      },
+    },
   };
 }
 

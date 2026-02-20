@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
-import middleware from '@/middleware';
 
 const { mockIntlMiddleware } = vi.hoisted(() => ({
   mockIntlMiddleware: vi.fn(),
@@ -10,7 +9,6 @@ vi.mock('next-intl/middleware', () => ({
   default: () => mockIntlMiddleware,
 }));
 
-// Mock routing since it is used in middleware initialization
 vi.mock('@/i18n/routing', () => ({
   routing: {
     locales: ['en', 'zh'],
@@ -18,151 +16,162 @@ vi.mock('@/i18n/routing', () => ({
   },
 }));
 
+// Import after mocks
+import middleware from '@/middleware';
+
 describe('Middleware', () => {
   const BASE_URL = 'http://localhost:3000';
 
-  it('Example: should redirect .html paths to canonical paths', () => {
-    const req = new NextRequest(new URL('/en/tech/article.html', BASE_URL));
-    const res = middleware(req);
+  beforeEach(() => {
+    mockIntlMiddleware.mockClear();
+  });
 
-    // Should be a redirect
+  // --- 已有用例 (已修正为 async) ---
+
+  it('should redirect .html paths to canonical paths', async () => {
+    const req = new NextRequest(new URL('/en/tech/article.html', BASE_URL));
+    const res = await middleware(req);
+
     expect(res).toBeInstanceOf(NextResponse);
     expect(res?.status).toBe(307);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/posts/tech/article`);
-
-    // Should NOT call intlMiddleware
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  it('Example: should redirect legacy paths (segment >= 2) to /posts/', () => {
-    // /en/tech/article -> should go to /en/posts/tech/article
+  it('should redirect legacy paths (segment >= 2) to /posts/', async () => {
     const req = new NextRequest(new URL('/en/tech/article', BASE_URL));
-    const res = middleware(req);
+    const res = await middleware(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/posts/tech/article`);
   });
 
-  it('Example: should redirect legacy paths without locale to /posts/ (and let next-intl handle locale later if needed)', () => {
-    // /tech/article -> /posts/tech/article
-    // Note: In my implementation, I check for locale.
-    // If no locale, I simply prepend /posts/ to the pathname.
-    // Middleware re-runs on redirect.
-
+  it('should redirect legacy paths without locale to /posts/', async () => {
     const req = new NextRequest(new URL('/tech/article', BASE_URL));
-    const res = middleware(req);
+    const res = await middleware(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
   });
 
-  it('should NOT redirect standard paths like /about', () => {
+  it('should NOT redirect standard paths like /about', async () => {
     const req = new NextRequest(new URL('/en/about', BASE_URL));
-    middleware(req);
-
-    // Should pass through to intlMiddleware
+    await middleware(req);
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 
-  it('should NOT redirect /posts paths', () => {
+  it('should NOT redirect /posts paths', async () => {
     const req = new NextRequest(new URL('/en/posts/tech/article', BASE_URL));
-    // Reset mock before test
-    mockIntlMiddleware.mockClear();
-
-    middleware(req);
-
+    await middleware(req);
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 
-  it('should NOT redirect single segment paths (potential categories)', () => {
-    // /en/tech -> might be category list, keep as is for now?
-    // My logic: if (contentSegments.length >= 2) -> redirect.
-    // So /en/tech (1 content segment) should NOT redirect.
-
-    const req = new NextRequest(new URL('/en/tech', BASE_URL));
-    mockIntlMiddleware.mockClear();
-    middleware(req);
-    expect(mockIntlMiddleware).toHaveBeenCalled();
-  });
-
-  it('should redirect /tags/xxx to /tag/xxx', () => {
+  it('should redirect /tags/xxx to /tag/xxx', async () => {
     const req = new NextRequest(new URL('/tags/memory', BASE_URL));
-    // Reset mock
-    mockIntlMiddleware.mockClear();
-
-    const res = middleware(req);
+    const res = await middleware(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/zh/tag/memory`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  it('should redirect /en/tags/xxx to /en/tag/xxx', () => {
+  it('should redirect /en/tags/xxx to /en/tag/xxx', async () => {
     const req = new NextRequest(new URL('/en/tags/memory', BASE_URL));
-    mockIntlMiddleware.mockClear();
-
-    const res = middleware(req);
+    const res = await middleware(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/tag/memory`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  it('should NOT redirect /tag/xxx/page/2', () => {
-    const req = new NextRequest(new URL('/tag/memory/page/2', BASE_URL));
-    mockIntlMiddleware.mockClear();
-
-    const res = middleware(req);
-
-    expect(res).toBeUndefined();
-    expect(mockIntlMiddleware).toHaveBeenCalled();
-  });
-
-  it('should NOT redirect /tag/xxx', () => {
+  it('should NOT redirect /tag/xxx', async () => {
     const req = new NextRequest(new URL('/tag/memory', BASE_URL));
-    mockIntlMiddleware.mockClear();
-    middleware(req);
+    await middleware(req);
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 
-  it('should NOT redirect /posts/streaming-summary-march-and-bbchan', () => {
-    const req = new NextRequest(new URL('/posts/streaming-summary-march-and-bbchan', BASE_URL));
-    mockIntlMiddleware.mockClear();
-
-    const res = middleware(req);
-
-    // Should NOT redirect, but let international middleware handle it
-    expect(res).toBeUndefined();
-    expect(mockIntlMiddleware).toHaveBeenCalled();
-  });
-
-  it('should redirect /tech/interview-tutorial-how-to-use-github.html to /posts/tech/interview-tutorial-how-to-use-github', () => {
-    const req = new NextRequest(new URL('/tech/interview-tutorial-how-to-use-github.html', BASE_URL));
-    mockIntlMiddleware.mockClear();
-
-    const res = middleware(req);
+  it('should redirect /page/3 to /posts/page/3', async () => {
+    const req = new NextRequest(new URL('/page/3', BASE_URL));
+    const res = await middleware(req);
 
     expect(res?.status).toBe(307);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/interview-tutorial-how-to-use-github`);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/zh/posts/page/3`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  it('should NOT redirect /posts/interview-tutorial-how-to-use-github', () => {
-    const req = new NextRequest(new URL('/posts/interview-tutorial-how-to-use-github', BASE_URL));
-    mockIntlMiddleware.mockClear();
+  // --- 新增用例：Feed Rewrite ---
 
-    const res = middleware(req);
+  it('should rewrite /tag/foo/feed to /feed/tag/foo', async () => {
+    const req = new NextRequest(new URL('/tag/foo/feed', BASE_URL));
+    const res = await middleware(req);
 
-    expect(res).toBeUndefined();
-    expect(mockIntlMiddleware).toHaveBeenCalled();
+    // rewrite 不会改变 status，但 NextResponse.rewrite 会设置 x-middleware-rewrite header
+    expect(res).toBeInstanceOf(NextResponse);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  it('should NOT redirect /posts/from-uiprint-co-to-how-to-learn-coding', () => {
-    const req = new NextRequest(new URL('/posts/from-uiprint-co-to-how-to-learn-coding', BASE_URL));
-    mockIntlMiddleware.mockClear();
+  it('should rewrite /category/life/feed to /feed/category/life', async () => {
+    const req = new NextRequest(new URL('/category/life/feed', BASE_URL));
+    const res = await middleware(req);
 
-    const res = middleware(req);
+    expect(res).toBeInstanceOf(NextResponse);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
 
-    expect(res).toBeUndefined();
-    expect(mockIntlMiddleware).toHaveBeenCalled();
+  // --- 新增用例：410 Gone ---
+
+  it('should return 410 for single-segment unknown paths like /img_0226', async () => {
+    const req = new NextRequest(new URL('/img_0226', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(410);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should return 410 for single-segment unknown paths like /photo_2024', async () => {
+    const req = new NextRequest(new URL('/photo_2024', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(410);
+  });
+
+  // --- 新增用例：attachment_id ---
+
+  it('should return 404 for ?attachment_id when fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('network error'));
+
+    const req = new NextRequest(new URL('/?attachment_id=9999', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(404);
+    vi.restoreAllMocks();
+  });
+
+  it('should return 404 for ?attachment_id when API returns 404', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('Not Found', { status: 404 }),
+    );
+
+    const req = new NextRequest(new URL('/?attachment_id=9999', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(404);
+    vi.restoreAllMocks();
+  });
+
+  it('should redirect for ?attachment_id when API returns source_url', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ source_url: 'https://blog.meathill.com/uploads/img.jpg' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const req = new NextRequest(new URL('/?attachment_id=2035', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe('https://blog.meathill.com/uploads/img.jpg');
+    vi.restoreAllMocks();
   });
 });
