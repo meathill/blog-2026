@@ -116,6 +116,17 @@ export function PostToc({ items }: PostTocProps) {
             );
           })}
         </ul>
+        <div className="mt-6 pt-6 border-t border-[var(--surface-border)]">
+          <a
+            href="#awesome-comment"
+            className={cn(
+              'block rounded border-l-2 border-transparent py-1 pe-2 ps-2 text-sm text-[var(--text-muted)] transition-colors',
+              'hover:text-[var(--accent)]',
+            )}
+          >
+            参与讨论
+          </a>
+        </div>
       </nav>
     </aside>
   );

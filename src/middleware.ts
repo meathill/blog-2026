@@ -35,6 +35,20 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Rewrite [...something]/feed -> /feed/[...something]
+  // Because our Next.js API catch-all is at /feed/[[...path]], we intercept the old structure here.
+  // Note: we use rewrite here instead of redirect so the user URL remains /tag/fathers-day/feed intact.
+  if (pathname.endsWith('/feed')) {
+    const feedSegments = pathname.split('/').filter(Boolean);
+    // Remove 'feed' from the end
+    feedSegments.pop();
+
+    const url = req.nextUrl.clone();
+    // Build the proxy URL: /feed/tag/fathers-day
+    url.pathname = `/feed/${feedSegments.join('/')}`;
+    return NextResponse.rewrite(url);
+  }
+
   // Redirect legacy paths (e.g. /tech/article -> /posts/tech/article)
   const segments = pathname.split('/').filter(Boolean);
   const isLocale = routing.locales.includes(segments[0] as any);
@@ -47,6 +61,18 @@ export default function middleware(req: NextRequest) {
     const pathContent = contentSegments.slice(1).join('/');
     const url = req.nextUrl.clone();
     url.pathname = `/${locale}/tag/${pathContent}`;
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect /page/xxx -> /posts/page/xxx
+  if (rootSegment === 'page' && contentSegments.length >= 2) {
+    const locale = isLocale ? segments[0] : routing.defaultLocale;
+    const pathContent = contentSegments.join('/');
+    const url = req.nextUrl.clone();
+
+    // Check if the prefix is needed. Next-intl matcher might already include it,
+    // but just in case, we format it properly via the explicit /{locale}/posts/page/x.
+    url.pathname = `/${locale}/posts/${pathContent}`;
     return NextResponse.redirect(url);
   }
 
@@ -67,6 +93,6 @@ export const config = {
   matcher: [
     '/',
     '/(zh|en)/:path*',
-    '/((?!api|_next|.*\\.(?:png|jpg|jpeg|svg|css|js|ico|webp|json|xml|woff|woff2|ttf|zip|gz)$).*)',
+    '/((?!api|_next|feed|.*\\/feed|.*\\.(?:png|jpg|jpeg|svg|css|js|ico|webp|json|xml|woff|woff2|ttf|zip|gz)$).*)',
   ],
 };

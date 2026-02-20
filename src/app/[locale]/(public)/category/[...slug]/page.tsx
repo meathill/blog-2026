@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
@@ -10,38 +10,84 @@ import {
   calculateReadingTime,
   formatDate,
   stripHtml,
-  WPCategory,
 } from '@/lib/wordpress';
 
 interface CategoryPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string[] }>;
+}
+
+/**
+ * 从 slug 数组中解析出分类路径和页码。
+ * 例如:
+ *   ['life', 'cartoon'] -> categoryPath: ['life', 'cartoon'], pageNum: 1
+ *   ['life', 'cartoon', 'page', '2'] -> categoryPath: ['life', 'cartoon'], pageNum: 2
+ */
+function parseCategorySlug(slugParts: string[]): { categoryPath: string[]; pageNum: number } {
+  const len = slugParts.length;
+  if (len >= 2 && slugParts[len - 2] === 'page') {
+    const num = parseInt(slugParts[len - 1], 10);
+    if (!isNaN(num) && num >= 1) {
+      return {
+        categoryPath: slugParts.slice(0, len - 2),
+        pageNum: num,
+      };
+    }
+  }
+  return { categoryPath: slugParts, pageNum: 1 };
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const category = await getCategoryBySlug(slug);
+  const { categoryPath, pageNum } = parseCategorySlug(slug);
 
-  if (!category) {
-    return {
-      title: '分类未找到',
-    };
+  if (categoryPath.length === 0) {
+    return { title: '分类未找到' };
   }
 
+  const actualSlug = categoryPath[categoryPath.length - 1];
+  const category = await getCategoryBySlug(actualSlug);
+
+  if (!category) {
+    return { title: '分类未找到' };
+  }
+
+  const title = pageNum > 1
+    ? `${category.name} - 文章分类 - 第 ${pageNum} 页`
+    : `${category.name} - 文章分类`;
+
   return {
-    title: `${category.name} - 文章分类`,
+    title,
     description: `查看 ${category.name} 分类下的所有文章`,
   };
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const category = await getCategoryBySlug(slug);
+  const { categoryPath, pageNum } = parseCategorySlug(slug);
+
+  if (categoryPath.length === 0) {
+    notFound();
+  }
+
+  // Page 1 should use the canonical URL without /page/1
+  if (pageNum === 1 && slug.length > categoryPath.length) {
+    redirect(`/category/${categoryPath.join('/')}`);
+  }
+
+  const actualSlug = categoryPath[categoryPath.length - 1];
+  const category = await getCategoryBySlug(actualSlug);
 
   if (!category) {
     notFound();
   }
 
-  const { posts, totalPages } = await getPostsByCategory(category.id, 1, 50);
+  const { posts, totalPages } = await getPostsByCategory(category.id, pageNum, 50);
+
+  if (pageNum > 1 && pageNum > totalPages && totalPages > 0) {
+    notFound();
+  }
+
+  const baseUrl = `/category/${categoryPath.join('/')}`;
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -62,7 +108,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </h1>
           <p className="text-[var(--text-secondary)]">
             共 {category.count} 篇文章
-            {totalPages > 1 && `，当前第 1/${totalPages} 页`}
+            {totalPages > 1 && `，当前第 ${pageNum}/${totalPages} 页`}
           </p>
         </header>
 
@@ -87,7 +133,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
         {posts.length === 0 && <div className="text-center py-12 text-[var(--text-muted)]">该分类暂无文章</div>}
 
-        <Pagination currentPage={1} totalPages={totalPages} baseUrl={`/category/${slug}`} />
+        <Pagination currentPage={pageNum} totalPages={totalPages} baseUrl={baseUrl} />
       </div>
     </div>
   );
