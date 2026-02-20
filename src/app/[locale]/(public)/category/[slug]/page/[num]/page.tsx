@@ -1,24 +1,17 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
 import { PostListItem } from '@/components/posts/post-list-item';
-import {
-  getCategoryBySlug,
-  getPostsByCategory,
-  calculateReadingTime,
-  formatDate,
-  stripHtml,
-  WPCategory,
-} from '@/lib/wordpress';
+import { getCategoryBySlug, getPostsByCategory, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 
 interface CategoryPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; num: string }>;
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, num } = await params;
   const category = await getCategoryBySlug(slug);
 
   if (!category) {
@@ -28,20 +21,34 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   }
 
   return {
-    title: `${category.name} - 文章分类`,
-    description: `查看 ${category.name} 分类下的所有文章`,
+    title: `${category.name} - 文章分类 - 第 ${num} 页`,
+    description: `查看 ${category.name} 分类下的所有文章 - 第 ${num} 页`,
   };
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = await params;
+export default async function CategoryPageNum({ params }: CategoryPageProps) {
+  const { slug, num } = await params;
+  const pageNum = parseInt(num, 10);
+
+  if (isNaN(pageNum) || pageNum < 1) {
+    notFound();
+  }
+
+  if (pageNum === 1) {
+    redirect(`/category/${slug}`);
+  }
+
   const category = await getCategoryBySlug(slug);
 
   if (!category) {
     notFound();
   }
 
-  const { posts, totalPages } = await getPostsByCategory(category.id, 1, 50);
+  const { posts, totalPages } = await getPostsByCategory(category.id, pageNum, 50);
+
+  if (pageNum > totalPages && totalPages > 0) {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -58,11 +65,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         {/* Header */}
         <header className="mb-12">
           <h1 className="text-responsive-title mb-4">
-            <span className="text-gradient">{category.name}</span>
+            <span className="text-gradient">分类：{category.name}</span>
           </h1>
           <p className="text-[var(--text-secondary)]">
             共 {category.count} 篇文章
-            {totalPages > 1 && `，当前第 1/${totalPages} 页`}
+            {totalPages > 1 && `，当前第 ${pageNum}/${totalPages} 页`}
           </p>
         </header>
 
@@ -87,7 +94,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
         {posts.length === 0 && <div className="text-center py-12 text-[var(--text-muted)]">该分类暂无文章</div>}
 
-        <Pagination currentPage={1} totalPages={totalPages} baseUrl={`/category/${slug}`} />
+        <Pagination currentPage={pageNum} totalPages={totalPages} baseUrl={`/category/${slug}`} />
       </div>
     </div>
   );

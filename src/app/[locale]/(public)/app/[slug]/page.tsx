@@ -78,7 +78,8 @@ export default async function AppDetailPage({ params }: PageProps) {
   const category = await getCategoryBySlug(slug);
   let recentPosts: any[] = [];
   if (category) {
-    recentPosts = await getPostsByCategory(category.id, 1, 3);
+    const result = await getPostsByCategory(category.id, 1, 3);
+    recentPosts = result.posts;
   }
 
   return (

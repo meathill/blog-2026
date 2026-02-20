@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPosts, getCategories, getUserBySlug } from '@/lib/wordpress';
-import { PostList } from '../../page';
+import { PostList } from '@/components/posts/post-list';
 
 const POSTS_PER_PAGE = 20;
 

@@ -73,9 +73,35 @@ export const getPost = cache(async (slug: string, options?: RequestInit): Promis
   return posts[0] || null;
 });
 
-export const getPostsByCategory = cache(async (categoryId: number, page = 1, perPage = 20): Promise<WPPost[]> => {
-  return wpFetch<WPPost[]>(`/posts?categories=${categoryId}&page=${page}&per_page=${perPage}&_embed=true`);
-});
+export const getPostsByCategory = cache(
+  async (categoryId: number, page = 1, perPage = 20): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
+    const { env } = await getCloudflareContext({ async: true });
+    const headers = getAccessHeaders(env);
+    const url = `${env.WORDPRESS_API_URL}/posts?categories=${categoryId}&page=${page}&per_page=${perPage}&_embed=true`;
+
+    const response = await fetch(url, {
+      headers,
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) {
+      if (response.status === 400) {
+        const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
+        const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
+        return { posts: [], total, totalPages };
+      }
+      const text = await response.text();
+      console.error('[WP API] Error Body:', text);
+      throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
+    }
+
+    const posts: WPPost[] = await response.json();
+    const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
+    const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
+
+    return { posts, total, totalPages };
+  },
+);
 
 export const getPostsByTag = cache(
   async (tagId: number, page = 1, perPage = 20): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
