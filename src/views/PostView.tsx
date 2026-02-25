@@ -1,5 +1,3 @@
-import Link from 'next/link';
-import { CalendarIcon, ClockIcon, TagIcon, FolderIcon } from 'lucide-react';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import AppCard from '@/components/AppCard';
@@ -8,7 +6,6 @@ import {
   formatDate,
   stripHtml,
   processContent,
-  WPCategory,
   getTags,
   WPTag,
   WPPost,
@@ -19,6 +16,9 @@ import AwesomeComment from '@/components/AwesomeComment';
 import { getDb } from '@/lib/db';
 import { PostToc, type TocItem } from '@/components/posts/post-toc';
 import FeaturedImage from '@/components/posts/featured-image';
+import PostBreadcrumb from '@/components/posts/post-breadcrumb';
+import PostHeader from '@/components/posts/post-header';
+import PostFooter from '@/components/posts/post-footer';
 
 interface PostViewProps {
   post: WPPost;
@@ -26,7 +26,6 @@ interface PostViewProps {
 
 // 从 HTML 内容中提取标题生成 TOC
 function extractTOC(html: string): TocItem[] {
-  // 使用非贪婪匹配 (.*?) 允许标题中包含 HTML 标签
   const headingRegex = /<h([2-4])[^>]*id="([^"]*)"[^>]*>(.*?)<\/h[2-4]>/gi;
   const toc: TocItem[] = [];
   let match;
@@ -35,12 +34,52 @@ function extractTOC(html: string): TocItem[] {
     toc.push({
       level: parseInt(match[1], 10),
       id: match[2],
-      text: stripHtml(match[3]), // 清理标题文本中的 HTML 标签
+      text: stripHtml(match[3]),
     });
   }
 
   return toc;
 }
+
+// 检查内容是否包含代码块
+function hasCodeBlocks(html: string): boolean {
+  return /<pre[\s>]/i.test(html);
+}
+
+// 查找关联的 App
+async function findRelatedApp(
+  tags: WPTag[],
+  categories: { slug: string }[],
+) {
+  const db = await getDb();
+
+  // 优先通过 app: 标签查找
+  const appTag = tags.find((t) => t.name.startsWith('app:'));
+  if (appTag) {
+    const appSlug = appTag.name.replace('app:', '');
+    const app = await db.select().from(apps).where(eq(apps.slug, appSlug)).get();
+    if (app) return app;
+  }
+
+  // 其次通过分类 slug 查找
+  for (const category of categories) {
+    const app = await db.select().from(apps).where(eq(apps.slug, category.slug)).get();
+    if (app) return app;
+  }
+
+  return null;
+}
+
+const PROSE_CLASSES = `prose prose-invert prose-lg max-w-none
+  prose-headings:text-[var(--text-primary)] prose-headings:scroll-mt-24
+  prose-p:text-[var(--text-secondary)]
+  prose-a:text-[var(--accent)] prose-a:no-underline hover:prose-a:underline
+  prose-strong:text-[var(--text-primary)]
+  prose-code:text-[var(--accent)] prose-code:bg-[var(--surface)] prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+  prose-pre:bg-[var(--surface)] prose-pre:border prose-pre:border-[var(--surface-border)] prose-pre:p-0
+  prose-img:rounded-xl
+  prose-blockquote:border-l-[var(--accent)] prose-blockquote:text-[var(--text-muted)]
+  prose-li:text-[var(--text-secondary)]`;
 
 export default async function PostView({ post }: PostViewProps) {
   const title = stripHtml(post.title.rendered);
@@ -48,40 +87,19 @@ export default async function PostView({ post }: PostViewProps) {
   const dateFormatted = formatDate(post.date);
   const processedContent = processContent(post.content.rendered);
   const toc = extractTOC(processedContent);
+  const needsCodeHighlight = hasCodeBlocks(processedContent);
 
-  // 获取分类名称
-  let categories: WPCategory[] = [];
-  if (post.categories && post.categories.length > 0) {
-    const allCategories = await getCategories();
-    categories = allCategories.filter((cat) => post.categories.includes(cat.id));
-  }
+  // 并发获取分类和标签
+  const [allCategories, tags] = await Promise.all([
+    post.categories?.length ? getCategories() : Promise.resolve([]),
+    post.tags?.length ? getTags({ include: post.tags }) : Promise.resolve([] as WPTag[]),
+  ]);
+  const categories = post.categories?.length
+    ? allCategories.filter((cat) => post.categories.includes(cat.id))
+    : [];
 
-  // 获取标签
-  let tags: WPTag[] = [];
-  if (post.tags && post.tags.length > 0) {
-    tags = await getTags({ include: post.tags });
-  }
-
-  // check for app tag
-  let relatedApp = null;
-  const appTag = tags.find((t) => t.name.startsWith('app:'));
-  const db = await getDb();
-
-  if (appTag) {
-    const appSlug = appTag.name.replace('app:', '');
-    relatedApp = await db.select().from(apps).where(eq(apps.slug, appSlug)).get();
-  }
-
-  if (!relatedApp && categories.length > 0) {
-    // Check if any category matches an app slug
-    for (const category of categories) {
-      const app = await db.select().from(apps).where(eq(apps.slug, category.slug)).get();
-      if (app) {
-        relatedApp = app;
-        break;
-      }
-    }
-  }
+  const relatedApp = await findRelatedApp(tags, categories);
+  const thumbnail = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -91,76 +109,15 @@ export default async function PostView({ post }: PostViewProps) {
 
           {/* Main Content */}
           <article className="flex-1 max-w-3xl">
-            {/* Breadcrumb */}
-            <nav className="mb-8 flex items-center text-sm text-[var(--text-muted)]">
-              <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">
-                首页
-              </Link>
-              <span className="mx-2">/</span>
-              {categories.length > 0 ? (
-                <Link
-                  href={`/category/${categories[0].slug}`}
-                  className="hover:text-[var(--text-primary)] transition-colors"
-                >
-                  {categories[0].name}
-                </Link>
-              ) : (
-                <Link href="/posts" className="hover:text-[var(--text-primary)] transition-colors">
-                  全部文章
-                </Link>
-              )}
-              <span className="mx-2">/</span>
-              <span className="text-[var(--text-primary)] font-medium truncate">{title}</span>
-            </nav>
+            <PostBreadcrumb title={title} categories={categories} />
 
-            {/* Article Header */}
-            <header className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-4 leading-tight">{title}</h1>
-
-              {/* Meta Info */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
-                <span className="inline-flex items-center gap-1">
-                  <CalendarIcon size={14} />
-                  {dateFormatted}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <ClockIcon size={14} />
-                  {readingTime} 分钟阅读
-                </span>
-                {categories.length > 0 && (
-                  <span className="inline-flex items-center gap-2">
-                    <FolderIcon size={14} />
-                    <span className="inline-flex flex-wrap items-center gap-2">
-                      {categories.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          href={`/category/${cat.slug}`}
-                          className="hover:text-[var(--accent)] transition-colors"
-                        >
-                          {cat.name}
-                        </Link>
-                      ))}
-                    </span>
-                  </span>
-                )}
-                {tags.length > 0 && (
-                  <span className="inline-flex items-center gap-2">
-                    <TagIcon size={14} />
-                    <span className="inline-flex flex-wrap items-center gap-2">
-                      {tags.map((tag) => (
-                        <Link
-                          href={`/tag/${tag.slug}`}
-                          key={tag.id}
-                          className="hover:text-[var(--accent)] transition-colors"
-                        >
-                          {tag.name}
-                        </Link>
-                      ))}
-                    </span>
-                  </span>
-                )}
-              </div>
-            </header>
+            <PostHeader
+              title={title}
+              dateFormatted={dateFormatted}
+              readingTime={readingTime}
+              categories={categories}
+              tags={tags}
+            />
 
             {/* Featured App */}
             {relatedApp && (
@@ -173,89 +130,26 @@ export default async function PostView({ post }: PostViewProps) {
             )}
 
             {/* Featured Image */}
-            {post._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
+            {thumbnail && (
               <FeaturedImage
-                src={post._embedded['wp:featuredmedia'][0].source_url}
+                src={thumbnail}
                 alt={title}
               />
             )}
 
-            {/* ... rest of content ... */}
+            {/* Article Content */}
             <div
-              className="prose prose-invert prose-lg max-w-none
-                prose-headings:text-[var(--text-primary)] prose-headings:scroll-mt-24
-                prose-p:text-[var(--text-secondary)]
-                prose-a:text-[var(--accent)] prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-[var(--text-primary)]
-                prose-code:text-[var(--accent)] prose-code:bg-[var(--surface)] prose-code:px-1 prose-code:py-0.5 prose-code:rounded
-                prose-pre:bg-[var(--surface)] prose-pre:border prose-pre:border-[var(--surface-border)] prose-pre:p-0
-                prose-img:rounded-xl
-                prose-blockquote:border-l-[var(--accent)] prose-blockquote:text-[var(--text-muted)]
-                prose-li:text-[var(--text-secondary)]
-              "
+              className={PROSE_CLASSES}
               dangerouslySetInnerHTML={{ __html: processedContent }}
             />
 
-            {/* Sponsor Section */}
-            <div className="mt-12 p-8 rounded-2xl glass glow text-center">
-              <h3 className="text-xl font-bold text-gradient mb-4">觉得文章有帮助？</h3>
-              <p className="text-[var(--text-secondary)] mb-6">
-                如果我的分享对你有所启发，欢迎通过赞助来支持我持续创作。
-              </p>
-              <Link
-                href="https://github.com/sponsors/meathill"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
-              >
-                ❤️ 赞助我
-              </Link>
-            </div>
-
-            {/* Footer */}
-            <footer className="mt-12 pt-8 border-t border-[var(--surface-border)]">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <Link
-                  href="/posts"
-                  className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors text-nowrap"
-                >
-                  返回文章列表
-                </Link>
-
-                {categories.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((cat) => (
-                      <Link
-                        key={cat.id}
-                        href={`/category/${cat.slug}`}
-                        className="px-3 py-1 text-xs font-medium rounded-full bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all"
-                      >
-                        {cat.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 w-1/2">
-                    {tags.map((tag) => (
-                      <Link
-                        key={tag.id}
-                        href={`/tag/${tag.slug}`}
-                        className="px-3 py-1 text-xs font-medium rounded-full bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all"
-                      >
-                        #{tag.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </footer>
+            <PostFooter categories={categories} tags={tags} />
 
             <AwesomeComment />
           </article>
         </div>
       </div>
-      <CodeHighlight />
+      {needsCodeHighlight && <CodeHighlight />}
     </div>
   );
 }

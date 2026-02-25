@@ -45,9 +45,7 @@ export default function Header({ initialNavItems }: { initialNavItems?: NavItem[
 
     async function loadNavigation() {
       try {
-        const response = await fetch(`/api/navigation?locale=${encodeURIComponent(locale)}&section=header`, {
-          cache: 'no-store',
-        });
+        const response = await fetch(`/api/navigation?locale=${encodeURIComponent(locale)}&section=header`);
         if (!response.ok) {
           return;
         }

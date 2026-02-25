@@ -5,6 +5,8 @@ import PostView from '@/views/PostView';
 import AttachmentView from '@/views/AttachmentView';
 import { routing } from '@/i18n/routing';
 
+export const revalidate = 86400;
+
 interface PostPageProps {
   params: Promise<{ slug: string[]; locale: string }>;
 }

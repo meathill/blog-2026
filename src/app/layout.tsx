@@ -67,6 +67,10 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.webp" type="image/webp" />
         <link rel="apple-touch-icon" href="/favicon.webp" />
+        <link rel="dns-prefetch" href="https://blog.meathill.com" />
+        <link rel="preconnect" href="https://blog.meathill.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
       </head>
 
       <body className={`antialiased ${inter.className}`}>
