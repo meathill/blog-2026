@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPosts, getCategories, getUserBySlug } from '@/lib/wordpress';
 import { PostList } from '@/components/posts/post-list';
+import { SITE_URL } from '@/lib/constants';
 
 const POSTS_PER_PAGE = 20;
 
@@ -20,9 +21,18 @@ export async function generateMetadata({ params }: AuthorPageNumProps): Promise<
     };
   }
 
+  const canonicalUrl = `${SITE_URL}/posts/author/${slug}/page/${pageNum}`;
+
   return {
     title: `${author.name} 的文章归档 - 第 ${pageNum} 页`,
     description: `查看由 ${author.name} 编写的所有文章归档 - 第 ${pageNum} 页`,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        zh: canonicalUrl,
+        en: `${SITE_URL}/en/posts/author/${slug}/page/${pageNum}`,
+      },
+    },
   };
 }
 

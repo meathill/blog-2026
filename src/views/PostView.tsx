@@ -18,6 +18,7 @@ import CodeHighlight from '@/components/CodeHighlight';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getDb } from '@/lib/db';
 import { PostToc, type TocItem } from '@/components/posts/post-toc';
+import FeaturedImage from '@/components/posts/featured-image';
 
 interface PostViewProps {
   post: WPPost;
@@ -173,13 +174,10 @@ export default async function PostView({ post }: PostViewProps) {
 
             {/* Featured Image */}
             {post._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
-              <div className="mb-8 overflow-hidden rounded-xl">
-                <img
-                  src={post._embedded['wp:featuredmedia'][0].source_url}
-                  alt={title}
-                  className="w-full h-auto object-cover"
-                />
-              </div>
+              <FeaturedImage
+                src={post._embedded['wp:featuredmedia'][0].source_url}
+                alt={title}
+              />
             )}
 
             {/* ... rest of content ... */}
