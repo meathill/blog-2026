@@ -84,8 +84,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
         <GoogleAdsense />
       </body>
-      {/* @ts-expect-error - strategy prop is supported but not typed */}
-      <GoogleAnalytics gaId="G-1S0T1HF97B" strategy="lazyOnload" />
+      <GoogleAnalytics gaId="G-1S0T1HF97B" />
     </html>
   );
 }

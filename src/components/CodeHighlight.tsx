@@ -64,8 +64,9 @@ export default function CodeHighlight() {
   useEffect(() => {
     hljs.highlightAll();
 
-    // 高亮完成后上报语言使用情况
-    requestIdleCallback(() => reportLanguages());
+    // 高亮完成后上报语言使用情况（Safari 不支持 requestIdleCallback）
+    const idle = globalThis.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 100));
+    idle(() => reportLanguages());
   }, []);
 
   return null;

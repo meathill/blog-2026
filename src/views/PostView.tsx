@@ -14,7 +14,8 @@ import {
 import CodeHighlight from '@/components/CodeHighlight';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getDb } from '@/lib/db';
-import { PostToc, type TocItem } from '@/components/posts/post-toc';
+import { PostToc } from '@/components/posts/post-toc';
+import { extractTOC, hasCodeBlocks } from '@/lib/post-utils';
 import FeaturedImage from '@/components/posts/featured-image';
 import PostBreadcrumb from '@/components/posts/post-breadcrumb';
 import PostHeader from '@/components/posts/post-header';
@@ -22,28 +23,6 @@ import PostFooter from '@/components/posts/post-footer';
 
 interface PostViewProps {
   post: WPPost;
-}
-
-// 从 HTML 内容中提取标题生成 TOC
-function extractTOC(html: string): TocItem[] {
-  const headingRegex = /<h([2-4])[^>]*id="([^"]*)"[^>]*>(.*?)<\/h[2-4]>/gi;
-  const toc: TocItem[] = [];
-  let match;
-
-  while ((match = headingRegex.exec(html)) !== null) {
-    toc.push({
-      level: parseInt(match[1], 10),
-      id: match[2],
-      text: stripHtml(match[3]),
-    });
-  }
-
-  return toc;
-}
-
-// 检查内容是否包含代码块
-function hasCodeBlocks(html: string): boolean {
-  return /<pre[\s>]/i.test(html);
 }
 
 // 查找关联的 App
@@ -83,7 +62,7 @@ export default async function PostView({ post }: PostViewProps) {
   const readingTime = calculateReadingTime(post.content.rendered);
   const dateFormatted = formatDate(post.date);
   const processedContent = processContent(post.content.rendered);
-  const toc = extractTOC(processedContent);
+  const toc = extractTOC(processedContent, stripHtml);
   const needsCodeHighlight = hasCodeBlocks(processedContent);
 
   // 并发获取分类和标签

@@ -57,6 +57,13 @@
       "bucket_name": "site-cache"
     }
   ],
+  "kv_namespaces": [
+    {
+      "binding": "PERF_KV",
+      "id": "212d31a7fa4945939e9e851f292ac5c8",
+      "preview_id": "212d31a7fa4945939e9e851f292ac5c8"
+    }
+  ],
   "vars": {
     "NEXT_PUBLIC_SITE_URL": "https://meathill.com",
     "NEXT_PUBLIC_ASSETS_URL": "https://i.meathill.com",
