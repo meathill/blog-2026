@@ -12,9 +12,7 @@ export default function PostFooter({ categories, tags }: PostFooterProps) {
       {/* Sponsor Section */}
       <div className="mt-12 p-8 rounded-2xl glass glow text-center">
         <h3 className="text-xl font-bold text-gradient mb-4">觉得文章有帮助？</h3>
-        <p className="text-[var(--text-secondary)] mb-6">
-          如果我的分享对你有所启发，欢迎通过赞助来支持我持续创作。
-        </p>
+        <p className="text-[var(--text-secondary)] mb-6">如果我的分享对你有所启发，欢迎通过赞助来支持我持续创作。</p>
         <Link
           href="https://github.com/sponsors/meathill"
           target="_blank"

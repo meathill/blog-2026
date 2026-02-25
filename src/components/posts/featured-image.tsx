@@ -5,10 +5,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 
-const ImagePreviewDialog = dynamic(
-  () => import('@/components/posts/image-preview-dialog'),
-  { ssr: false },
-);
+const ImagePreviewDialog = dynamic(() => import('@/components/posts/image-preview-dialog'), { ssr: false });
 
 interface FeaturedImageProps {
   src: string;
@@ -25,10 +22,7 @@ export default function FeaturedImage({ src, alt }: FeaturedImageProps) {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className={cn(
-            'relative block w-full cursor-zoom-in',
-            'aspect-square md:aspect-video',
-          )}
+          className={cn('relative block w-full cursor-zoom-in', 'aspect-square md:aspect-video')}
           aria-label={`查看大图：${alt}`}
         >
           <Image
@@ -43,14 +37,7 @@ export default function FeaturedImage({ src, alt }: FeaturedImageProps) {
       </div>
 
       {/* 大图预览弹窗 - 懒加载 */}
-      {isOpen && (
-        <ImagePreviewDialog
-          src={src}
-          alt={alt}
-          isOpen={isOpen}
-          onOpenChange={setIsOpen}
-        />
-      )}
+      {isOpen && <ImagePreviewDialog src={src} alt={alt} isOpen={isOpen} onOpenChange={setIsOpen} />}
     </>
   );
 }

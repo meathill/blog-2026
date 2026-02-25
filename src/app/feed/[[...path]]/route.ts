@@ -23,15 +23,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
     // If there are sub-paths, construct the origin feed URL correctly
     // e.g. /feed/tag/父亲节 -> Origin: /tag/父亲节/feed/
     if (path && path.length > 0) {
-      const originalPath = path.map(segment => encodeURIComponent(segment)).join('/');
+      const originalPath = path.map((segment) => encodeURIComponent(segment)).join('/');
       feedUrl = `${originUrl}/${originalPath}/feed/`;
     }
 
     const originResponse = await fetch(feedUrl, {
       next: { revalidate: 3600 },
       headers: {
-        'Accept': 'application/rss+xml, application/xml',
-      }
+        Accept: 'application/rss+xml, application/xml',
+      },
     });
 
     if (!originResponse.ok) {

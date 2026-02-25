@@ -48,6 +48,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
               src={thumbnail}
               alt={title}
               fill
+              loading="lazy"
               className="object-cover transition-transform group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />

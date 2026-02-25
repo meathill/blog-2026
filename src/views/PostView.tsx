@@ -47,10 +47,7 @@ function hasCodeBlocks(html: string): boolean {
 }
 
 // 查找关联的 App
-async function findRelatedApp(
-  tags: WPTag[],
-  categories: { slug: string }[],
-) {
+async function findRelatedApp(tags: WPTag[], categories: { slug: string }[]) {
   const db = await getDb();
 
   // 优先通过 app: 标签查找
@@ -94,9 +91,7 @@ export default async function PostView({ post }: PostViewProps) {
     post.categories?.length ? getCategories() : Promise.resolve([]),
     post.tags?.length ? getTags({ include: post.tags }) : Promise.resolve([] as WPTag[]),
   ]);
-  const categories = post.categories?.length
-    ? allCategories.filter((cat) => post.categories.includes(cat.id))
-    : [];
+  const categories = post.categories?.length ? allCategories.filter((cat) => post.categories.includes(cat.id)) : [];
 
   const relatedApp = await findRelatedApp(tags, categories);
   const thumbnail = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
@@ -130,18 +125,10 @@ export default async function PostView({ post }: PostViewProps) {
             )}
 
             {/* Featured Image */}
-            {thumbnail && (
-              <FeaturedImage
-                src={thumbnail}
-                alt={title}
-              />
-            )}
+            {thumbnail && <FeaturedImage src={thumbnail} alt={title} />}
 
             {/* Article Content */}
-            <div
-              className={PROSE_CLASSES}
-              dangerouslySetInnerHTML={{ __html: processedContent }}
-            />
+            <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: processedContent }} />
 
             <PostFooter categories={categories} tags={tags} />
 

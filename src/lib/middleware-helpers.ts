@@ -1,6 +1,17 @@
 import { routing } from '@/i18n/routing';
 
-export const TOP_LEVEL_ROUTES = ['about', 'app', 'posts', 'category', 'tag', 'login', 'search', 'api', '_next', 'admin'];
+export const TOP_LEVEL_ROUTES = [
+  'about',
+  'app',
+  'posts',
+  'category',
+  'tag',
+  'login',
+  'search',
+  'api',
+  '_next',
+  'admin',
+];
 
 /**
  * 从 pathname 中解析 locale 和内容路径。

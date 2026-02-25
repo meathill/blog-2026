@@ -23,4 +23,3 @@ export default async function ArchivePage() {
 
   return <PostList posts={posts} total={total} totalPages={totalPages} currentPage={1} categories={categories} />;
 }
-

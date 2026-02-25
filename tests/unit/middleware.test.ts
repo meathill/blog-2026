@@ -148,9 +148,7 @@ describe('Middleware', () => {
   });
 
   it('should return 404 for ?attachment_id when API returns 404', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('Not Found', { status: 404 }),
-    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('Not Found', { status: 404 }));
 
     const req = new NextRequest(new URL('/?attachment_id=9999', BASE_URL));
     const res = await middleware(req);

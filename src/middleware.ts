@@ -99,6 +99,6 @@ export const config = {
   matcher: [
     '/',
     '/(zh|en)/:path*',
-    '/((?!api|_next|feed|.*\\/feed|.*\\.(?:png|jpg|jpeg|svg|css|js|ico|webp|json|xml|woff|woff2|ttf|zip|gz)$).*)',
+    '/((?!api|_next|_vercel|feed|.*\\/feed|.*\\.(?:png|jpg|jpeg|gif|svg|css|js|ico|webp|webm|json|xml|txt|woff|woff2|ttf|eot|otf|map|zip|gz)$).*)',
   ],
 };

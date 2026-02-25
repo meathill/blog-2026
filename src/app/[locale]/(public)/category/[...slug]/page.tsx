@@ -4,21 +4,13 @@ import Link from 'next/link';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
 import { PostListItem } from '@/components/posts/post-list-item';
-import {
-  getCategoryBySlug,
-  getPostsByCategory,
-  calculateReadingTime,
-  formatDate,
-  stripHtml,
-} from '@/lib/wordpress';
+import { getCategoryBySlug, getPostsByCategory, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { parseCategorySlug } from '@/lib/category-slug';
 import { SITE_URL } from '@/lib/constants';
 
 interface CategoryPageProps {
   params: Promise<{ slug: string[] }>;
 }
-
-
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -37,13 +29,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
   const siteUrl = SITE_URL;
   const basePath = `/category/${categoryPath.join('/')}`;
-  const canonicalUrl = pageNum > 1
-    ? `${siteUrl}${basePath}/page/${pageNum}`
-    : `${siteUrl}${basePath}`;
+  const canonicalUrl = pageNum > 1 ? `${siteUrl}${basePath}/page/${pageNum}` : `${siteUrl}${basePath}`;
 
-  const title = pageNum > 1
-    ? `${category.name} - 文章分类 - 第 ${pageNum} 页`
-    : `${category.name} - 文章分类`;
+  const title = pageNum > 1 ? `${category.name} - 文章分类 - 第 ${pageNum} 页` : `${category.name} - 文章分类`;
 
   return {
     title,
@@ -52,9 +40,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
       canonical: canonicalUrl,
       languages: {
         zh: canonicalUrl,
-        en: pageNum > 1
-          ? `${siteUrl}/en${basePath}/page/${pageNum}`
-          : `${siteUrl}/en${basePath}`,
+        en: pageNum > 1 ? `${siteUrl}/en${basePath}/page/${pageNum}` : `${siteUrl}/en${basePath}`,
       },
     },
   };

@@ -74,7 +74,11 @@ export const getPost = cache(async (slug: string, options?: RequestInit): Promis
 });
 
 export const getPostsByCategory = cache(
-  async (categoryId: number, page = 1, perPage = 20): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
+  async (
+    categoryId: number,
+    page = 1,
+    perPage = 20,
+  ): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
     const { env } = await getCloudflareContext({ async: true });
     const headers = getAccessHeaders(env);
     const url = `${env.WORDPRESS_API_URL}/posts?categories=${categoryId}&page=${page}&per_page=${perPage}&_embed=true`;

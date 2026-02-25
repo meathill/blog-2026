@@ -46,11 +46,7 @@ export default function PostHeader({ title, dateFormatted, readingTime, categori
             <TagIcon size={14} />
             <span className="inline-flex flex-wrap items-center gap-2">
               {tags.map((tag) => (
-                <Link
-                  href={`/tag/${tag.slug}`}
-                  key={tag.id}
-                  className="hover:text-[var(--accent)] transition-colors"
-                >
+                <Link href={`/tag/${tag.slug}`} key={tag.id} className="hover:text-[var(--accent)] transition-colors">
                   {tag.name}
                 </Link>
               ))}

@@ -45,6 +45,9 @@ export const metadata: Metadata = {
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+
+// 客户端只需要这些 namespace，其余仅服务端使用
+const CLIENT_NAMESPACES = ['Header', 'Footer', 'LocaleSwitcher'] as const;
 import { Inter } from 'next/font/google';
 
 const inter = Inter({
@@ -60,7 +63,11 @@ export default async function RootLayout({
   params: Promise<{ locale?: string }>;
 }>) {
   const { locale } = await params;
-  const messages = await getMessages();
+  const allMessages = await getMessages();
+  // 只传客户端需要的 namespace，减少 hydration payload
+  const messages = Object.fromEntries(
+    CLIENT_NAMESPACES.filter((ns) => ns in allMessages).map((ns) => [ns, allMessages[ns]]),
+  );
 
   return (
     <html lang={locale || 'zh'} className="antialiased">
@@ -77,7 +84,8 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
         <GoogleAdsense />
       </body>
-      <GoogleAnalytics gaId="G-1S0T1HF97B" />
+      {/* @ts-expect-error - strategy prop is supported but not typed */}
+      <GoogleAnalytics gaId="G-1S0T1HF97B" strategy="lazyOnload" />
     </html>
   );
 }

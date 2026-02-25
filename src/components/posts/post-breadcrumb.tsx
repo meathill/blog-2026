@@ -14,10 +14,7 @@ export default function PostBreadcrumb({ title, categories }: PostBreadcrumbProp
       </Link>
       <span className="mx-2">/</span>
       {categories.length > 0 ? (
-        <Link
-          href={`/category/${categories[0].slug}`}
-          className="hover:text-[var(--text-primary)] transition-colors"
-        >
+        <Link href={`/category/${categories[0].slug}`} className="hover:text-[var(--text-primary)] transition-colors">
           {categories[0].name}
         </Link>
       ) : (

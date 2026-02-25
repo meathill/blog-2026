@@ -17,12 +17,8 @@ export default function ImagePreviewDialog({ src, alt, isOpen, onOpenChange }: I
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-all duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0"
-        />
-        <DialogPrimitive.Viewport
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
-        >
+        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-all duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
+        <DialogPrimitive.Viewport className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
           <DialogPrimitive.Popup
             className={cn(
               'relative max-h-[90vh] max-w-[90vw]',
@@ -31,9 +27,7 @@ export default function ImagePreviewDialog({ src, alt, isOpen, onOpenChange }: I
               'data-starting-style:scale-95 data-starting-style:opacity-0',
             )}
           >
-            <DialogPrimitive.Title className="sr-only">
-              {alt}
-            </DialogPrimitive.Title>
+            <DialogPrimitive.Title className="sr-only">{alt}</DialogPrimitive.Title>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <Image
               src={src}
