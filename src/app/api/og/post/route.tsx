@@ -63,10 +63,11 @@ export async function GET(request: NextRequest) {
 
   const title = stripHtml(post.title.rendered);
   const rawFeaturedMedia = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
-  // Satori (next/og ImageResponse) 不支持 WebP，通过 Cloudflare Image Resizing 转为 PNG
+  const origin = new URL(request.url).origin;
+  // Satori (next/og ImageResponse) 不支持 WebP，通过当前域名的 Cloudflare Image Resizing 转为 PNG
   const featuredMedia =
     rawFeaturedMedia && rawFeaturedMedia.match(/\.webp(\?|$)/i)
-      ? rawFeaturedMedia.replace(/(https?:\/\/[^/]+)(\/.*)/, '$1/cdn-cgi/image/format=png,width=1200$2')
+      ? `${origin}/cdn-cgi/image/format=png,width=1200/${rawFeaturedMedia}`
       : rawFeaturedMedia;
 
   return new ImageResponse(
