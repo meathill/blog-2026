@@ -43,6 +43,11 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
         en: pageNum > 1 ? `${siteUrl}/en${basePath}/page/${pageNum}` : `${siteUrl}/en${basePath}`,
       },
     },
+    openGraph: {
+      title,
+      description: `查看 ${category.name} 分类下的所有文章`,
+      url: canonicalUrl,
+    },
   };
 }
 

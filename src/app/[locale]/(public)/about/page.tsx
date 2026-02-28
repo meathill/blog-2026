@@ -11,12 +11,30 @@ import {
 } from 'lucide-react';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getAboutContent } from '@/actions/about';
+import { SITE_URL } from '@/lib/constants';
 import { marked } from 'marked';
 
-export const metadata: Metadata = {
-  title: '关于我',
-  description: 'Meathill - 19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const canonicalUrl = `${SITE_URL}${locale === 'en' ? '/en' : ''}/about`;
+
+  return {
+    title: '关于我',
+    description: 'Meathill - 19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识',
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        zh: `${SITE_URL}/about`,
+        en: `${SITE_URL}/en/about`,
+      },
+    },
+    openGraph: {
+      title: '关于我',
+      description: 'Meathill - 19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识',
+      url: canonicalUrl,
+    },
+  };
+}
 
 const socialLinks = [
   { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon, username: '@meathill' },

@@ -34,6 +34,11 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
         en: `${SITE_URL}/en/tag/${slug}/page/${num}`,
       },
     },
+    openGraph: {
+      title: `${tag.name} - 文章标签 - 第 ${num} 页`,
+      description: `查看 ${tag.name} 标签下的所有文章 - 第 ${num} 页`,
+      url: canonicalUrl,
+    },
   };
 }
 

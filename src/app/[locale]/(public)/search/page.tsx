@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { SearchIcon } from 'lucide-react';
 import { PostSummaryItem } from '@/components/posts/post-summary-item';
 import { getPosts, getCategories, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
+import { SITE_URL } from '@/lib/constants';
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -9,17 +10,43 @@ interface PageProps {
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const { q } = await searchParams;
+  const canonicalUrl = `${SITE_URL}/search`;
 
   if (q) {
+    const url = `${canonicalUrl}?q=${encodeURIComponent(q)}`;
     return {
       title: `搜索: ${q}`,
       description: `山维空间搜索结果 - ${q}`,
+      alternates: {
+        canonical: url,
+        languages: {
+          zh: url,
+          en: `${SITE_URL}/en/search?q=${encodeURIComponent(q)}`,
+        },
+      },
+      openGraph: {
+        title: `搜索: ${q}`,
+        description: `山维空间搜索结果 - ${q}`,
+        url,
+      },
     };
   }
 
   return {
     title: '搜索文章',
     description: '在山维空间搜索技术文章和内容',
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        zh: canonicalUrl,
+        en: `${SITE_URL}/en/search`,
+      },
+    },
+    openGraph: {
+      title: '搜索文章',
+      description: '在山维空间搜索技术文章和内容',
+      url: canonicalUrl,
+    },
   };
 }
 

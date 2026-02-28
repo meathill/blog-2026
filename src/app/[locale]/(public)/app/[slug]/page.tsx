@@ -12,6 +12,8 @@ import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
 import PostCard from '@/components/PostCard';
 import { getTranslations } from 'next-intl/server';
 
+import { SITE_URL } from '@/lib/constants';
+
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
@@ -38,13 +40,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { apps: app, app_translations: translation } = result;
   const name = translation?.name || app.name;
   const description = translation?.description || app.description;
+  const canonicalUrl = `${SITE_URL}/app/${slug}`;
 
   return {
     title: name,
     description: description,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        zh: canonicalUrl,
+        en: `${SITE_URL}/en/app/${slug}`,
+      },
+    },
     openGraph: {
       title: name,
       description: description || '',
+      url: canonicalUrl,
       images: app.icon ? [app.icon] : [],
     },
   };

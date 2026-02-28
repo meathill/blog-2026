@@ -25,9 +25,18 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
         ? stripHtml(media.description.rendered).slice(0, 160)
         : `Attachment: ${title}`;
 
+      const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/posts/${slug.join('/')}`;
+
       return {
         title,
         description,
+        alternates: {
+          canonical: canonicalUrl,
+          languages: {
+            zh: canonicalUrl,
+            en: `${process.env.NEXT_PUBLIC_SITE_URL}/en/posts/${slug.join('/')}`,
+          },
+        },
         openGraph: {
           title,
           description,

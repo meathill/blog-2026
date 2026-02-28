@@ -33,6 +33,11 @@ export async function generateMetadata({ params }: AuthorPageNumProps): Promise<
         en: `${SITE_URL}/en/posts/author/${slug}/page/${pageNum}`,
       },
     },
+    openGraph: {
+      title: `${author.name} 的文章归档 - 第 ${pageNum} 页`,
+      description: `查看由 ${author.name} 编写的所有文章归档 - 第 ${pageNum} 页`,
+      url: canonicalUrl,
+    },
   };
 }
 

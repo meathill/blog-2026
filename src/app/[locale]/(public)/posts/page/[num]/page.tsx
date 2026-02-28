@@ -26,6 +26,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         en: `${SITE_URL}/en/posts/page/${pageNum}`,
       },
     },
+    openGraph: {
+      title: `文章归档 - 第 ${pageNum} 页`,
+      description: `山维空间技术文章归档 - 第 ${pageNum} 页`,
+      url: canonicalUrl,
+    },
   };
 }
 

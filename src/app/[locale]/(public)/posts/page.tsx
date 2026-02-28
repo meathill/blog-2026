@@ -15,6 +15,11 @@ export const metadata: Metadata = {
       en: `${SITE_URL}/en/posts`,
     },
   },
+  openGraph: {
+    title: '文章归档',
+    description: '山维空间所有技术文章和生活记录的归档列表',
+    url: `${SITE_URL}/posts`,
+  },
 };
 
 export default async function ArchivePage() {

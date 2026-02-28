@@ -5,14 +5,30 @@ import AppCard from '@/components/AppCard';
 import { getAppTags } from '@/actions/tags';
 import { getTranslations } from 'next-intl/server';
 
+import { SITE_URL } from '@/lib/constants';
+
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Apps' });
+  const url = `${SITE_URL}/app`;
+
   return {
     title: t('title'),
     description: t('subtitle_page'),
+    alternates: {
+      canonical: url,
+      languages: {
+        zh: url,
+        en: `${SITE_URL}/en/app`,
+      },
+    },
+    openGraph: {
+      title: t('title'),
+      description: t('subtitle_page'),
+      url,
+    },
   };
 }
 
