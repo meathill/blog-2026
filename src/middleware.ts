@@ -2,6 +2,7 @@ import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { NextRequest, NextResponse } from 'next/server';
 import { TOP_LEVEL_ROUTES, getLocaleAndContent } from '@/lib/middleware-helpers';
+import { parseCategorySlug } from '@/lib/category-slug';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -27,16 +28,21 @@ export default async function middleware(req: NextRequest) {
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  // Redirect legacy .html to canonical URL
-  if (pathname.endsWith('.html')) {
+  // Handle legacy AMP and .html paths
+  const isAmp = pathname.endsWith('/amp') || pathname.endsWith('/amp/');
+  const isHtml = pathname.endsWith('.html') || pathname.includes('.html/');
+  if (isAmp || isHtml) {
     const { locale, content } = getLocaleAndContent(pathname);
-    const cleanPath = content.replace('.html', '');
-    const finalPath = cleanPath.startsWith('posts/') ? cleanPath : `posts/${cleanPath}`;
+    const cleanPath = content.replace(/\/amp\/?$/, '').replace('.html', '');
+    const finalPath =
+      cleanPath.startsWith('posts/') || cleanPath.startsWith('category/') || cleanPath.startsWith('tag/')
+        ? cleanPath
+        : `posts/${cleanPath}`;
 
     const url = req.nextUrl.clone();
     const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
     url.pathname = `${prefix}/${finalPath}`;
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(url, 301);
   }
 
   // Rewrite [...something]/feed -> /feed/[...something]
@@ -77,18 +83,22 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Return 410 Gone for single-segment unknown paths (e.g. /img_0226, old WP attachment pages)
-  if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment) && contentSegments.length === 1) {
-    return new NextResponse('Gone', { status: 410 });
-  }
-
-  if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment) && contentSegments.length >= 2) {
+  // Handle non-top-level routes (e.g. legacy WP paths)
+  if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment)) {
     const locale = isLocale ? segments[0] : routing.defaultLocale;
+    const { pageNum } = parseCategorySlug(contentSegments);
     const pathContent = contentSegments.join('/');
 
     const url = req.nextUrl.clone();
     const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
-    url.pathname = `${prefix}/posts/${pathContent}`;
+
+    // If it's a pagination or a single segment (likely a category), redirect to /category/
+    if (pageNum > 1 || contentSegments.length === 1) {
+      url.pathname = `${prefix}/category/${pathContent}`;
+    } else {
+      // Otherwise assume it's a post
+      url.pathname = `${prefix}/posts/${pathContent}`;
+    }
     return NextResponse.redirect(url);
   }
 

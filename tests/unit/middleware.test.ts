@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 
 const { mockIntlMiddleware } = vi.hoisted(() => ({
@@ -33,9 +33,25 @@ describe('Middleware', () => {
     const res = await middleware(req);
 
     expect(res).toBeInstanceOf(NextResponse);
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/posts/tech/article`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should redirect .html/amp paths to canonical paths', async () => {
+    const req = new NextRequest(new URL('/tech/article.html/amp', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
+  });
+
+  it('should redirect /amp suffix paths to canonical paths', async () => {
+    const req = new NextRequest(new URL('/tech/article/amp', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
   });
 
   it('should redirect legacy paths (segment >= 2) to /posts/', async () => {
@@ -118,21 +134,40 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  // --- 新增用例：410 Gone ---
+  // --- 新增用例：Category Pagination and Single-Segment ---
 
-  it('should return 410 for single-segment unknown paths like /img_0226', async () => {
+  it('should redirect /tech/page/22 to /category/tech/page/22', async () => {
+    const req = new NextRequest(new URL('/tech/page/22', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/category/tech/page/22`);
+  });
+
+  it('should redirect single-segment /tech to /category/tech', async () => {
+    const req = new NextRequest(new URL('/tech', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/category/tech`);
+  });
+
+  it('should still redirect /tech/article to /posts/tech/article', async () => {
+    const req = new NextRequest(new URL('/tech/article', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
+  });
+
+  // --- 新增用例：410 Gone (Updated to Category) ---
+
+  it('should redirect single-segment unknown paths like /img_0226 to /category/img_0226', async () => {
     const req = new NextRequest(new URL('/img_0226', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(410);
-    expect(mockIntlMiddleware).not.toHaveBeenCalled();
-  });
-
-  it('should return 410 for single-segment unknown paths like /photo_2024', async () => {
-    const req = new NextRequest(new URL('/photo_2024', BASE_URL));
-    const res = await middleware(req);
-
-    expect(res?.status).toBe(410);
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/category/img_0226`);
   });
 
   // --- 新增用例：attachment_id ---
