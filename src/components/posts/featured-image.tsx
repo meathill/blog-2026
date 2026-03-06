@@ -29,9 +29,12 @@ export default function FeaturedImage({ src, alt }: FeaturedImageProps) {
             src={src}
             alt={alt}
             fill
-            priority
+            preload
+            fetchPriority="high"
+            loading="eager"
+            quality={70}
             className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 768px, 896px"
+            sizes="(max-width: 768px) calc(100vw - 2rem), (max-width: 1200px) 768px, 896px"
           />
         </button>
       </div>

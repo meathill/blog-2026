@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { GoogleAnalytics } from '@next/third-parties/google';
-import { GoogleAdsense } from '@/components/GoogleAdsense';
+import ThirdPartyScripts from '@/components/ThirdPartyScripts';
 
 export const metadata: Metadata = {
   title: {
@@ -53,6 +52,7 @@ import { Inter } from 'next/font/google';
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
+  preload: false,
 });
 
 export default async function RootLayout({
@@ -76,15 +76,12 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.webp" />
         <link rel="dns-prefetch" href="https://blog.meathill.com" />
         <link rel="preconnect" href="https://blog.meathill.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
       </head>
 
       <body className={`antialiased ${inter.className}`}>
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
-        <GoogleAdsense />
+        <ThirdPartyScripts />
       </body>
-      <GoogleAnalytics gaId="G-1S0T1HF97B" />
     </html>
   );
 }

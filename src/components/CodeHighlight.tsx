@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import hljs from 'highlight.js/lib/core';
 import 'highlight.js/styles/atom-one-dark.css';
 import supportedLanguages from '@/config/highlight-languages.json';
 
@@ -84,6 +83,8 @@ function reportLanguages() {
 export default function CodeHighlight() {
   useEffect(() => {
     async function loadAndHighlight() {
+      const { default: hljs } = await import('highlight.js/lib/core');
+
       // 只加载构建时确定的语言
       const loadPromises = (supportedLanguages as string[])
         .filter((lang) => lang in LANGUAGE_LOADERS)
@@ -106,7 +107,27 @@ export default function CodeHighlight() {
       idle(() => reportLanguages());
     }
 
-    loadAndHighlight();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let idleCallbackId: number | null = null;
+
+    function runHighlight() {
+      void loadAndHighlight();
+    }
+
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      idleCallbackId = globalThis.requestIdleCallback(runHighlight, { timeout: 2000 });
+    } else {
+      timeoutId = setTimeout(runHighlight, 200);
+    }
+
+    return () => {
+      if (idleCallbackId !== null && typeof globalThis.cancelIdleCallback === 'function') {
+        globalThis.cancelIdleCallback(idleCallbackId);
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   return null;
