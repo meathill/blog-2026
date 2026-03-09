@@ -5,6 +5,7 @@ const mockGetDb = vi.fn();
 const mockGetSession = vi.fn();
 const mockHeaders = vi.fn();
 const mockRevalidatePath = vi.fn();
+const mockRevalidateTag = vi.fn();
 
 vi.mock('@/lib/db', () => ({
   getDb: (...args: unknown[]) => mockGetDb(...args),
@@ -24,6 +25,7 @@ vi.mock('next/headers', () => ({
 
 vi.mock('next/cache', () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
+  revalidateTag: (...args: unknown[]) => mockRevalidateTag(...args),
 }));
 
 import { createTag, deleteTag, getTags, updateAppTags } from '@/actions/tags';
@@ -117,6 +119,12 @@ describe('tags actions', () => {
     expect(whereAppTags).toHaveBeenCalledTimes(1);
     expect(whereTags).toHaveBeenCalledTimes(1);
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:zh', 'max');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:en', 'max');
   });
 
   it('updateAppTags: 未登录时应抛出 Unauthorized', async () => {
@@ -146,6 +154,11 @@ describe('tags actions', () => {
     ]);
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:zh', 'max');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:en', 'max');
   });
 
   it('updateAppTags: tagIds 为空时仅清空旧关系，不执行插入', async () => {
@@ -161,5 +174,12 @@ describe('tags actions', () => {
     expect(db.delete).toHaveBeenCalledWith(appTags);
     expect(deleteWhere).toHaveBeenCalledTimes(1);
     expect(db.insert).not.toHaveBeenCalled();
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:zh', 'max');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:en', 'max');
   });
 });

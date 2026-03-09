@@ -1,21 +1,13 @@
-import { getDb } from '@/lib/db';
-import { apps } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
 import AppCard from '@/components/AppCard';
 import { Link } from '@/i18n/routing';
 import { ArrowRight } from 'lucide-react';
-import { getAppTags } from '@/actions/tags';
-import { getTranslations } from 'next-intl/server';
+import { getCachedFeaturedApps } from '@/lib/public-apps';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 export default async function FeaturedApps() {
+  const locale = await getLocale();
   const t = await getTranslations('Apps');
-  const db = await getDb();
-  const featuredApps = await db
-    .select()
-    .from(apps)
-    .where(eq(apps.status, 'published'))
-    .orderBy(desc(apps.createdAt))
-    .limit(3);
+  const featuredApps = await getCachedFeaturedApps(locale);
 
   if (featuredApps.length === 0) return null;
 
@@ -39,14 +31,9 @@ export default async function FeaturedApps() {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {
-            await Promise.all(
-              featuredApps.map(async (app) => {
-                const tags = await getAppTags(app.id);
-                return <AppCard key={app.id} app={app} tags={tags} i18n={{ open_app: t('open_app') }} />;
-              }),
-            )
-          }
+          {featuredApps.map(({ app, tags }) => (
+            <AppCard key={app.id} app={app} tags={tags} i18n={{ open_app: t('open_app') }} />
+          ))}
         </div>
 
         <div className="mt-8 text-center sm:hidden">

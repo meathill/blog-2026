@@ -3,11 +3,12 @@
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { buildAppSlug } from '@/lib/app-slug';
+import { getFeaturedAppsTag } from '@/lib/public-apps';
 
 async function checkAuth() {
   const auth = await getAuth();
@@ -18,6 +19,13 @@ async function checkAuth() {
     throw new Error('Unauthorized');
   }
   return session;
+}
+
+function revalidateFeaturedApps() {
+  revalidatePath('/');
+  revalidatePath('/en');
+  revalidateTag(getFeaturedAppsTag('zh'), 'max');
+  revalidateTag(getFeaturedAppsTag('en'), 'max');
 }
 
 export async function createApp(formData: FormData) {
@@ -57,6 +65,8 @@ export async function createApp(formData: FormData) {
 
   revalidatePath('/admin');
   revalidatePath('/app');
+  revalidatePath('/en/app');
+  revalidateFeaturedApps();
   redirect('/admin');
 }
 
@@ -95,7 +105,10 @@ export async function updateApp(id: string, formData: FormData) {
 
     revalidatePath('/admin');
     revalidatePath('/app');
+    revalidatePath('/en/app');
     revalidatePath(`/app/${slug}`);
+    revalidatePath(`/en/app/${slug}`);
+    revalidateFeaturedApps();
     redirect('/admin');
   } catch (e) {
     console.error('Failed to update app:', e);
@@ -109,4 +122,6 @@ export async function deleteApp(id: string) {
   await db.delete(apps).where(eq(apps.id, id));
   revalidatePath('/admin');
   revalidatePath('/app');
+  revalidatePath('/en/app');
+  revalidateFeaturedApps();
 }

@@ -5,7 +5,7 @@ import { navigationConfigs } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
   formatNavigationConfigJson,
@@ -16,6 +16,7 @@ import {
   resolveNavigationLocale,
   resolveNavigationSection,
 } from '@/lib/navigation-config';
+import { getNavigationTag, readNavigationConfig } from '@/lib/public-navigation';
 
 function getDefaultNavigationConfig(locale: 'zh' | 'en') {
   return {
@@ -77,37 +78,13 @@ function buildRedirectUrl(params: {
 }
 
 export async function getHeaderNavigation(localeInput: string) {
-  const locale = resolveNavigationLocale(localeInput);
-  const db = await getDb();
-  const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
-
-  if (!row) {
-    return getDefaultNavigationItems(locale, 'header');
-  }
-
-  try {
-    const config = parseNavigationConfigJson(row.items, locale);
-    return config.header;
-  } catch {
-    return getDefaultNavigationItems(locale, 'header');
-  }
+  const config = await readNavigationConfig(localeInput);
+  return config.header;
 }
 
 export async function getFooterNavigation(localeInput: string) {
-  const locale = resolveNavigationLocale(localeInput);
-  const db = await getDb();
-  const row = await db.select().from(navigationConfigs).where(eq(navigationConfigs.locale, locale)).get();
-
-  if (!row) {
-    return getDefaultNavigationItems(locale, 'footer');
-  }
-
-  try {
-    const config = parseNavigationConfigJson(row.items, locale);
-    return config.footer;
-  } catch {
-    return getDefaultNavigationItems(locale, 'footer');
-  }
+  const config = await readNavigationConfig(localeInput);
+  return config.footer;
 }
 
 export async function getNavigationEditorData(
@@ -195,6 +172,7 @@ export async function saveNavigationConfig(formData: FormData) {
     revalidatePath('/');
     revalidatePath('/en');
     revalidatePath('/admin/navigation');
+    revalidateTag(getNavigationTag(locale, section), 'max');
     redirect(buildRedirectUrl({ locale, section, saved: '1' }));
   } catch (error) {
     if (error instanceof Error && (error as any).digest?.startsWith('NEXT_REDIRECT')) {
@@ -247,6 +225,7 @@ export async function resetNavigationConfig(formData: FormData) {
     revalidatePath('/');
     revalidatePath('/en');
     revalidatePath('/admin/navigation');
+    revalidateTag(getNavigationTag(locale, section), 'max');
     redirect(buildRedirectUrl({ locale, section, reset: '1' }));
   } catch (error) {
     if (error instanceof Error && (error as any).digest?.startsWith('NEXT_REDIRECT')) {

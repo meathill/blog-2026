@@ -46,13 +46,13 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
 // 客户端只需要这些 namespace，其余仅服务端使用
-const CLIENT_NAMESPACES = ['Header', 'Footer', 'LocaleSwitcher'] as const;
+const CLIENT_NAMESPACES = ['LocaleSwitcher'] as const;
 import { Inter } from 'next/font/google';
 
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  preload: false,
+  preload: true,
 });
 
 export default async function RootLayout({
@@ -74,8 +74,6 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.webp" type="image/webp" />
         <link rel="apple-touch-icon" href="/favicon.webp" />
-        <link rel="dns-prefetch" href="https://blog.meathill.com" />
-        <link rel="preconnect" href="https://blog.meathill.com" crossOrigin="anonymous" />
       </head>
 
       <body className={`antialiased ${inter.className}`}>

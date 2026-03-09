@@ -5,7 +5,15 @@ import { tags, appTags } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { getFeaturedAppsTag } from '@/lib/public-apps';
+
+function revalidateFeaturedApps() {
+  revalidatePath('/');
+  revalidatePath('/en');
+  revalidateTag(getFeaturedAppsTag('zh'), 'max');
+  revalidateTag(getFeaturedAppsTag('en'), 'max');
+}
 
 // Get all tags
 export async function getTags() {
@@ -70,6 +78,9 @@ export async function deleteTag(id: string) {
   await db.delete(tags).where(eq(tags.id, id));
 
   revalidatePath('/admin');
+  revalidatePath('/app');
+  revalidatePath('/en/app');
+  revalidateFeaturedApps();
 }
 
 // Update app tags (replace all tags for an app)
@@ -96,4 +107,6 @@ export async function updateAppTags(appId: string, tagIds: string[]) {
 
   revalidatePath('/admin');
   revalidatePath(`/app`);
+  revalidatePath('/en/app');
+  revalidateFeaturedApps();
 }

@@ -1,3 +1,38 @@
+# Web Vitals 优化（2026-03-09）
+
+## 背景
+- 目标页面：`/` 与 `/en`
+- 优先问题
+  - `/_next/image` 在 OpenNext Cloudflare 适配层无法按 `minimumCacheTTL` 正常生效
+  - 首页导航与 `FeaturedApps` 每次请求都走实时读取
+  - 首页第三方脚本、Hero 动效和全局文章样式抬高移动端首屏成本
+
+## Todo
+- [x] 新增 `image-loader.ts`，把全站 `next/image` 切到 `/cdn-cgi/image/...`
+- [x] 收紧首页卡片图、文章头图、App 图标和预览图的图片参数
+- [x] 抽离导航 / app tags / featured apps 读模型，并增加 cache tag 失效
+- [x] 将 Header / Footer 改为服务端壳体，移除导航客户端补拉
+- [x] 调整 `ThirdPartyScripts`、Hero 和文章专用样式拆分
+- [x] 补充测试并运行针对性验证
+
+## 验收记录
+- 已通过针对性测试：`tests/image-loader.test.ts`、`tests/lib/public-navigation.test.ts`、`tests/lib/public-apps.test.ts`、`tests/components/third-party-scripts.test.tsx`、`tests/actions/apps.test.ts`、`tests/actions/tags.test.ts`、`tests/components/featured-image.test.tsx`
+- 已通过构建：`pnpm build`
+
+# PR #2 Review Follow-up（2026-03-09）
+
+## 背景
+- Copilot review 指出两个需要立即修正的问题
+  - `deleteTag` 删除标签后没有失效 `/app` 与 `/en/app` 列表页缓存
+  - 首页 `ThirdPartyScripts` 的滚动监听在越过 Hero 阈值后仍然保留
+- 另有一条“抽公共 helper 去重”的建议，先按非阻塞清理项评估，不作为本轮必改项
+
+## Todo
+- [x] 为 `deleteTag` 补充 `/app` 与 `/en/app` 的 `revalidatePath`
+- [x] 收紧首页 Hero 滚动监听，在命中阈值后尽快解绑
+- [x] 更新 `tags` 与 `ThirdPartyScripts` 相关测试并验证
+- [x] 修正首页滚动恢复场景下 `Adsense` 可能早于 `GA` 注入的问题
+
 # Web Vitals 优化（2026-03-06）
 
 ## 背景

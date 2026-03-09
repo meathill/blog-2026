@@ -35,6 +35,8 @@ export default function ImagePreviewDialog({ src, alt, isOpen, onOpenChange }: I
               className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
               width={1000}
               height={1000}
+              quality={75}
+              sizes="90vw"
             />
             <DialogPrimitive.Close
               aria-label="关闭"

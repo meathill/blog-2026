@@ -6,7 +6,7 @@ import { ExternalLink, Github, TagIcon } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import type { Metadata } from 'next';
 import { marked } from 'marked';
-import { getAppTags } from '@/actions/tags';
+import { getPublicAppTags } from '@/lib/public-apps';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
 import PostCard from '@/components/PostCard';
@@ -81,7 +81,7 @@ export default async function AppDetailPage({ params }: PageProps) {
   const description = translation?.description || app.description;
   const content = translation?.content || app.content;
 
-  const tags = await getAppTags(app.id);
+  const tags = await getPublicAppTags(app.id);
 
   // Convert markdown to HTML
   const contentHtml = content ? await marked(content) : '';

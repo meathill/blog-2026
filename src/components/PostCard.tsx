@@ -23,6 +23,10 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
 
   // 获取缩略图
   const thumbnail = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
+  const thumbnailSizes = featured
+    ? '(max-width: 768px) calc(100vw - 2rem), (max-width: 1200px) min(90vw, 56rem), 56rem'
+    : '(max-width: 768px) calc(100vw - 2.5rem), (max-width: 1200px) calc(50vw - 2rem), 22rem';
+  const thumbnailQuality = featured ? 68 : 65;
 
   return (
     <article
@@ -50,7 +54,8 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
               fill
               loading="lazy"
               className="object-cover transition-transform group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              quality={thumbnailQuality}
+              sizes={thumbnailSizes}
             />
           </Link>
         </div>
