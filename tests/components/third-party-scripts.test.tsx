@@ -133,6 +133,34 @@ describe('ThirdPartyScripts', () => {
     expect(renderedScriptSrcs.some((src) => src.includes('pagead2.googlesyndication.com'))).toBe(true);
   });
 
+  it('首页滚过 Hero 后应解绑滚动监听', async () => {
+    currentPathname = '/';
+    process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID = 'ca-pub-test';
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+    render(<ThirdPartyScripts />);
+
+    await act(async () => {
+      window.dispatchEvent(new Event('pointerdown'));
+      await Promise.resolve();
+    });
+
+    removeEventListenerSpy.mockClear();
+
+    await act(async () => {
+      Object.defineProperty(window, 'scrollY', {
+        configurable: true,
+        value: 560,
+        writable: true,
+      });
+      window.dispatchEvent(new Event('scroll'));
+      await Promise.resolve();
+    });
+
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function));
+    removeEventListenerSpy.mockRestore();
+  });
+
   it('首页应按更长超时依次加载 GA 与 Adsense', async () => {
     currentPathname = '/en';
     process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID = 'ca-pub-test';

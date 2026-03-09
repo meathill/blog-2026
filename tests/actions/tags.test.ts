@@ -119,6 +119,8 @@ describe('tags actions', () => {
     expect(whereAppTags).toHaveBeenCalledTimes(1);
     expect(whereTags).toHaveBeenCalledTimes(1);
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/en');
     expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:zh', 'max');

@@ -19,6 +19,19 @@
 - 已通过针对性测试：`tests/image-loader.test.ts`、`tests/lib/public-navigation.test.ts`、`tests/lib/public-apps.test.ts`、`tests/components/third-party-scripts.test.tsx`、`tests/actions/apps.test.ts`、`tests/actions/tags.test.ts`、`tests/components/featured-image.test.tsx`
 - 已通过构建：`pnpm build`
 
+# PR #2 Review Follow-up（2026-03-09）
+
+## 背景
+- Copilot review 指出两个需要立即修正的问题
+  - `deleteTag` 删除标签后没有失效 `/app` 与 `/en/app` 列表页缓存
+  - 首页 `ThirdPartyScripts` 的滚动监听在越过 Hero 阈值后仍然保留
+- 另有一条“抽公共 helper 去重”的建议，先按非阻塞清理项评估，不作为本轮必改项
+
+## Todo
+- [x] 为 `deleteTag` 补充 `/app` 与 `/en/app` 的 `revalidatePath`
+- [x] 收紧首页 Hero 滚动监听，在命中阈值后尽快解绑
+- [x] 更新 `tags` 与 `ThirdPartyScripts` 相关测试并验证
+
 # Web Vitals 优化（2026-03-06）
 
 ## 背景

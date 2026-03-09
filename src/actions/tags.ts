@@ -78,6 +78,8 @@ export async function deleteTag(id: string) {
   await db.delete(tags).where(eq(tags.id, id));
 
   revalidatePath('/admin');
+  revalidatePath('/app');
+  revalidatePath('/en/app');
   revalidateFeaturedApps();
 }
 

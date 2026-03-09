@@ -92,18 +92,30 @@ export default function ThirdPartyScripts() {
       return;
     }
 
+    if (hasScrolledPastHero) {
+      return;
+    }
+
+    function removeScrollListener() {
+      window.removeEventListener('scroll', onScrollPastHero);
+    }
+
     function onScrollPastHero() {
-      if (window.scrollY >= Math.max(320, window.innerHeight * 0.65)) {
-        setHasScrolledPastHero(true);
+      if (window.scrollY < Math.max(320, window.innerHeight * 0.65)) {
+        return;
       }
+
+      setHasScrolledPastHero(true);
+      removeScrollListener();
     }
 
     window.addEventListener('scroll', onScrollPastHero, { passive: true });
+    onScrollPastHero();
 
     return () => {
-      window.removeEventListener('scroll', onScrollPastHero);
+      removeScrollListener();
     };
-  }, [isHomePage, shouldSkip]);
+  }, [hasScrolledPastHero, isHomePage, shouldSkip]);
 
   useEffect(() => {
     if (shouldSkip) {
