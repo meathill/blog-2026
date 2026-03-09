@@ -31,6 +31,7 @@
 - [x] 为 `deleteTag` 补充 `/app` 与 `/en/app` 的 `revalidatePath`
 - [x] 收紧首页 Hero 滚动监听，在命中阈值后尽快解绑
 - [x] 更新 `tags` 与 `ThirdPartyScripts` 相关测试并验证
+- [x] 修正首页滚动恢复场景下 `Adsense` 可能早于 `GA` 注入的问题
 
 # Web Vitals 优化（2026-03-06）
 

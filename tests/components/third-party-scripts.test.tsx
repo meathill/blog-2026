@@ -161,6 +161,38 @@ describe('ThirdPartyScripts', () => {
     removeEventListenerSpy.mockRestore();
   });
 
+  it('首页滚动恢复越过 Hero 时也不应早于 GA 加载 Adsense', async () => {
+    currentPathname = '/';
+    process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID = 'ca-pub-test';
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 560,
+      writable: true,
+    });
+
+    await act(async () => {
+      render(<ThirdPartyScripts />);
+      await Promise.resolve();
+    });
+
+    expect(document.querySelector('script[src*="googletagmanager.com"]')).toBeNull();
+    expect(document.querySelector('script[src*="pagead2.googlesyndication.com"]')).toBeNull();
+
+    await act(async () => {
+      vi.advanceTimersByTime(5999);
+      await Promise.resolve();
+    });
+    expect(document.querySelector('script[src*="googletagmanager.com"]')).toBeNull();
+    expect(document.querySelector('script[src*="pagead2.googlesyndication.com"]')).toBeNull();
+
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+      await Promise.resolve();
+    });
+    expect(document.querySelector('script[src*="googletagmanager.com"]')).toBeInTheDocument();
+    expect(renderedScriptSrcs.some((src) => src.includes('pagead2.googlesyndication.com'))).toBe(true);
+  });
+
   it('首页应按更长超时依次加载 GA 与 Adsense', async () => {
     currentPathname = '/en';
     process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID = 'ca-pub-test';

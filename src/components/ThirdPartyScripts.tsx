@@ -32,6 +32,7 @@ export default function ThirdPartyScripts() {
   const [isAnalyticsReady, setIsAnalyticsReady] = useState(false);
   const [isAdsenseReady, setIsAdsenseReady] = useState(false);
   const [hasScrolledPastHero, setHasScrolledPastHero] = useState(false);
+  const [hasHomeAdsenseDelayElapsed, setHasHomeAdsenseDelayElapsed] = useState(false);
   const adsenseScriptSrc = getAdsenseScriptSrc();
   const shouldSkip = shouldSkipThirdPartyScripts(pathname);
   const isHomePage = isHomePagePath(pathname);
@@ -136,6 +137,21 @@ export default function ThirdPartyScripts() {
   }, [adsenseScriptSrc, isAnalyticsReady, isHomePage, shouldSkip]);
 
   useEffect(() => {
+    if (shouldSkip || !isHomePage) {
+      setHasHomeAdsenseDelayElapsed(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setHasHomeAdsenseDelayElapsed(true);
+    }, HOME_ADSENSE_DELAY_MS);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isHomePage, shouldSkip]);
+
+  useEffect(() => {
     if (shouldSkip) {
       setIsAdsenseReady(false);
       return;
@@ -150,21 +166,13 @@ export default function ThirdPartyScripts() {
       return;
     }
 
-    if (hasScrolledPastHero) {
-      setIsAdsenseReady(true);
+    if (!isAnalyticsReady) {
+      setIsAdsenseReady(false);
       return;
     }
 
-    setIsAdsenseReady(false);
-
-    const timeoutId = setTimeout(() => {
-      setIsAdsenseReady(true);
-    }, HOME_ADSENSE_DELAY_MS);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [adsenseScriptSrc, hasScrolledPastHero, isHomePage, shouldSkip]);
+    setIsAdsenseReady(hasScrolledPastHero || hasHomeAdsenseDelayElapsed);
+  }, [adsenseScriptSrc, hasHomeAdsenseDelayElapsed, hasScrolledPastHero, isAnalyticsReady, isHomePage, shouldSkip]);
 
   if (shouldSkip) {
     return null;
