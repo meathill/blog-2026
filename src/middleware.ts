@@ -3,8 +3,20 @@ import { routing } from './i18n/routing';
 import { NextRequest, NextResponse } from 'next/server';
 import { TOP_LEVEL_ROUTES, getLocaleAndContent } from '@/lib/middleware-helpers';
 import { parseCategorySlug } from '@/lib/category-slug';
+import { getWordPressAccessHeaders, getWordPressApiUrl } from '@/lib/wordpress/access';
 
 const intlMiddleware = createMiddleware(routing);
+
+function getLocalePrefix(locale: string) {
+  return locale === routing.defaultLocale ? '' : `/${locale}`;
+}
+
+function buildLegacyRedirectUrl(req: NextRequest, pathname: string) {
+  const url = req.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = '';
+  return url;
+}
 
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
@@ -13,8 +25,10 @@ export default async function middleware(req: NextRequest) {
   const attachmentId = searchParams.get('attachment_id');
   if (attachmentId && pathname === '/') {
     try {
-      const apiUrl = process.env.WORDPRESS_API_URL || 'https://blog.meathill.com/wp-json/wp/v2';
-      const res = await fetch(`${apiUrl}/media/${attachmentId}`);
+      const apiUrl = getWordPressApiUrl();
+      const res = await fetch(`${apiUrl}/media/${attachmentId}`, {
+        headers: getWordPressAccessHeaders(),
+      });
       if (res.ok) {
         const media: { source_url?: string } = await res.json();
         if (media.source_url) {
@@ -38,11 +52,8 @@ export default async function middleware(req: NextRequest) {
       cleanPath.startsWith('posts/') || cleanPath.startsWith('category/') || cleanPath.startsWith('tag/')
         ? cleanPath
         : `posts/${cleanPath}`;
-
-    const url = req.nextUrl.clone();
-    const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
-    url.pathname = `${prefix}/${finalPath}`;
-    return NextResponse.redirect(url, 301);
+    const prefix = getLocalePrefix(locale);
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `${prefix}/${finalPath}`), 301);
   }
 
   // Rewrite [...something]/feed -> /feed/[...something]
@@ -64,33 +75,36 @@ export default async function middleware(req: NextRequest) {
   const isLocale = routing.locales.includes(segments[0] as any);
   const contentSegments = isLocale ? segments.slice(1) : segments;
   const rootSegment = contentSegments[0];
+  const locale = isLocale ? (segments[0] as (typeof routing.locales)[number]) : routing.defaultLocale;
+  const prefix = getLocalePrefix(locale);
+
+  if (rootSegment === 'sponsors' && contentSegments.length === 1) {
+    return NextResponse.redirect('https://github.com/sponsors/meathill', 301);
+  }
+
+  if (rootSegment === 'author' && contentSegments.length === 4 && contentSegments[2] === 'page') {
+    return NextResponse.redirect(
+      buildLegacyRedirectUrl(req, `${prefix}/posts/author/${contentSegments[1]}/page/${contentSegments[3]}`),
+    );
+  }
 
   // Redirect /tags/xxx -> /tag/xxx
   if (rootSegment === 'tags' && contentSegments.length >= 2) {
-    const locale = isLocale ? segments[0] : routing.defaultLocale;
     const pathContent = contentSegments.slice(1).join('/');
-    const url = req.nextUrl.clone();
-    url.pathname = `/${locale}/tag/${pathContent}`;
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `/${locale}/tag/${pathContent}`));
   }
 
   // Redirect /page/xxx -> /posts/page/xxx
   if (rootSegment === 'page' && contentSegments.length >= 2) {
-    const locale = isLocale ? segments[0] : routing.defaultLocale;
     const pathContent = contentSegments.join('/');
-    const url = req.nextUrl.clone();
-    url.pathname = `/${locale}/posts/${pathContent}`;
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `${prefix}/posts/${pathContent}`));
   }
 
   // Handle non-top-level routes (e.g. legacy WP paths)
   if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment)) {
-    const locale = isLocale ? segments[0] : routing.defaultLocale;
     const { pageNum } = parseCategorySlug(contentSegments);
     const pathContent = contentSegments.join('/');
-
-    const url = req.nextUrl.clone();
-    const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
+    const url = buildLegacyRedirectUrl(req, pathname);
 
     // If it's a pagination or a single segment (likely a category), redirect to /category/
     if (pageNum > 1 || contentSegments.length === 1) {

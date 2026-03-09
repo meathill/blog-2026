@@ -1,4 +1,5 @@
 export * from './types';
+export * from './access';
 export * from './client';
 export * from './posts';
 export * from './taxonomies';

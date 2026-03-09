@@ -111,7 +111,43 @@ describe('Middleware', () => {
     const res = await middleware(req);
 
     expect(res?.status).toBe(307);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/zh/posts/page/3`);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/page/3`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should redirect /sponsors to GitHub Sponsors', async () => {
+    const req = new NextRequest(new URL('/sponsors', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe('https://github.com/sponsors/meathill');
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should redirect author archive paths to /posts/author/:slug/page/:num', async () => {
+    const req = new NextRequest(new URL('/author/meathill/page/24', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/author/meathill/page/24`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should drop legacy query params when redirecting author archive paths', async () => {
+    const req = new NextRequest(new URL('/author/meathill/page/64?ak_action=reject_mobile', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/author/meathill/page/64`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should drop legacy query params when redirecting /page/:num', async () => {
+    const req = new NextRequest(new URL('/page/54?callback=ngg-ajax', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/page/54`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
@@ -193,7 +229,15 @@ describe('Middleware', () => {
   });
 
   it('should redirect for ?attachment_id when API returns source_url', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+    const originalClientId = process.env.CF_ACCESS_CLIENT_ID;
+    const originalClientSecret = process.env.CF_ACCESS_CLIENT_SECRET;
+    const originalWordPressApiUrl = process.env.WORDPRESS_API_URL;
+
+    process.env.CF_ACCESS_CLIENT_ID = 'test-client-id';
+    process.env.CF_ACCESS_CLIENT_SECRET = 'test-client-secret';
+    process.env.WORDPRESS_API_URL = 'https://blog.meathill.com/wp-json/wp/v2';
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify({ source_url: 'https://blog.meathill.com/uploads/img.jpg' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -205,6 +249,33 @@ describe('Middleware', () => {
 
     expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe('https://blog.meathill.com/uploads/img.jpg');
+    expect(fetchSpy).toHaveBeenCalledWith('https://blog.meathill.com/wp-json/wp/v2/media/2035', {
+      headers: expect.objectContaining({
+        'CF-Access-Client-Id': 'test-client-id',
+        'CF-Access-Client-Secret': 'test-client-secret',
+        'Content-Type': 'application/json',
+        'User-Agent': 'Next.js Worker',
+      }),
+    });
+
+    if (originalClientId) {
+      process.env.CF_ACCESS_CLIENT_ID = originalClientId;
+    } else {
+      delete process.env.CF_ACCESS_CLIENT_ID;
+    }
+
+    if (originalClientSecret) {
+      process.env.CF_ACCESS_CLIENT_SECRET = originalClientSecret;
+    } else {
+      delete process.env.CF_ACCESS_CLIENT_SECRET;
+    }
+
+    if (originalWordPressApiUrl) {
+      process.env.WORDPRESS_API_URL = originalWordPressApiUrl;
+    } else {
+      delete process.env.WORDPRESS_API_URL;
+    }
+
     vi.restoreAllMocks();
   });
 });

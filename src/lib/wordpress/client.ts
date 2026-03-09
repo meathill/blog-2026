@@ -1,24 +1,11 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { getWordPressAccessHeaders, getWordPressApiUrl } from './access';
 
-function getAccessHeaders(env: CloudflareEnv): HeadersInit {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'User-Agent': 'Next.js Worker',
-  };
-
-  const CF_ACCESS_CLIENT_ID = env.CF_ACCESS_CLIENT_ID || process.env.CF_ACCESS_CLIENT_ID;
-  const CF_ACCESS_CLIENT_SECRET = env.CF_ACCESS_CLIENT_SECRET || process.env.CF_ACCESS_CLIENT_SECRET;
-  if (CF_ACCESS_CLIENT_ID && CF_ACCESS_CLIENT_SECRET) {
-    headers['CF-Access-Client-Id'] = CF_ACCESS_CLIENT_ID;
-    headers['CF-Access-Client-Secret'] = CF_ACCESS_CLIENT_SECRET;
-  }
-
-  return headers;
-}
+const getAccessHeaders = getWordPressAccessHeaders;
 
 export async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const { env } = await getCloudflareContext({ async: true });
-  const url = `${env.WORDPRESS_API_URL}${endpoint}`;
+  const url = `${getWordPressApiUrl(env)}${endpoint}`;
   const headers: HeadersInit = {
     ...getAccessHeaders(env),
     ...(options?.headers || {}),
@@ -56,7 +43,7 @@ function getBasicAuthHeader(env: CloudflareEnv): HeadersInit {
 }
 
 export async function verifyAuth(env: CloudflareEnv): Promise<any> {
-  const url = `${env.WORDPRESS_API_URL}/users/me?context=edit`; // context=edit reveals roles
+  const url = `${getWordPressApiUrl(env)}/users/me?context=edit`; // context=edit reveals roles
   const headers = {
     ...getAccessHeaders(env),
     ...getBasicAuthHeader(env),
