@@ -17,12 +17,6 @@ vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
 }));
 
-vi.mock('../../src/i18n/routing', () => ({
-  routing: {
-    defaultLocale: 'zh',
-  },
-}));
-
 describe('ArchivePageNum', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -53,7 +47,7 @@ describe('ArchivePageNum', () => {
     expect(result).toBeDefined();
   });
 
-  it('should redirect out-of-range archive pages to the last page for default locale', async () => {
+  it('should return notFound for out-of-range archive pages', async () => {
     (wordpress.getPosts as any).mockResolvedValue({
       posts: [],
       total: 800,
@@ -62,30 +56,22 @@ describe('ArchivePageNum', () => {
 
     await ArchivePageNum({
       params: Promise.resolve({
-        locale: 'zh',
         num: '61',
       }),
     });
 
-    expect(navigation.redirect).toHaveBeenCalledWith('/posts/page/40');
+    expect(navigation.notFound).toHaveBeenCalled();
     expect(wordpress.getCategories).not.toHaveBeenCalled();
   });
 
-  it('should keep locale prefix when redirecting out-of-range English archive pages', async () => {
-    (wordpress.getPosts as any).mockResolvedValue({
-      posts: [],
-      total: 800,
-      totalPages: 40,
-    });
-
+  it('should return notFound for invalid page numbers', async () => {
     await ArchivePageNum({
       params: Promise.resolve({
-        locale: 'en',
-        num: '61',
+        num: '0',
       }),
     });
 
-    expect(navigation.redirect).toHaveBeenCalledWith('/en/posts/page/40');
-    expect(wordpress.getCategories).not.toHaveBeenCalled();
+    expect(navigation.notFound).toHaveBeenCalled();
+    expect(wordpress.getPosts).not.toHaveBeenCalled();
   });
 });

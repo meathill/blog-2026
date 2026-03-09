@@ -1,19 +1,13 @@
 import { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getPosts, getCategories } from '@/lib/wordpress';
 import { PostList } from '@/components/posts/post-list';
 import { SITE_URL } from '@/lib/constants';
-import { routing } from '@/i18n/routing';
 
 const POSTS_PER_PAGE = 20;
 
 interface PageProps {
-  params: Promise<{ locale: string; num: string }>;
-}
-
-function getArchivePagePath(locale: string, pageNum: number) {
-  const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
-  return pageNum === 1 ? `${prefix}/posts` : `${prefix}/posts/page/${pageNum}`;
+  params: Promise<{ num: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -41,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ArchivePageNum({ params }: PageProps) {
-  const { locale, num } = await params;
+  const { num } = await params;
   const currentPage = parseInt(num, 10);
 
   if (isNaN(currentPage) || currentPage < 1) {
@@ -59,9 +53,6 @@ export default async function ArchivePageNum({ params }: PageProps) {
   });
 
   if (currentPage > totalPages) {
-    if (totalPages > 0) {
-      return redirect(getArchivePagePath(locale, totalPages));
-    }
     return notFound();
   }
 
