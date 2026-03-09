@@ -1,11 +1,8 @@
-'use client';
-
 import { Link } from '@/i18n/routing';
-import { GithubIcon, YoutubeIcon, TwitterIcon, HeartIcon } from 'lucide-react';
-import LanguageSwitcher from '../LanguageSwitcher';
-import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
 import type { NavItem } from '@/components/layout/header/types';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { GithubIcon, HeartIcon, TwitterIcon, YoutubeIcon } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 const socialLinks = [
   { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon },
@@ -13,60 +10,18 @@ const socialLinks = [
   { href: 'https://x.com/meathill1', label: 'X', icon: TwitterIcon },
 ];
 
-interface NavigationResponse {
-  items?: NavItem[];
+interface FooterProps {
+  navItems: NavItem[];
 }
 
-export default function Footer({ initialNavItems }: { initialNavItems?: NavItem[] }) {
-  const t = useTranslations('Footer');
-  const locale = useLocale();
+export default async function Footer({ navItems }: FooterProps) {
+  const t = await getTranslations('Footer');
   const currentYear = new Date().getFullYear();
-  const [customNavItems, setCustomNavItems] = useState<NavItem[] | null>(null);
-
-  const defaultFooterLinks: NavItem[] = [
-    { href: '/posts', label: t('archives') },
-    { href: '/app', label: t('apps') },
-    { href: '/about', label: t('about') },
-    { href: 'https://github.com/sponsors/meathill', label: t('sponsor'), external: true },
-  ];
-  const footerLinks = customNavItems ?? initialNavItems ?? defaultFooterLinks;
-
-  useEffect(() => {
-    if (initialNavItems) return;
-
-    let isCancelled = false;
-    setCustomNavItems(null);
-
-    async function loadNavigation() {
-      try {
-        const response = await fetch(`/api/navigation?locale=${encodeURIComponent(locale)}&section=footer`, {
-          cache: 'no-store',
-        });
-        if (!response.ok) {
-          return;
-        }
-
-        const data = (await response.json()) as NavigationResponse;
-        if (isCancelled || !Array.isArray(data.items) || data.items.length === 0) {
-          return;
-        }
-        setCustomNavItems(data.items);
-      } catch {
-        // 请求失败时静默回退到默认 Footer 导航。
-      }
-    }
-
-    loadNavigation();
-    return () => {
-      isCancelled = true;
-    };
-  }, [locale]);
 
   return (
     <footer className="border-t border-[var(--surface-border)] mt-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Brand */}
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="space-y-4">
             <Link href="/" className="text-xl font-bold text-gradient inline-block">
               山维空间
@@ -88,11 +43,10 @@ export default function Footer({ initialNavItems }: { initialNavItems?: NavItem[
             </div>
           </div>
 
-          {/* Links */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t('quick_links')}</h3>
             <ul className="space-y-2">
-              {footerLinks.map((link) => (
+              {navItems.map((link) => (
                 <li key={`${link.href}-${link.label}`}>
                   {link.external || /^https?:\/\//.test(link.href) ? (
                     <a
@@ -116,7 +70,6 @@ export default function Footer({ initialNavItems }: { initialNavItems?: NavItem[
             </ul>
           </div>
 
-          {/* Newsletter or Extra */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t('tech_stack')}</h3>
             <div className="flex flex-wrap gap-2">
@@ -132,8 +85,7 @@ export default function Footer({ initialNavItems }: { initialNavItems?: NavItem[
           </div>
         </div>
 
-        {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-[var(--surface-border)] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-12 pt-8 border-t border-[var(--surface-border)] flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
             © {currentYear} Meathill. {t('made_with')}
             <HeartIcon size={12} className="text-red-500" fill="currentColor" />

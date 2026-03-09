@@ -4,6 +4,7 @@ import { getPost, stripHtml, getCategories, getMediaBySlug } from '@/lib/wordpre
 import PostView from '@/views/PostView';
 import AttachmentView from '@/views/AttachmentView';
 import { routing } from '@/i18n/routing';
+import '@/app/post-content.css';
 
 export const revalidate = 86400;
 

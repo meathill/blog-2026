@@ -4,7 +4,7 @@
 
 # Next.js Image Optimization
 /_next/image*
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 
 # 图片和字体缓存
 /*.ico

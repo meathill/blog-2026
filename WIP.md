@@ -1,3 +1,24 @@
+# Web Vitals 优化（2026-03-09）
+
+## 背景
+- 目标页面：`/` 与 `/en`
+- 优先问题
+  - `/_next/image` 在 OpenNext Cloudflare 适配层无法按 `minimumCacheTTL` 正常生效
+  - 首页导航与 `FeaturedApps` 每次请求都走实时读取
+  - 首页第三方脚本、Hero 动效和全局文章样式抬高移动端首屏成本
+
+## Todo
+- [x] 新增 `image-loader.ts`，把全站 `next/image` 切到 `/cdn-cgi/image/...`
+- [x] 收紧首页卡片图、文章头图、App 图标和预览图的图片参数
+- [x] 抽离导航 / app tags / featured apps 读模型，并增加 cache tag 失效
+- [x] 将 Header / Footer 改为服务端壳体，移除导航客户端补拉
+- [x] 调整 `ThirdPartyScripts`、Hero 和文章专用样式拆分
+- [x] 补充测试并运行针对性验证
+
+## 验收记录
+- 已通过针对性测试：`tests/image-loader.test.ts`、`tests/lib/public-navigation.test.ts`、`tests/lib/public-apps.test.ts`、`tests/components/third-party-scripts.test.tsx`、`tests/actions/apps.test.ts`、`tests/actions/tags.test.ts`、`tests/components/featured-image.test.tsx`
+- 已通过构建：`pnpm build`
+
 # Web Vitals 优化（2026-03-06）
 
 ## 背景

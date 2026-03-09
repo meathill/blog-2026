@@ -5,6 +5,7 @@ const mockGetDb = vi.fn();
 const mockGetSession = vi.fn();
 const mockHeaders = vi.fn();
 const mockRevalidatePath = vi.fn();
+const mockRevalidateTag = vi.fn();
 const mockRedirect = vi.fn();
 const mockBuildAppSlug = vi.fn();
 const mockUpdateAppTags = vi.fn();
@@ -27,6 +28,7 @@ vi.mock('next/headers', () => ({
 
 vi.mock('next/cache', () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
+  revalidateTag: (...args: unknown[]) => mockRevalidateTag(...args),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -107,6 +109,11 @@ describe('apps actions', () => {
     expect(mockUpdateAppTags).toHaveBeenCalledWith('app-uuid', ['tag-a', 'tag-b']);
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:zh', 'max');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:en', 'max');
     expect(mockRedirect).toHaveBeenCalledWith('/admin');
   });
 
@@ -145,7 +152,13 @@ describe('apps actions', () => {
     expect(mockUpdateAppTags).toHaveBeenCalledWith('app-1', ['tag-a', 'tag-a', 'tag-b']);
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/app/updated-app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app/updated-app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:zh', 'max');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:en', 'max');
     expect(mockRedirect).toHaveBeenCalledWith('/admin');
   });
 
@@ -162,5 +175,10 @@ describe('apps actions', () => {
     expect(where).toHaveBeenCalledTimes(1);
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/');
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/en');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:zh', 'max');
+    expect(mockRevalidateTag).toHaveBeenCalledWith('home:featured-apps:en', 'max');
   });
 });

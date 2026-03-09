@@ -1,6 +1,6 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { getFooterNavigation, getHeaderNavigation } from '@/actions/navigation';
+import { getCachedFooterNavigation, getCachedHeaderNavigation } from '@/lib/public-navigation';
 
 export default async function PublicLayout({
   children,
@@ -10,14 +10,14 @@ export default async function PublicLayout({
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
-  const navItems = await getHeaderNavigation(locale);
-  const footerNavItems = await getFooterNavigation(locale);
+  const navItems = await getCachedHeaderNavigation(locale);
+  const footerNavItems = await getCachedFooterNavigation(locale);
 
   return (
     <>
-      <Header initialNavItems={navItems} />
+      <Header navItems={navItems} />
       <main className="min-h-screen">{children}</main>
-      <Footer initialNavItems={footerNavItems} />
+      <Footer navItems={footerNavItems} />
     </>
   );
 }

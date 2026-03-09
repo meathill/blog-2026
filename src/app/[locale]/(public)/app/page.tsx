@@ -2,7 +2,7 @@ import { getDb } from '@/lib/db';
 import { apps, appTranslations } from '@/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import AppCard from '@/components/AppCard';
-import { getAppTags } from '@/actions/tags';
+import { getPublicAppTagsMap } from '@/lib/public-apps';
 import { getTranslations } from 'next-intl/server';
 
 import { SITE_URL } from '@/lib/constants';
@@ -42,6 +42,7 @@ export default async function AppListPage({ params }: { params: Promise<{ locale
     .leftJoin(appTranslations, and(eq(appTranslations.appId, apps.id), eq(appTranslations.locale, locale)))
     .where(eq(apps.status, 'published'))
     .orderBy(desc(apps.createdAt));
+  const tagMap = await getPublicAppTagsMap(result.map(({ apps: app }) => app.id));
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
@@ -53,20 +54,17 @@ export default async function AppListPage({ params }: { params: Promise<{ locale
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {
-          await Promise.all(
-            result.map(async ({ apps: app, app_translations: translation }) => {
-              const tags = await getAppTags(app.id);
-              const displayApp = {
-                ...app,
-                name: translation?.name || app.name,
-                description: translation?.description || app.description,
-                content: translation?.content || app.content,
-              };
-              return <AppCard key={app.id} app={displayApp} tags={tags} i18n={{ open_app: t('open_app') }} />;
-            }),
-          )
-        }
+        {result.map(({ apps: app, app_translations: translation }) => {
+          const displayApp = {
+            ...app,
+            name: translation?.name || app.name,
+            description: translation?.description || app.description,
+            content: translation?.content || app.content,
+          };
+          return (
+            <AppCard key={app.id} app={displayApp} tags={tagMap.get(app.id) ?? []} i18n={{ open_app: t('open_app') }} />
+          );
+        })}
       </div>
 
       {result.length === 0 && <div className="text-center py-12 text-zinc-500 italic">{t('coming_soon')}</div>}
