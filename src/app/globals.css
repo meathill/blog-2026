@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 @plugin "@tailwindcss/typography";
+@source "../../node_modules/@blocknote/shadcn/dist";
 
 /* ========================================
    设计系统 - 山维空间博客

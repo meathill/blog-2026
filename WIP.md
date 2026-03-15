@@ -15,9 +15,10 @@
 
 ## 验收记录
 - 已新增 BlockNote 编辑器、博客本地存储与 WordPress 发布链路，并保留 Notion 遗留同步工具。
-- 已新增测试：`tests/lib/blog-post.test.ts`、`tests/lib/blog-blocks.test.ts`，并补充 `tests/unit/wordpress-posts.test.ts`。
-- 全量测试通过：`pnpm test:run`（`35 files / 213 tests`）。
+- 已新增测试：`tests/lib/blog-post.test.ts`、`tests/lib/blog-blocks.test.ts`、`tests/lib/blog-markdown-paste.test.ts`，并补充 `tests/unit/wordpress-posts.test.ts`。
+- 全量测试通过：`pnpm test:run`（`36 files / 217 tests`）。
 - 构建通过：`pnpm build`。
+- 已追加修复：Markdown 粘贴自动转 block，以及 BlockNote 浮层菜单背景样式异常。
 
 # Web Vitals 优化（2026-03-09）
 
