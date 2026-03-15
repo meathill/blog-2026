@@ -56,6 +56,17 @@
 - Gemini 端点配置已适配 SDK：支持把原有 `GEMINI_BASE_URL` 解析为 `baseUrl + apiVersion`，兼容默认端点和自定义代理。
 - 已补充 / 更新 `tests/lib/blog-ai.test.ts`，并通过全量验证：`pnpm test:run`、`pnpm build`。
 
+## Sidebar 交互微调（2026-03-15）
+- [x] 将博客编辑 sidebar 的主操作按钮改为左对齐
+- [x] 在“操作”区补充显式的“AI 处理”按钮，基于标题和正文回填元数据
+- [x] 补充针对 sidebar 的交互测试并重新验证
+
+## Sidebar 交互微调验收记录
+- 已将 sidebar 中的保存、发布、返回和公开预览入口统一改为左对齐，减少操作区视觉漂移。
+- 已将 AI 元数据入口提升到“操作”区，按钮文案改为“AI 处理”，并保留对 slug、摘要、标签的回填能力。
+- 已移除正文区域上方重复的 AI 助手卡片，避免编辑区出现重复入口。
+- 已新增 `tests/components/admin/blog-editor-sidebar.test.tsx`，并通过全量验证：`pnpm test:run`、`pnpm build`。
+
 # Web Vitals 优化（2026-03-09）
 
 ## 背景

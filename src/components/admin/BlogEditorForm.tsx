@@ -1,13 +1,13 @@
 'use client';
 
-import { LoaderCircleIcon, SparklesIcon } from 'lucide-react';
+import { LoaderCircleIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { type ChangeEvent, type FormEvent, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import BlogEditorSidebar from '@/components/admin/BlogEditorSidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import BlogEditorSidebar from '@/components/admin/BlogEditorSidebar';
 import { routing } from '@/i18n/routing';
 import { parseBlogStringListInput } from '@/lib/blog-post';
 
@@ -111,7 +111,9 @@ export default function BlogEditorForm({
       const result = intent === 'publish' ? await publishAction(formData) : await saveAction(formData);
       applyMutationResult(result, intent);
     } catch (error) {
-      toast.error(resolveErrorMessage(error, intent === 'publish' ? '发布失败，请稍后再试。' : '保存失败，请稍后再试。'));
+      toast.error(
+        resolveErrorMessage(error, intent === 'publish' ? '发布失败，请稍后再试。' : '保存失败，请稍后再试。'),
+      );
     } finally {
       setActiveIntent(null);
     }
@@ -306,21 +308,6 @@ export default function BlogEditorForm({
               </label>
             </div>
 
-            <div className="rounded-[1.5rem] border border-dashed border-border/70 bg-muted/20 p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <h2 className="text-sm font-semibold text-foreground">AI 助手</h2>
-                  <p className="text-sm text-muted-foreground">
-                    基于当前标题和正文自动生成 slug、摘要和 tags，生成后仍然可以手动修改。
-                  </p>
-                </div>
-                <Button type="button" variant="secondary" onClick={handleGenerateMetadataClick} disabled={isBusy}>
-                  {isGeneratingMetadata ? <LoaderCircleIcon className="animate-spin" /> : <SparklesIcon />}
-                  {isGeneratingMetadata ? 'AI 生成中…' : 'AI 生成元数据'}
-                </Button>
-              </div>
-            </div>
-
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -341,6 +328,7 @@ export default function BlogEditorForm({
           mode={mode}
           isBusy={isBusy}
           isUploadingCover={isUploadingCover}
+          isGeneratingMetadata={isGeneratingMetadata}
           activeIntent={activeIntent}
           coverImage={coverImage}
           categoriesInput={categoriesInput}
@@ -348,10 +336,16 @@ export default function BlogEditorForm({
           categoryPreview={categoryPreview}
           tagPreview={tagPreview}
           previewPath={previewPath}
+          metadataPreview={{
+            slug,
+            excerpt,
+            tags: tagPreview,
+          }}
           onCoverImageChange={handleCoverImageChange}
           onCoverUpload={handleCoverUpload}
           onCategoriesChange={handleCategoriesChange}
           onTagsChange={handleTagsChange}
+          onAiProcessClick={handleGenerateMetadataClick}
           onSaveClick={handleSaveClick}
           onPublishClick={handlePublishClick}
           onBackClick={handleBackClick}
