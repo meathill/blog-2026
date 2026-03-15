@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getPosts, getPost, createPost } from '../../src/lib/wordpress/posts';
+import { getPosts, getPost, getPostById, createPost } from '../../src/lib/wordpress/posts';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 // Mock Cloudflare Env
@@ -121,6 +121,39 @@ describe('WordPress Posts Module', () => {
       });
 
       const result = await getPost('non-existent');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getPostById', () => {
+    it('should fetch a single post by id', async () => {
+      const mockPost = { id: 42, slug: 'hello-world' };
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => mockPost,
+      });
+
+      const result = await getPostById(42);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://mock-wp.com/wp-json/wp/v2/posts/42?_embed=true',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'CF-Access-Client-Id': 'mock_id',
+          }),
+        }),
+      );
+      expect(result).toEqual(mockPost);
+    });
+
+    it('should return null on 404', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      const result = await getPostById(404);
       expect(result).toBeNull();
     });
   });

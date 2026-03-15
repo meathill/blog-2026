@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/admin/AppSidebar';
+import '@blocknote/core/style.css';
+import '@blocknote/shadcn/style.css';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const auth = await getAuth();

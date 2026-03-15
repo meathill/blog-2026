@@ -1,6 +1,9 @@
 import Link from 'next/link';
-import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, PenSquareIcon } from 'lucide-react';
+import { listBlogPosts } from '@/actions/blog';
+import { BlogStatusBadge, BlogWordPressSyncBadge } from '@/components/admin/BlogStatusBadge';
 import { NotionSyncButton } from '@/components/admin/NotionSyncButton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { routing } from '@/i18n/routing';
 import { listBackupPosts } from '@/lib/notion-post-backup';
 
@@ -33,27 +36,26 @@ function getLocalePrefix(locale: string): string {
   if (locale === routing.defaultLocale) {
     return '';
   }
+
   return `/${locale}`;
 }
 
-function getAdminBlogBasePath(locale: string): string {
-  return `${getLocalePrefix(locale)}/admin/blog`;
-}
-
-function buildPaginationHref(basePath: string, page: number): string {
+function buildPaginationHref(locale: string, page: number): string {
+  const basePath = `${getLocalePrefix(locale)}/admin/blog`;
   if (page <= 1) {
     return basePath;
   }
+
   return `${basePath}?page=${page}`;
 }
 
-function buildPostPreviewHref(locale: string, slug: string): string {
+function buildPublicPreviewHref(locale: string, slug: string): string {
   return `${getLocalePrefix(locale)}/posts/${slug}`;
 }
 
 function formatDateTime(date: Date | null, locale: string): string {
   if (!date) {
-    return '未发布';
+    return '未同步';
   }
 
   const formatter = new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'zh-CN', {
@@ -63,226 +65,222 @@ function formatDateTime(date: Date | null, locale: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+
   return formatter.format(date);
-}
-
-function getVisibleItems(items: string[], maxCount: number): { visible: string[]; hiddenCount: number } {
-  if (items.length <= maxCount) {
-    return {
-      visible: items,
-      hiddenCount: 0,
-    };
-  }
-
-  return {
-    visible: items.slice(0, maxCount),
-    hiddenCount: items.length - maxCount,
-  };
 }
 
 export default async function BlogAdminPage({ params, searchParams }: BlogAdminPageProps) {
   const { locale } = await params;
   const query = await searchParams;
   const requestedPage = parsePageParam(query.page);
-  const result = await listBackupPosts({
-    page: requestedPage,
-    pageSize: PAGE_SIZE,
-  });
-  const basePath = getAdminBlogBasePath(locale);
-  const previousPageHref = buildPaginationHref(basePath, result.page - 1);
-  const nextPageHref = buildPaginationHref(basePath, result.page + 1);
+  const [result, legacyResult] = await Promise.all([
+    listBlogPosts({
+      page: requestedPage,
+      pageSize: PAGE_SIZE,
+    }),
+    listBackupPosts({
+      page: 1,
+      pageSize: 5,
+    }),
+  ]);
+
+  const previousPageHref = buildPaginationHref(locale, result.page - 1);
+  const nextPageHref = buildPaginationHref(locale, result.page + 1);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Blog Management</h2>
-          <p className="text-sm text-zinc-500">展示 D1 备份文章，可预览和分页浏览（不提供编辑）。</p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">博客写作台</h1>
+          <p className="max-w-3xl text-sm text-muted-foreground">
+            现在开始在站内直接写博客。正文以 Block JSON 作为主数据保存，发布时再同步到
+            WordPress，公开站点继续沿用现有读取链路。
+          </p>
         </div>
-        <div className="flex gap-2">
-          <NotionSyncButton />
-        </div>
+        <Link
+          href={`${getLocalePrefix(locale)}/admin/blog/new`}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90"
+        >
+          <PenSquareIcon className="size-4" />
+          新建文章
+        </Link>
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-sm text-zinc-500">
-          当前共有 <span className="font-medium text-zinc-700 dark:text-zinc-100">{result.total}</span> 篇备份文章， 第{' '}
-          <span className="font-medium text-zinc-700 dark:text-zinc-100">{result.page}</span> /{' '}
-          <span className="font-medium text-zinc-700 dark:text-zinc-100">{result.totalPages}</span> 页， 每页{' '}
-          {result.pageSize} 条。
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>本地文章库</CardTitle>
+          <CardDescription>
+            当前共有 {result.total} 篇站内文章，第 {result.page} / {result.totalPages} 页，每页 {result.pageSize} 条。
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+            <div className="rounded-2xl bg-secondary/60 px-4 py-3">
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Block Source</div>
+              <div className="mt-2 text-foreground">Block JSON + Markdown / HTML 快照</div>
+            </div>
+            <div className="rounded-2xl bg-secondary/60 px-4 py-3">
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Publish Flow</div>
+              <div className="mt-2 text-foreground">保存进 D1，发布时同步 WordPress</div>
+            </div>
+            <div className="rounded-2xl bg-secondary/60 px-4 py-3">
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Legacy</div>
+              <div className="mt-2 text-foreground">Notion 备份链路继续保留，但降级为遗留工具</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {result.posts.length === 0 ? (
-        <div className="rounded-lg border border-zinc-200 bg-white p-6 text-zinc-500 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-          尚无备份文章。点击右上角同步按钮后，这里会显示从 Notion 同步到 D1 的结果。
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>还没有本地文章</CardTitle>
+            <CardDescription>从右上角开始新建。第一次保存后就会生成可持续编辑的本地草稿。</CardDescription>
+          </CardHeader>
+        </Card>
       ) : (
-        <>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {result.posts.map((post) => {
-              const visibleCategories = getVisibleItems(post.categories, 4);
-              const visibleTags = getVisibleItems(post.tags, 4);
-
-              return (
-                <article
-                  key={post.id}
-                  className="rounded-lg border border-zinc-200 bg-white p-3 shadow-xs dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="line-clamp-2 text-sm font-semibold text-zinc-900 dark:text-zinc-50">{post.title}</h3>
-                    {post.slug ? (
-                      <Link
-                        href={buildPostPreviewHref(locale, post.slug)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                      >
-                        预览
-                        <ExternalLinkIcon size={12} />
-                      </Link>
-                    ) : (
-                      <span className="rounded-md border border-zinc-200 px-2 py-1 text-xs text-zinc-400 dark:border-zinc-700 dark:text-zinc-500">
-                        无预览
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <span
-                      className={`rounded-full px-2 py-0.5 font-medium ${
-                        post.needsSyncToWordPress
-                          ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                      }`}
-                    >
-                      {post.needsSyncToWordPress ? '待同步 WP' : '已同步 WP'}
-                    </span>
-                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                      {post.status}
-                    </span>
-                  </div>
-
-                  <dl className="mt-3 space-y-1.5 text-xs text-zinc-600 dark:text-zinc-300">
-                    <div className="flex items-start justify-between gap-2">
-                      <dt className="shrink-0 font-medium text-zinc-700 dark:text-zinc-100">Slug</dt>
-                      <dd className="line-clamp-1 text-right">{post.slug || '（空）'}</dd>
-                    </div>
-                    <div className="flex items-start justify-between gap-2">
-                      <dt className="shrink-0 font-medium text-zinc-700 dark:text-zinc-100">Notion 更新</dt>
-                      <dd className="text-right">{formatDateTime(post.lastUpdateTime, locale)}</dd>
-                    </div>
-                    <div className="flex items-start justify-between gap-2">
-                      <dt className="shrink-0 font-medium text-zinc-700 dark:text-zinc-100">WP 发布时间</dt>
-                      <dd className="text-right">{formatDateTime(post.publishedAt, locale)}</dd>
-                    </div>
-                  </dl>
-
-                  <div className="mt-3 space-y-2">
-                    <div className="space-y-1">
-                      <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-100">分类</p>
-                      <div className="flex flex-wrap gap-1">
-                        {post.categories.length > 0 ? (
-                          <>
-                            {visibleCategories.visible.map((category) => (
-                              <span
-                                key={`${post.id}-${category}`}
-                                className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
-                              >
-                                {category}
-                              </span>
-                            ))}
-                            {visibleCategories.hiddenCount > 0 && (
-                              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                +{visibleCategories.hiddenCount}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">无分类</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-100">标签</p>
-                      <div className="flex flex-wrap gap-1">
-                        {post.tags.length > 0 ? (
-                          <>
-                            {visibleTags.visible.map((tag) => (
-                              <span
-                                key={`${post.id}-${tag}`}
-                                className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {visibleTags.hiddenCount > 0 && (
-                              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                +{visibleTags.hiddenCount}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">无标签</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <details className="mt-3 rounded-md border border-zinc-200 px-2.5 py-2 dark:border-zinc-700">
-                    <summary className="cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-200">
-                      HTML 预览
-                    </summary>
-                    <div
-                      className="prose prose-sm mt-2 max-h-44 max-w-none overflow-auto rounded-md border border-zinc-200 p-2 text-xs dark:prose-invert dark:border-zinc-700"
-                      dangerouslySetInnerHTML={{ __html: post.content || '<p>暂无内容</p>' }}
+        <div className="grid gap-4 xl:grid-cols-2">
+          {result.posts.map((post) => (
+            <article key={post.id} className="rounded-[1.75rem] border border-border/80 bg-card p-5 shadow-xs/5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <BlogStatusBadge status={post.status} />
+                    <BlogWordPressSyncBadge
+                      status={post.status}
+                      needsSyncToWordPress={post.needsSyncToWordPress}
+                      hasWordPressSync={post.wpSyncedAt !== null}
                     />
-                  </details>
-                </article>
-              );
-            })}
-          </div>
-
-          {result.totalPages > 1 && (
-            <nav className="mt-4 flex items-center justify-center gap-2">
-              {result.page > 1 ? (
+                  </div>
+                  <h2 className="text-xl font-semibold text-foreground">{post.title}</h2>
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {post.excerpt || '暂无摘要。正文内容已保存在本地，可继续编辑或发布到 WordPress。'}
+                  </p>
+                </div>
                 <Link
-                  href={previousPageHref}
-                  className="inline-flex items-center gap-1 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  href={`${getLocalePrefix(locale)}/admin/blog/${post.id}`}
+                  className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground"
                 >
-                  <ChevronLeftIcon size={16} />
-                  上一页
+                  编辑
                 </Link>
-              ) : (
-                <span className="inline-flex cursor-not-allowed items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 dark:text-zinc-500">
-                  <ChevronLeftIcon size={16} />
-                  上一页
-                </span>
-              )}
+              </div>
 
-              <span className="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-300">
-                {result.page} / {result.totalPages}
-              </span>
+              <dl className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                <div className="rounded-2xl bg-secondary/40 px-3 py-2">
+                  <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Slug</dt>
+                  <dd className="mt-1 font-medium text-foreground">{post.slug}</dd>
+                </div>
+                <div className="rounded-2xl bg-secondary/40 px-3 py-2">
+                  <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80">最后编辑</dt>
+                  <dd className="mt-1 font-medium text-foreground">{formatDateTime(post.updatedAt, locale)}</dd>
+                </div>
+                <div className="rounded-2xl bg-secondary/40 px-3 py-2">
+                  <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80">WP 同步时间</dt>
+                  <dd className="mt-1 font-medium text-foreground">{formatDateTime(post.wpSyncedAt, locale)}</dd>
+                </div>
+                <div className="rounded-2xl bg-secondary/40 px-3 py-2">
+                  <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80">WordPress ID</dt>
+                  <dd className="mt-1 font-medium text-foreground">{post.wpPostId ?? '尚未生成'}</dd>
+                </div>
+              </dl>
 
-              {result.page < result.totalPages ? (
-                <Link
-                  href={nextPageHref}
-                  className="inline-flex items-center gap-1 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                >
-                  下一页
-                  <ChevronRightIcon size={16} />
-                </Link>
-              ) : (
-                <span className="inline-flex cursor-not-allowed items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 dark:text-zinc-500">
-                  下一页
-                  <ChevronRightIcon size={16} />
-                </span>
-              )}
-            </nav>
-          )}
-        </>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {post.categories.map((category) => (
+                  <span
+                    key={`${post.id}-category-${category}`}
+                    className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700"
+                  >
+                    {category}
+                  </span>
+                ))}
+                {post.tags.map((tag) => (
+                  <span
+                    key={`${post.id}-tag-${tag}`}
+                    className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                {post.wpSyncedAt && (
+                  <Link
+                    href={buildPublicPreviewHref(locale, post.slug)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground"
+                  >
+                    预览公开页
+                    <ExternalLinkIcon className="size-4" />
+                  </Link>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
       )}
+
+      {result.totalPages > 1 && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-xs/5">
+          <Link
+            href={previousPageHref}
+            aria-disabled={result.page <= 1}
+            className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${
+              result.page <= 1 ? 'pointer-events-none text-muted-foreground/50' : 'text-foreground hover:bg-accent'
+            }`}
+          >
+            <ChevronLeftIcon className="size-4" />
+            上一页
+          </Link>
+          <span className="text-sm text-muted-foreground">
+            第 {result.page} / {result.totalPages} 页
+          </span>
+          <Link
+            href={nextPageHref}
+            aria-disabled={result.page >= result.totalPages}
+            className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${
+              result.page >= result.totalPages
+                ? 'pointer-events-none text-muted-foreground/50'
+                : 'text-foreground hover:bg-accent'
+            }`}
+          >
+            下一页
+            <ChevronRightIcon className="size-4" />
+          </Link>
+        </div>
+      )}
+
+      <Card>
+        <CardHeader className="sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle>遗留同步工具</CardTitle>
+            <CardDescription>
+              仍可手动同步 Notion 备份到 WordPress。当前 D1 里共有 {legacyResult.total} 篇 Notion 备份，下面只展示最近 5
+              条。
+            </CardDescription>
+          </div>
+          <div className="pt-1">
+            <NotionSyncButton />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {legacyResult.posts.map((post) => (
+            <div
+              key={post.id}
+              className="flex flex-col gap-2 rounded-2xl border border-border/70 px-4 py-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between"
+            >
+              <div>
+                <div className="font-medium text-foreground">{post.title}</div>
+                <div className="mt-1">
+                  {post.slug || '无 slug'} · Notion 更新 {formatDateTime(post.lastUpdateTime, locale)}
+                </div>
+              </div>
+              <div className="text-xs">{post.needsSyncToWordPress ? '待同步到 WP' : '已同步到 WP'}</div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }

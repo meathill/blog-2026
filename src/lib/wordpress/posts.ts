@@ -73,6 +73,36 @@ export const getPost = cache(async (slug: string, options?: RequestInit): Promis
   return posts[0] || null;
 });
 
+export async function getPostById(id: number, options?: RequestInit): Promise<WPPost | null> {
+  const { env } = await getCloudflareContext({ async: true });
+  const headers = {
+    ...getAccessHeaders(env),
+    ...(options?.headers || {}),
+  };
+
+  const response = await fetch(`${env.WORDPRESS_API_URL}/posts/${id}?_embed=true`, {
+    ...options,
+    headers,
+    next: {
+      revalidate: options?.cache === 'no-store' ? 0 : 300,
+      ...options?.next,
+    },
+    cache: options?.cache,
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error('[WP API] Error Body:', text);
+    throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export const getPostsByCategory = cache(
   async (
     categoryId: number,

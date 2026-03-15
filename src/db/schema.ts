@@ -140,6 +140,27 @@ export const notionPostBackups = sqliteTable('notion_post_backups', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
 
+export const blogPosts = sqliteTable('blog_posts', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  slug: text('slug').notNull().unique(),
+  excerpt: text('excerpt').notNull().default(''),
+  status: text('status', { enum: ['draft', 'published', 'archived'] })
+    .notNull()
+    .default('draft'),
+  coverImage: text('cover_image'),
+  categories: text('categories').notNull().default('[]'),
+  tags: text('tags').notNull().default('[]'),
+  blocksJson: text('blocks_json').notNull(),
+  markdown: text('markdown').notNull(),
+  html: text('html').notNull(),
+  wpPostId: integer('wp_post_id'),
+  wpSyncedAt: integer('wp_synced_at', { mode: 'timestamp' }),
+  publishedAt: integer('published_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
 export const navigationConfigs = sqliteTable('navigation_configs', {
   locale: text('locale').primaryKey(),
   items: text('items').notNull().default('[]'),

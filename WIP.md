@@ -1,3 +1,24 @@
+# Admin 博客编辑器（2026-03-15）
+
+## 背景
+- 目标：在 `/admin` 内集成 BlockNote 所见即所得博客编辑器，替换 Notion 作为新的写作入口
+- v1 保持公开站点继续读取 WordPress，不改前台文章路由
+- 本地 D1 作为主数据源，文章内容以 `block JSON` 为准，同时保存 Markdown / HTML 快照
+
+## Todo
+- [x] 新增 `blog_posts` schema 与迁移
+- [x] 封装 BlockNote 内容解析 / 序列化 / slug / 分类标签等博客辅助逻辑
+- [x] 实现博客 server actions 与 WordPress 发布同步
+- [x] 重写 `/admin/blog` 列表页并新增新建 / 编辑页面
+- [x] 集成 BlockNote 编辑器、封面上传与正文图片上传
+- [x] 为核心逻辑补充测试并跑构建验证
+
+## 验收记录
+- 已新增 BlockNote 编辑器、博客本地存储与 WordPress 发布链路，并保留 Notion 遗留同步工具。
+- 已新增测试：`tests/lib/blog-post.test.ts`、`tests/lib/blog-blocks.test.ts`，并补充 `tests/unit/wordpress-posts.test.ts`。
+- 全量测试通过：`pnpm test:run`（`35 files / 213 tests`）。
+- 构建通过：`pnpm build`。
+
 # Web Vitals 优化（2026-03-09）
 
 ## 背景
