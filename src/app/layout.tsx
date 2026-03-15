@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Toaster } from 'sonner';
 import './globals.css';
 import ThirdPartyScripts from '@/components/ThirdPartyScripts';
 
@@ -78,6 +79,7 @@ export default async function RootLayout({
 
       <body className={`antialiased ${inter.className}`}>
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        <Toaster position="bottom-right" richColors />
         <ThirdPartyScripts />
       </body>
     </html>

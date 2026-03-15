@@ -3,10 +3,10 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { getAuth } from '@/lib/auth';
 import { type BlogPostRecord, buildBlogSlug, normalizeBlogPostStatus, parseBlogStringListInput } from '@/lib/blog-post';
 import { syncBlogPostToWordPress } from '@/lib/blog-sync';
+import { type BlogMetadataAiEnv, generateBlogMetadataSuggestion } from '@/lib/blog-ai';
 import {
   type SaveBlogPostInput,
   createBlogPostRecord,
@@ -26,31 +26,48 @@ export async function getBlogPost(id: string) {
   return getBlogPostRecord(id);
 }
 
-export async function createBlogPost(formData: FormData) {
+export interface BlogEditorMutationResult {
+  id: string;
+  slug: string;
+  status: 'saved' | 'published';
+  warning?: 'cover-image-upload-failed';
+}
+
+export async function createBlogPost(formData: FormData): Promise<BlogEditorMutationResult> {
   await checkAuth();
 
   const payload = await parseBlogPostFormData(formData);
   const id = await createBlogPostRecord(payload);
 
-  revalidateBlogAdminPaths();
-  redirect(`/admin/blog/${id}?saved=1`);
+  revalidateBlogAdminPaths(id);
+
+  return {
+    id,
+    slug: payload.slug,
+    status: 'saved',
+  };
 }
 
-export async function updateBlogPost(formData: FormData) {
+export async function updateBlogPost(formData: FormData): Promise<BlogEditorMutationResult> {
   await checkAuth();
 
   const id = readRequiredString(formData, 'id', '文章 ID 缺失。');
   const payload = await parseBlogPostFormData(formData);
   await updateBlogPostRecord(id, payload);
 
-  revalidateBlogAdminPaths();
-  redirect(`/admin/blog/${id}?saved=1`);
+  revalidateBlogAdminPaths(id);
+
+  return {
+    id,
+    slug: payload.slug,
+    status: 'saved',
+  };
 }
 
-export async function publishBlogPost(formData: FormData) {
+export async function publishBlogPost(formData: FormData): Promise<BlogEditorMutationResult> {
   await checkAuth();
 
-  const id = await saveBlogPostForPublishing(formData);
+  const { id, slug } = await saveBlogPostForPublishing(formData);
   const post = await getBlogPostRecord(id);
 
   if (!post) {
@@ -73,21 +90,45 @@ export async function publishBlogPost(formData: FormData) {
     publishedAt: now,
   });
 
-  revalidateBlogAdminPaths();
-  const search = syncResult.warning ? '?published=1&warning=cover-image' : '?published=1';
-  redirect(`/admin/blog/${id}${search}`);
+  revalidateBlogAdminPaths(id);
+
+  return {
+    id,
+    slug,
+    status: 'published',
+    warning: syncResult.warning,
+  };
 }
 
-async function saveBlogPostForPublishing(formData: FormData): Promise<string> {
+export async function generateBlogMetadata(formData: FormData) {
+  await checkAuth();
+
+  const title = readRequiredString(formData, 'title', '请先填写标题。');
+  const locale = readOptionalString(formData, 'locale') || 'zh';
+  const { buildBlogContentSnapshot } = await import('@/lib/blog-content');
+  const content = await buildBlogContentSnapshot(readOptionalString(formData, 'blocksJson'));
+  const { env } = await getCloudflareContext({ async: true });
+
+  return generateBlogMetadataSuggestion(env as BlogMetadataAiEnv, {
+    locale,
+    title,
+    markdown: content.markdown,
+  });
+}
+
+async function saveBlogPostForPublishing(formData: FormData): Promise<{ id: string; slug: string }> {
   const id = readOptionalString(formData, 'id');
   const payload = await parseBlogPostFormData(formData, 'published');
 
   if (id) {
     await updateBlogPostRecord(id, payload);
-    return id;
+    return { id, slug: payload.slug };
   }
 
-  return createBlogPostRecord(payload);
+  return {
+    id: await createBlogPostRecord(payload),
+    slug: payload.slug,
+  };
 }
 
 async function parseBlogPostFormData(
@@ -131,8 +172,13 @@ async function checkAuth() {
   return session;
 }
 
-function revalidateBlogAdminPaths() {
+function revalidateBlogAdminPaths(id?: string) {
   revalidatePath('/admin/blog');
+  revalidatePath('/admin/blog/new');
+
+  if (id) {
+    revalidatePath(`/admin/blog/${id}`);
+  }
 }
 
 function readOptionalString(formData: FormData, key: string): string {

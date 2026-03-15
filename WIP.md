@@ -20,6 +20,42 @@
 - 构建通过：`pnpm build`。
 - 已追加修复：Markdown 粘贴自动转 block，以及 BlockNote 浮层菜单背景样式异常。
 
+## Follow-up（2026-03-15）
+- [x] 保存草稿 / 发布补充可见的 pending 状态与成功 toast
+- [x] 为博客编辑表单接入 AI 元数据生成（slug / 摘要 / tags）
+- [x] 清理旧的 query 参数成功提示，统一为客户端反馈
+- [x] 补充 AI 元数据与编辑器交互相关测试并重新验证
+
+## Follow-up 验收记录
+- 博客编辑表单已改为客户端接管保存 / 发布状态，按钮提供 spinner，成功后统一使用 toast 反馈。
+- 已新增 AI 元数据链路：基于标题与正文 Markdown 生成 `slug`、`excerpt`、`tags`，并在服务端清洗后回填表单。
+- 已补充 `tests/lib/blog-ai.test.ts`，并保持全量测试通过。
+- 已通过构建：`pnpm build`。
+
+## AI 配置统一（2026-03-15）
+- [x] 将博客 AI helper 改为统一读取 `AI_MODEL`
+- [x] 根据 model 自动判定 `OpenAI / Gemini` provider
+- [x] 分别使用 `OPENAI_API_KEY` 与 `GEMINI_API_KEY`
+- [x] 补充 provider 选择与配置解析测试并重新验证
+
+## AI 配置统一验收记录
+- 已将博客 AI 配置收敛为统一环境变量入口：`AI_MODEL`、`OPENAI_API_KEY`、`GEMINI_API_KEY`，并支持 `OPENAI_BASE_URL`、`GEMINI_BASE_URL` 覆盖默认端点。
+- 已按 `AI_MODEL` 自动识别 provider：`gemini*` 走 Gemini `generateContent`，其余模型默认走 OpenAI `chat/completions`。
+- 已补充 `tests/lib/blog-ai.test.ts`，覆盖 provider 识别、配置解析和现有元数据清洗逻辑。
+- 验证通过：`pnpm test:run`、`pnpm build`。
+
+## AI SDK 对齐（2026-03-15）
+- [x] 用 `openai` SDK 替换 OpenAI 的手写 fetch 调用
+- [x] 用 `@google/genai` 替换 Gemini 的手写 fetch 调用
+- [x] 保持统一环境变量与 `AI_MODEL -> provider` 判定逻辑不变
+- [x] 补充 / 更新测试并重新验证构建
+
+## AI SDK 对齐验收记录
+- 已将博客 AI 元数据生成从手写 `fetch` 切换到官方 SDK：OpenAI 使用 `openai`，Gemini 使用 `@google/genai`。
+- 统一环境变量入口保持不变：继续通过 `AI_MODEL` 判定 provider，并分别读取 `OPENAI_API_KEY` 与 `GEMINI_API_KEY`。
+- Gemini 端点配置已适配 SDK：支持把原有 `GEMINI_BASE_URL` 解析为 `baseUrl + apiVersion`，兼容默认端点和自定义代理。
+- 已补充 / 更新 `tests/lib/blog-ai.test.ts`，并通过全量验证：`pnpm test:run`、`pnpm build`。
+
 # Web Vitals 优化（2026-03-09）
 
 ## 背景
