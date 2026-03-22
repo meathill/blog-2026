@@ -1,10 +1,12 @@
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { Toaster } from 'sonner';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/admin/AppSidebar';
 import '@blocknote/core/style.css';
 import '@blocknote/shadcn/style.css';
+import './admin.css';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const auth = await getAuth();
@@ -29,6 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
         <div className="p-4">{children}</div>
       </main>
+      <Toaster position="bottom-right" richColors />
     </SidebarProvider>
   );
 }

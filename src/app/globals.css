@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 
 @plugin "@tailwindcss/typography";
-@source "../../node_modules/@blocknote/shadcn/dist";
 
 /* ========================================
    设计系统 - 山维空间博客
@@ -184,8 +183,10 @@
 }
 
 /* 全局样式 */
-html {
-  scroll-behavior: smooth;
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {

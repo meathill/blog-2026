@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Toaster } from 'sonner';
 import './globals.css';
 import ThirdPartyScripts from '@/components/ThirdPartyScripts';
 
@@ -71,15 +70,15 @@ export default async function RootLayout({
   );
 
   return (
-    <html lang={locale || 'zh'} className="antialiased">
+    <html lang={locale || 'zh'}>
       <head>
         <link rel="icon" href="/favicon.webp" type="image/webp" />
         <link rel="apple-touch-icon" href="/favicon.webp" />
+        <link rel="dns-prefetch" href="https://blog.meathill.com" />
       </head>
 
       <body className={`antialiased ${inter.className}`}>
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
-        <Toaster position="bottom-right" richColors />
         <ThirdPartyScripts />
       </body>
     </html>

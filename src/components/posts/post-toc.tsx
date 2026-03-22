@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface TocItem {
@@ -17,8 +17,9 @@ const HEADING_OFFSET_PX = 140;
 
 export function PostToc({ items }: PostTocProps) {
   const [activeId, setActiveId] = useState<string | null>(items[0]?.id ?? null);
-
   const headingIds = useMemo(() => items.map((item) => item.id), [items]);
+  // Track which headings have scrolled past the offset threshold
+  const aboveSetRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (headingIds.length === 0) {
@@ -35,25 +36,12 @@ export function PostToc({ items }: PostTocProps) {
       return;
     }
 
-    function updateActiveHeading() {
-      let nextActiveId = headingElements[0].id;
-      for (const heading of headingElements) {
-        if (heading.getBoundingClientRect().top <= HEADING_OFFSET_PX) {
-          nextActiveId = heading.id;
-        } else {
-          break;
-        }
-      }
-      setActiveId((prev) => (prev === nextActiveId ? prev : nextActiveId));
-    }
-
+    // Handle initial hash
     if (window.location.hash) {
       const hashId = window.location.hash.slice(1);
       if (headingIds.includes(hashId)) {
         setActiveId(hashId);
       }
-    } else {
-      updateActiveHeading();
     }
 
     function handleHashChange() {
@@ -63,27 +51,57 @@ export function PostToc({ items }: PostTocProps) {
       }
     }
 
-    let rafId = 0;
-    function handleScrollOrResize() {
-      if (rafId !== 0) {
+    function pickActive() {
+      const above = aboveSetRef.current;
+      if (above.size === 0) {
+        setActiveId(headingIds[0] ?? null);
         return;
       }
-      rafId = window.requestAnimationFrame(() => {
-        updateActiveHeading();
-        rafId = 0;
-      });
+      // Find the last heading (in document order) that is above the threshold
+      for (let i = headingIds.length - 1; i >= 0; i--) {
+        if (above.has(headingIds[i])) {
+          setActiveId(headingIds[i]);
+          return;
+        }
+      }
     }
 
-    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
-    window.addEventListener('resize', handleScrollOrResize);
+    // Use a negative top margin to trigger "above the offset" detection
+    // When a heading crosses 140px from the top going up, it enters the intersection
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const above = aboveSetRef.current;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            // Heading has scrolled above the offset threshold
+            above.add(entry.target.id);
+          } else {
+            // Check if the heading is below the threshold (scrolled back down)
+            if (entry.boundingClientRect.top > HEADING_OFFSET_PX) {
+              above.delete(entry.target.id);
+            }
+          }
+        }
+        pickActive();
+      },
+      {
+        // Top boundary at -HEADING_OFFSET_PX means "140px from viewport top"
+        // Bottom boundary at -100% + HEADING_OFFSET_PX makes the observable area
+        // only the strip from top of viewport to HEADING_OFFSET_PX
+        rootMargin: `0px 0px -${window.innerHeight - HEADING_OFFSET_PX}px 0px`,
+        threshold: 0,
+      },
+    );
+
+    for (const el of headingElements) {
+      observer.observe(el);
+    }
+
     window.addEventListener('hashchange', handleHashChange);
 
     return () => {
-      if (rafId !== 0) {
-        window.cancelAnimationFrame(rafId);
-      }
-      window.removeEventListener('scroll', handleScrollOrResize);
-      window.removeEventListener('resize', handleScrollOrResize);
+      observer.disconnect();
+      aboveSetRef.current.clear();
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, [headingIds]);
