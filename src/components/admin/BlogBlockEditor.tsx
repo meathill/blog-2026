@@ -4,7 +4,7 @@ import type { BlockNoteEditor, PartialBlock } from '@blocknote/core';
 import { zh, en } from '@blocknote/core/locales';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/shadcn';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getInitialBlogBlocks } from '@/lib/blog-blocks';
 import { looksLikeMarkdownDocument } from '@/lib/blog-markdown-paste';
@@ -19,6 +19,8 @@ interface BlogBlockEditorProps {
 export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBlockEditorProps) {
   const [initialContent] = useState<PartialBlock[]>(() => getInitialBlogBlocks(defaultValue));
   const [serializedValue, setSerializedValue] = useState(() => JSON.stringify(initialContent));
+  const [htmlValue, setHtmlValue] = useState('');
+  const [markdownValue, setMarkdownValue] = useState('');
   const editor = useCreateBlockNote(
     {
       initialContent,
@@ -29,13 +31,23 @@ export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBloc
     [locale],
   );
 
+  useEffect(() => {
+    setHtmlValue(editor.blocksToHTMLLossy(editor.document));
+    setMarkdownValue(editor.blocksToMarkdownLossy(editor.document));
+  }, [editor]);
+
   function handleChange() {
-    setSerializedValue(JSON.stringify(editor.document));
+    const blocks = editor.document;
+    setSerializedValue(JSON.stringify(blocks));
+    setHtmlValue(editor.blocksToHTMLLossy(blocks));
+    setMarkdownValue(editor.blocksToMarkdownLossy(blocks));
   }
 
   return (
     <div className={`${styles.editorRoot} space-y-3`}>
       <input type="hidden" name={name} value={serializedValue} />
+      <input type="hidden" name="html" value={htmlValue} />
+      <input type="hidden" name="markdown" value={markdownValue} />
 
       <div className="rounded-[1.5rem] border border-border/80 bg-background/90 p-3 shadow-xs/5">
         <BlockNoteView

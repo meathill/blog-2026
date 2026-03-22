@@ -7,6 +7,7 @@ import { getAuth } from '@/lib/auth';
 import { type BlogPostRecord, buildBlogSlug, normalizeBlogPostStatus, parseBlogStringListInput } from '@/lib/blog-post';
 import { syncBlogPostToWordPress } from '@/lib/blog-sync';
 import { type BlogMetadataAiEnv, generateBlogMetadataSuggestion } from '@/lib/blog-ai';
+import { buildBlogContentSnapshot } from '@/lib/blog-content';
 import {
   type SaveBlogPostInput,
   createBlogPostRecord,
@@ -105,14 +106,13 @@ export async function generateBlogMetadata(formData: FormData) {
 
   const title = readRequiredString(formData, 'title', '请先填写标题。');
   const locale = readOptionalString(formData, 'locale') || 'zh';
-  const { buildBlogContentSnapshot } = await import('@/lib/blog-content');
-  const content = await buildBlogContentSnapshot(readOptionalString(formData, 'blocksJson'));
+  const markdown = readRequiredString(formData, 'markdown', '正文内容不能为空。');
   const { env } = await getCloudflareContext({ async: true });
 
   return generateBlogMetadataSuggestion(env as BlogMetadataAiEnv, {
     locale,
     title,
-    markdown: content.markdown,
+    markdown,
   });
 }
 
@@ -135,7 +135,6 @@ async function parseBlogPostFormData(
   formData: FormData,
   forcedStatus?: BlogPostRecord['status'],
 ): Promise<SaveBlogPostInput> {
-  const { buildBlogContentSnapshot } = await import('@/lib/blog-content');
   const title = readRequiredString(formData, 'title', '标题不能为空。');
   const slug = buildBlogSlug(title, readOptionalString(formData, 'slug'));
   const excerpt = readOptionalString(formData, 'excerpt') || '';
@@ -143,7 +142,9 @@ async function parseBlogPostFormData(
   const categories = parseBlogStringListInput(readOptionalString(formData, 'categoriesInput'));
   const tags = parseBlogStringListInput(readOptionalString(formData, 'tagsInput'));
   const status = forcedStatus ?? normalizeBlogPostStatus(readOptionalString(formData, 'status'));
-  const content = await buildBlogContentSnapshot(readOptionalString(formData, 'blocksJson'));
+  const html = readOptionalString(formData, 'html');
+  const markdown = readOptionalString(formData, 'markdown');
+  const content = buildBlogContentSnapshot(readOptionalString(formData, 'blocksJson'), html, markdown);
 
   return {
     title,

@@ -22,7 +22,6 @@
     "@base-ui/react": "^1.2.0",
     "@blocknote/core": "0.47.1",
     "@blocknote/react": "0.47.1",
-    "@blocknote/server-util": "0.47.1",
     "@blocknote/shadcn": "0.47.1",
     "@google/genai": "^1.45.0",
     "@next/third-parties": "^16.1.6",
