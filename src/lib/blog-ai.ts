@@ -234,7 +234,6 @@ async function requestOpenAiBlogMetadata(
   try {
     const response = await client.chat.completions.create({
       model: config.model,
-      temperature: 0.2,
       messages: [
         {
           role: 'system',
@@ -271,7 +270,6 @@ async function requestGeminiBlogMetadata(
       contents: buildBlogMetadataUserPrompt(input),
       config: {
         systemInstruction: buildBlogMetadataSystemPrompt(),
-        temperature: 0.2,
         responseMimeType: 'application/json',
         responseJsonSchema: BLOG_METADATA_RESPONSE_JSON_SCHEMA,
       },
