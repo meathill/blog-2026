@@ -21,16 +21,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="w-full">
-        <div className="flex items-center p-4 border-b">
+      <SidebarInset>
+        <header className="flex h-14 items-center gap-3 border-b border-border px-4">
           <SidebarTrigger />
-          <div className="ml-4 flex items-center justify-between w-full">
-            <h1 className="text-xl font-bold">Admin Dashboard</h1>
-            <div className="text-sm text-zinc-500">Welcome, {session.user.name}</div>
-          </div>
-        </div>
-        <div className="p-4">{children}</div>
-      </main>
+          <div className="h-5 w-px bg-border" />
+          <span className="text-sm font-medium text-foreground">Admin</span>
+          <span className="ml-auto text-sm text-muted-foreground">{session.user.name}</span>
+        </header>
+        <div className="p-6">{children}</div>
+      </SidebarInset>
       <Toaster position="bottom-right" richColors />
     </SidebarProvider>
   );

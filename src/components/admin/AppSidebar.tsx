@@ -1,4 +1,5 @@
-import { Home, Settings, LogOut, FileText, NavigationIcon, User } from 'lucide-react';
+import Link from 'next/link';
+import { LayoutGrid, Settings, ArrowLeft, FileText, NavigationIcon, User } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -11,17 +12,11 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 
-// Menu items.
 const items = [
   {
     title: 'Dashboard',
     url: '/admin',
-    icon: Home,
-  },
-  {
-    title: 'Apps',
-    url: '/admin', // Initially same as dashboard until we split them
-    icon: Home,
+    icon: LayoutGrid,
   },
   {
     title: 'Blog',
@@ -57,10 +52,10 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     render={
-                      <a href={item.url}>
+                      <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
-                      </a>
+                      </Link>
                     }
                   />
                 </SidebarMenuItem>
@@ -74,10 +69,10 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               render={
-                <a href="/">
-                  <LogOut />
+                <Link href="/">
+                  <ArrowLeft />
                   <span>Back to Site</span>
-                </a>
+                </Link>
               }
             />
           </SidebarMenuItem>

@@ -3,6 +3,8 @@ import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, PenSquareIcon } fr
 import { listBlogPosts } from '@/actions/blog';
 import { BlogStatusBadge, BlogWordPressSyncBadge } from '@/components/admin/BlogStatusBadge';
 import { NotionSyncButton } from '@/components/admin/NotionSyncButton';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { routing } from '@/i18n/routing';
 import { listBackupPosts } from '@/lib/notion-post-backup';
@@ -97,13 +99,10 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
             WordPress，公开站点继续沿用现有读取链路。
           </p>
         </div>
-        <Link
-          href={`${getLocalePrefix(locale)}/admin/blog/new`}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90"
-        >
+        <Button render={<Link href={`${getLocalePrefix(locale)}/admin/blog/new`} />}>
           <PenSquareIcon className="size-4" />
           新建文章
-        </Link>
+        </Button>
       </div>
 
       <Card>
@@ -157,12 +156,9 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
                     {post.excerpt || '暂无摘要。正文内容已保存在本地，可继续编辑或发布到 WordPress。'}
                   </p>
                 </div>
-                <Link
-                  href={`${getLocalePrefix(locale)}/admin/blog/${post.id}`}
-                  className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground"
-                >
+                <Button variant="outline" size="sm" render={<Link href={`${getLocalePrefix(locale)}/admin/blog/${post.id}`} />}>
                   编辑
-                </Link>
+                </Button>
               </div>
 
               <dl className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
@@ -186,34 +182,25 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {post.categories.map((category) => (
-                  <span
-                    key={`${post.id}-category-${category}`}
-                    className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700"
-                  >
+                  <Badge key={`${post.id}-category-${category}`} variant="info">
                     {category}
-                  </span>
+                  </Badge>
                 ))}
                 {post.tags.map((tag) => (
-                  <span
-                    key={`${post.id}-tag-${tag}`}
-                    className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700"
-                  >
+                  <Badge key={`${post.id}-tag-${tag}`} variant="outline">
                     {tag}
-                  </span>
+                  </Badge>
                 ))}
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">
                 {post.wpSyncedAt && (
-                  <Link
-                    href={buildPublicPreviewHref(locale, post.slug)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground"
-                  >
+                  <Button variant="outline" size="sm" render={
+                    <Link href={buildPublicPreviewHref(locale, post.slug)} target="_blank" rel="noreferrer" />
+                  }>
                     预览公开页
                     <ExternalLinkIcon className="size-4" />
-                  </Link>
+                  </Button>
                 )}
               </div>
             </article>

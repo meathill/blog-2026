@@ -45,7 +45,7 @@ export default async function AboutAdminPage({
       </div>
 
       {saved === '1' && (
-        <Alert className="bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50">
+        <Alert variant="success">
           <CheckCircle2Icon className="h-4 w-4" />
           <AlertTitle>保存成功</AlertTitle>
           <AlertDescription>关于我内容已更新。</AlertDescription>
