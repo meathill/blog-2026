@@ -74,6 +74,7 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.webp" type="image/webp" />
         <link rel="apple-touch-icon" href="/favicon.webp" />
+        <link rel="preconnect" href="https://blog.meathill.com" />
         <link rel="dns-prefetch" href="https://blog.meathill.com" />
       </head>
 

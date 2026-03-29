@@ -1,3 +1,7 @@
+# Early Hints - preconnect to image origin
+/*
+  Link: <https://blog.meathill.com>; rel=preconnect
+
 # 静态资源缓存配置
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable

@@ -27,6 +27,9 @@ export function PostToc({ items }: PostTocProps) {
       return;
     }
 
+    // Skip observer setup on mobile where TOC is hidden via CSS (lg:block)
+    if (!window.matchMedia('(min-width: 1024px)').matches) return;
+
     const headingElements = headingIds
       .map((id) => document.getElementById(id))
       .filter((element): element is HTMLElement => element instanceof HTMLElement);

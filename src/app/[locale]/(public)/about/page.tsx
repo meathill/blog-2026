@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import './about.css';
 import {
   GithubIcon,
   YoutubeIcon,
