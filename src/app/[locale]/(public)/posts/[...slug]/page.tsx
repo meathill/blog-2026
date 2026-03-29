@@ -13,7 +13,7 @@ interface PostPageProps {
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, locale } = await params;
 
   // Check for attachment pattern: .../attachment/[slug]
   if (slug.length >= 2 && slug[slug.length - 2] === 'attachment') {
@@ -26,7 +26,10 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
         ? stripHtml(media.description.rendered).slice(0, 160)
         : `Attachment: ${title}`;
 
-      const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/posts/${slug.join('/')}`;
+      const attachmentBasePath = `/posts/${slug.join('/')}`;
+      const attachmentZhUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${attachmentBasePath}`;
+      const attachmentEnUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/en${attachmentBasePath}`;
+      const canonicalUrl = locale === routing.defaultLocale ? attachmentZhUrl : attachmentEnUrl;
 
       return {
         title,
@@ -34,8 +37,8 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
         alternates: {
           canonical: canonicalUrl,
           languages: {
-            zh: canonicalUrl,
-            en: `${process.env.NEXT_PUBLIC_SITE_URL}/en/posts/${slug.join('/')}`,
+            zh: attachmentZhUrl,
+            en: attachmentEnUrl,
           },
         },
         openGraph: {
@@ -74,7 +77,10 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     }
   }
 
-  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/posts/${primaryCategorySlug}/${cleanSlug}`;
+  const basePath = `/posts/${primaryCategorySlug}/${cleanSlug}`;
+  const zhUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${basePath}`;
+  const enUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/en${basePath}`;
+  const canonicalUrl = locale === routing.defaultLocale ? zhUrl : enUrl;
 
   return {
     title,
@@ -82,8 +88,8 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        zh: canonicalUrl,
-        en: `${process.env.NEXT_PUBLIC_SITE_URL}/en/posts/${primaryCategorySlug}/${cleanSlug}`,
+        zh: zhUrl,
+        en: enUrl,
       },
     },
     openGraph: {
