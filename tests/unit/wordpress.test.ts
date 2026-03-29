@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getOrCreateTag } from '../../src/lib/wordpress';
+import { getOrCreateTag, toTermSlug } from '../../src/lib/wordpress';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 // Mock Cloudflare Env
@@ -20,6 +20,28 @@ vi.mock('../../src/lib/wordpress', async () => {
     ...actual,
     getTagBySlug: vi.fn(),
   };
+});
+
+describe('toTermSlug', () => {
+  it('should handle ASCII names', () => {
+    expect(toTermSlug('React')).toBe('react');
+    expect(toTermSlug('Next JS')).toBe('next-js');
+    expect(toTermSlug('vue-router')).toBe('vue-router');
+  });
+
+  it('should percent-encode Chinese characters', () => {
+    expect(toTermSlug('代码维护')).toBe('%e4%bb%a3%e7%a0%81%e7%bb%b4%e6%8a%a4');
+    expect(toTermSlug('重构')).toBe('%e9%87%8d%e6%9e%84');
+  });
+
+  it('should handle mixed ASCII and Chinese', () => {
+    const slug = toTermSlug('vibe coding 实战');
+    expect(slug).toBe('vibe-coding-%e5%ae%9e%e6%88%98');
+  });
+
+  it('should return empty string for empty input', () => {
+    expect(toTermSlug('')).toBe('');
+  });
 });
 
 describe('getOrCreateTag', () => {

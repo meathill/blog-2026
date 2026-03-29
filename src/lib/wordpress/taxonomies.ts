@@ -2,6 +2,20 @@ import { cache } from 'react';
 import { wpFetch, getAccessHeaders, getBasicAuthHeader } from './client';
 import { WPCategory, WPTag } from './types';
 
+/**
+ * Generate a WordPress-compatible slug from a term name.
+ * ASCII chars: keep a-z, 0-9, hyphens; strip the rest.
+ * Non-ASCII chars (e.g. Chinese): percent-encode, matching WordPress sanitize_title behaviour.
+ */
+export function toTermSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .split('')
+    .map((c) => (/[a-z0-9-]/.test(c) ? c : encodeURIComponent(c).toLowerCase()))
+    .join('');
+}
+
 export const getCategories = cache(async (): Promise<WPCategory[]> => {
   return wpFetch<WPCategory[]>('/categories?per_page=100');
 });
@@ -75,10 +89,7 @@ export async function createTag(env: CloudflareEnv, name: string): Promise<WPTag
 }
 
 export async function getOrCreateCategory(env: CloudflareEnv, name: string): Promise<WPCategory> {
-  const slug = name
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
+  const slug = toTermSlug(name);
 
   let category = await getCategoryBySlug(slug);
   if (!category) {
@@ -102,10 +113,7 @@ export async function getOrCreateCategory(env: CloudflareEnv, name: string): Pro
 }
 
 export async function getOrCreateTag(env: CloudflareEnv, name: string): Promise<WPTag> {
-  const slug = name
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
+  const slug = toTermSlug(name);
 
   let tag = await getTagBySlug(slug);
   if (!tag) {
