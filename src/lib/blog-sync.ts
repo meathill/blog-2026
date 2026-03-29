@@ -87,6 +87,8 @@ async function syncCategoryIds(env: CloudflareEnv, categories: string[]): Promis
   const ids: number[] = [];
 
   for (const category of categories) {
+    if (!category.trim()) continue;
+
     const syncedCategory = await getOrCreateCategory(env, category);
     ids.push(syncedCategory.id);
   }
@@ -98,6 +100,8 @@ async function syncTagIds(env: CloudflareEnv, tags: string[]): Promise<number[]>
   const ids: number[] = [];
 
   for (const tag of tags) {
+    if (!tag.trim()) continue;
+
     const syncedTag = await getOrCreateTag(env, tag);
     ids.push(syncedTag.id);
   }
