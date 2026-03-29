@@ -66,10 +66,11 @@ export default async function PostView({ post }: PostViewProps) {
   const needsCodeHighlight = hasCodeBlocks(processedContent);
 
   // 并发获取分类和标签
-  const [allCategories, tags] = await Promise.all([
+  const [allCategories, allTags] = await Promise.all([
     post.categories?.length ? getCategories() : Promise.resolve([]),
     post.tags?.length ? getTags({ include: post.tags }) : Promise.resolve([] as WPTag[]),
   ]);
+  const tags = allTags.filter((tag) => tag.name?.trim());
   const categories = post.categories?.length ? allCategories.filter((cat) => post.categories.includes(cat.id)) : [];
 
   const relatedApp = await findRelatedApp(tags, categories);
