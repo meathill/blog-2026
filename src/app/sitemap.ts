@@ -7,6 +7,14 @@ import { eq } from 'drizzle-orm';
 
 export const revalidate = 86400; // 1 day
 
+function safeDate(date: unknown): Date {
+  const d = date instanceof Date ? date : new Date(date as string);
+  if (isNaN(d.getTime()) || d.getFullYear() > 2100 || d.getFullYear() < 2000) {
+    return new Date();
+  }
+  return d;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { env } = await getCloudflareContext({ async: true });
   const SITE_URL = env.NEXT_PUBLIC_SITE_URL;
@@ -125,7 +133,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const url = `${SITE_URL}/posts/${categorySlug}/${post.slug}`;
       return {
         url,
-        lastModified: new Date(post.date),
+        lastModified: safeDate(post.date),
         changeFrequency: 'weekly' as const,
         priority: 0.8,
         alternates: {
@@ -147,7 +155,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const allApps = await db.select().from(apps).where(eq(apps.status, 'published'));
     appPages = allApps.map((app) => ({
       url: `${SITE_URL}/app/${app.slug}`,
-      lastModified: app.updatedAt,
+      lastModified: safeDate(app.updatedAt),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));
