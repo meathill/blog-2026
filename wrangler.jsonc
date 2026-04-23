@@ -3,10 +3,7 @@
   "main": ".open-next/worker.js",
   "name": "blog-2026",
   "compatibility_date": "2026-01-01",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
-  ],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "account_id": "fdc63eeea83ae8f5234357308b9a638b",
   "keep_names": false,
   "assets": {
@@ -41,9 +38,7 @@
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": [
-        "DOQueueHandler"
-      ]
+      "new_sqlite_classes": ["DOQueueHandler"]
     }
   ],
   "observability": {
@@ -73,6 +68,7 @@
     "NEXT_PUBLIC_SITE_URL": "https://meathill.com",
     "NEXT_PUBLIC_ASSETS_URL": "https://i.meathill.com",
     "NEXT_PUBLIC_GOOGLE_ADSENSE_ID": "ca-pub-9946806099979342",
+    "NEXT_PUBLIC_SEARCH_API_URL": "https://mui-search.meathill.com",
     "AI_MODEL": "gpt-5-mini",
     "BETTER_AUTH_BASE_URL": "https://meathill.com",
     "CRON_SECRET": "meathill-2026",
