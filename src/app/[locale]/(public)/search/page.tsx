@@ -1,10 +1,10 @@
 import { Metadata } from 'next';
 import { SearchIcon } from 'lucide-react';
-import { PostSummaryItem } from '@/components/posts/post-summary-item';
-import { getPosts, getCategories, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
+import { SearchResultsClient } from '@/components/search/search-results-client';
 import { SITE_URL } from '@/lib/constants';
 
 interface PageProps {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ q?: string }>;
 }
 
@@ -50,21 +50,10 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   };
 }
 
-export default async function SearchPage({ searchParams }: PageProps) {
+export default async function SearchPage({ params, searchParams }: PageProps) {
+  const { locale } = await params;
   const { q } = await searchParams;
   const query = q?.trim() || '';
-
-  let posts: any[] = [];
-  let total = 0;
-
-  if (query) {
-    const result = await getPosts({ search: query, perPage: 50 });
-    posts = result.posts;
-    total = result.total;
-  }
-
-  const categories = await getCategories();
-  const categoryMap = new Map(categories.map((cat) => [cat.id, cat.name]));
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -95,49 +84,10 @@ export default async function SearchPage({ searchParams }: PageProps) {
           </form>
         </header>
 
-        {/* Search Results */}
-        {query && (
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <p className="text-[var(--text-secondary)]">
-                找到 <span className="font-semibold text-[var(--text-primary)]">{total}</span> 篇相关文章
-              </p>
-            </div>
-
-            {posts.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-[var(--text-muted)] text-lg">没有找到相关文章</p>
-                <p className="text-[var(--text-muted)] mt-2">尝试使用其他关键词搜索</p>
-              </div>
-            ) : (
-              <ul className="space-y-4">
-                {posts.map((post) => {
-                  const title = stripHtml(post.title.rendered);
-                  const excerpt = `${stripHtml(post.excerpt.rendered).slice(0, 150)}...`;
-                  const date = formatDate(post.date);
-                  const readingTime = calculateReadingTime(post.content.rendered);
-                  const categoryName = post.categories?.[0] ? categoryMap.get(post.categories[0]) : undefined;
-
-                  return (
-                    <PostSummaryItem
-                      key={post.id}
-                      href={`/posts/${post.slug}`}
-                      title={title}
-                      excerptText={excerpt}
-                      dateText={date}
-                      readingTimeText={`${readingTime}分钟`}
-                      categoryText={categoryName}
-                      variant="search"
-                    />
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {/* Initial State - No Query */}
-        {!query && (
+        {/* Search Results (client-side via mui-search) */}
+        {query ? (
+          <SearchResultsClient query={query} locale={locale} />
+        ) : (
           <div className="text-center py-16">
             <SearchIcon size={48} className="mx-auto mb-4 text-[var(--text-muted)]" />
             <p className="text-[var(--text-muted)] text-lg">输入关键词开始搜索</p>
