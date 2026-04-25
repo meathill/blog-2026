@@ -2,22 +2,14 @@
   position: relative;
 }
 
-:global(.bn-shadcn.bn-toolbar),
-:global(.bn-shadcn .bn-toolbar),
-:global(.bn-toolbar) {
-  background: var(--popover);
-  color: var(--popover-foreground);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  box-shadow:
-    0 12px 32px color-mix(in srgb, var(--foreground) 14%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--border) 85%, transparent);
-  backdrop-filter: blur(14px);
-  /* shadcn 默认给 .bn-toolbar 加了 overflow-x: auto + max-width: 100vw,
-     会把内部的 BlockTypeSelect 下拉、链接编辑 popover 等裁掉。 */
+/* shadcn 默认给 .bn-toolbar 加了 overflow-x: auto + max-width: 100vw,
+   overflow-x 非 visible 时浏览器会把 overflow-y 也设为 auto，
+   把 BlockTypeSelect 的下拉、CreateLinkButton 的 popover、Tooltip 等
+   一并裁掉。背景/active 态由 shadcn 自带 Tailwind 类负责，这里只放行溢出。 */
+:global(.bn-shadcn .bn-toolbar) {
   overflow: visible !important;
-  flex-wrap: wrap;
   max-width: none !important;
+  flex-wrap: wrap;
 }
 
 :global(.bn-menu-dropdown),
