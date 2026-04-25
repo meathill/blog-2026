@@ -2,6 +2,17 @@
   position: relative;
 }
 
+:global(.bn-toolbar) {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow:
+    0 12px 32px color-mix(in srgb, var(--foreground) 14%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--border) 85%, transparent);
+  backdrop-filter: blur(14px);
+}
+
 :global(.bn-menu-dropdown),
 :global(.bn-popover-content),
 :global(.bn-suggestion-menu),

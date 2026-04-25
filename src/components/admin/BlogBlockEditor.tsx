@@ -2,7 +2,13 @@
 
 import type { BlockNoteEditor, PartialBlock } from '@blocknote/core';
 import { zh, en } from '@blocknote/core/locales';
-import { useCreateBlockNote } from '@blocknote/react';
+import {
+  BasicTextStyleButton,
+  FormattingToolbar,
+  FormattingToolbarController,
+  getFormattingToolbarItems,
+  useCreateBlockNote,
+} from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/shadcn';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -49,13 +55,23 @@ export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBloc
       <input type="hidden" name="html" value={htmlValue} />
       <input type="hidden" name="markdown" value={markdownValue} />
 
-      <div className="rounded-[1.5rem] border border-border/80 bg-background/90 p-3 shadow-xs/5">
-        <BlockNoteView
-          editor={editor}
-          onChange={handleChange}
-          className="min-h-[26rem] rounded-[1.25rem] border border-dashed border-border/60 bg-background px-3 py-4"
+      <BlockNoteView
+        editor={editor}
+        onChange={handleChange}
+        formattingToolbar={false}
+        className="min-h-[26rem] rounded border border-border/60 bg-background py-4"
+      >
+        <FormattingToolbarController
+          formattingToolbar={() => (
+            <FormattingToolbar>
+              {[
+                ...getFormattingToolbarItems(),
+                <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />,
+              ]}
+            </FormattingToolbar>
+          )}
         />
-      </div>
+      </BlockNoteView>
 
       <p className="text-sm text-muted-foreground">
         输入 <code>/</code> 可插入标题、列表、引用、代码块、分割线和图片。直接粘贴 Markdown 文本时会自动转换为
