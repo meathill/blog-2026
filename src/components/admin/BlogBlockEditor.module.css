@@ -2,6 +2,8 @@
   position: relative;
 }
 
+:global(.bn-shadcn.bn-toolbar),
+:global(.bn-shadcn .bn-toolbar),
 :global(.bn-toolbar) {
   background: var(--popover);
   color: var(--popover-foreground);
@@ -11,6 +13,11 @@
     0 12px 32px color-mix(in srgb, var(--foreground) 14%, transparent),
     0 0 0 1px color-mix(in srgb, var(--border) 85%, transparent);
   backdrop-filter: blur(14px);
+  /* shadcn 默认给 .bn-toolbar 加了 overflow-x: auto + max-width: 100vw,
+     会把内部的 BlockTypeSelect 下拉、链接编辑 popover 等裁掉。 */
+  overflow: visible !important;
+  flex-wrap: wrap;
+  max-width: none !important;
 }
 
 :global(.bn-menu-dropdown),
