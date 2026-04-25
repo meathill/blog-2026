@@ -62,14 +62,17 @@ export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBloc
         className="min-h-[26rem] rounded border border-border/60 bg-background py-4"
       >
         <FormattingToolbarController
-          formattingToolbar={() => (
-            <FormattingToolbar>
-              {[
-                ...getFormattingToolbarItems(),
-                <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />,
-              ]}
-            </FormattingToolbar>
-          )}
+          formattingToolbar={() => {
+            const items = getFormattingToolbarItems();
+            const strikeIndex = items.findIndex((item) => item.key === 'strikeStyleButton');
+            const insertAt = strikeIndex >= 0 ? strikeIndex + 1 : items.length;
+            items.splice(
+              insertAt,
+              0,
+              <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />,
+            );
+            return <FormattingToolbar>{items}</FormattingToolbar>;
+          }}
         />
       </BlockNoteView>
 
