@@ -43,4 +43,15 @@ describe('processContent', () => {
     const expected = '<h2 id="title-with-special-chars">Title (with) [special] chars!</h2>';
     expect(processContent(input)).toBe(expected);
   });
+
+  it('should turn <br> inside <pre><code> into newlines', () => {
+    const input = '<pre data-language="ts"><code>line1<br>line2<br/>line3</code></pre>';
+    const expected = '<pre data-language="ts"><code>line1\nline2\nline3</code></pre>';
+    expect(processContent(input)).toBe(expected);
+  });
+
+  it('should not touch <br> outside <pre>', () => {
+    const input = '<p>foo<br>bar</p>';
+    expect(processContent(input)).toBe(input);
+  });
 });

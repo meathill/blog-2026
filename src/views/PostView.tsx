@@ -52,6 +52,7 @@ const PROSE_CLASSES = `prose prose-invert prose-lg max-w-none
   prose-a:text-[var(--accent)] prose-a:no-underline hover:prose-a:underline
   prose-strong:text-[var(--text-primary)]
   prose-code:text-[var(--accent)] prose-code:bg-[var(--surface)] prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+  prose-code:before:content-none prose-code:after:content-none
   prose-pre:bg-[var(--surface)] prose-pre:border prose-pre:border-[var(--surface-border)] prose-pre:p-0
   prose-img:rounded-xl
   prose-blockquote:border-l-[var(--accent)] prose-blockquote:text-[var(--text-muted)]

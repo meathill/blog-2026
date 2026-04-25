@@ -262,6 +262,11 @@ export function processContent(html: string): string {
   return html
     .replace(/href="https?:\/\/blog\.meathill\.com\/[^"]*?(#[^"]+)"/g, 'href="$1"')
     .replace(/href="https?:\/\/blog\.meathill\.com\/([^"#]+)\.html"/g, 'href="/posts/$1"')
+    // BlockNote 把 code block 里的换行序列化成 <br>，导致 <pre> 里看不到换行，
+    // highlight.js 走 textContent 时也会丢行。统一替回 \n。
+    .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/g, (match) =>
+      match.replace(/<br\s*\/?>/gi, '\n'),
+    )
     .replace(/<h([2-4])([^>]*)>(.*?)<\/h[2-4]>/g, (match, level, attrs, content) => {
       // Check if id already exists
       if (attrs.includes('id=')) {
