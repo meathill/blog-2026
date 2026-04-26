@@ -12,6 +12,7 @@
 ## 关键配置
 
 - `wrangler.jsonc`：Workers 绑定（D1 / R2 / DO / vars）
+- 构建时环境变量：`NEXT_PUBLIC_SITE_URL` 等 `NEXT_PUBLIC_` 变量需在构建（`pnpm build`）时提供。为了方便管理，我们也将其记录在 `wrangler.jsonc` 的 `vars` 中。
 - `open-next.config.ts`：OpenNext 构建配置
 - `migrations/`：D1 迁移文件
 

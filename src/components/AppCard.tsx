@@ -71,7 +71,6 @@ export default function AppCard({ app, tags = [], i18n }: AppCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             className="z-10 flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-500 transition-colors"
-
           >
             {i18n?.open_app || 'Open App'} <ExternalLink size={12} />
           </a>

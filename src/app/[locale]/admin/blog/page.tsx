@@ -156,7 +156,11 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
                     {post.excerpt || '暂无摘要。正文内容已保存在本地，可继续编辑或发布到 WordPress。'}
                   </p>
                 </div>
-                <Button variant="outline" size="sm" render={<Link href={`${getLocalePrefix(locale)}/admin/blog/${post.id}`} />}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link href={`${getLocalePrefix(locale)}/admin/blog/${post.id}`} />}
+                >
                   编辑
                 </Button>
               </div>
@@ -195,9 +199,11 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
 
               <div className="mt-5 flex flex-wrap gap-2">
                 {post.wpSyncedAt && (
-                  <Button variant="outline" size="sm" render={
-                    <Link href={buildPublicPreviewHref(locale, post.slug)} target="_blank" rel="noreferrer" />
-                  }>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    render={<Link href={buildPublicPreviewHref(locale, post.slug)} target="_blank" rel="noreferrer" />}
+                  >
                     预览公开页
                     <ExternalLinkIcon className="size-4" />
                   </Button>

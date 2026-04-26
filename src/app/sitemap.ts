@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
 import { getPosts, getCategories, getTags } from '@/lib/wordpress';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -16,8 +15,7 @@ function safeDate(date: unknown): Date {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { env } = await getCloudflareContext({ async: true });
-  const SITE_URL = env.NEXT_PUBLIC_SITE_URL;
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://meathill.com';
   // 静态页面
   const staticPages: MetadataRoute.Sitemap = [
     {

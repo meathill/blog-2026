@@ -43,7 +43,7 @@ export async function uploadImage(formData: FormData) {
       },
     });
 
-    const assetsUrl = env.NEXT_PUBLIC_ASSETS_URL || 'https://i.meathill.com';
+    const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL || 'https://i.meathill.com';
     const baseUrl = assetsUrl.endsWith('/') ? assetsUrl.slice(0, -1) : assetsUrl;
     const url = `${baseUrl}/${key}`;
 

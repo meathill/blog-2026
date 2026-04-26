@@ -10,12 +10,10 @@
   - WordPress（内容主源）
   - D1（后台数据与同步备份）
 
-## 内容同步链路
+博文写作与发布有两条链路：
 
-Notion 博文同步采用两阶段：
-
-1. `Notion -> D1`：先做备份落库
-2. `D1 -> WordPress`：按时间规则同步
+1. **后台编辑器（推荐）**：使用 `/admin/blog` 内置的 BlockNote 编辑器。文章内容以 Block JSON 格式存储在 D1，同时生成 Markdown/HTML 快照，并同步至 WordPress。
+2. **Notion 同步（遗留）**：`Notion -> D1 备份 -> WordPress`。适用于批量迁移或习惯 Notion 写作的场景。
 
 时间规则：
 
@@ -43,7 +41,26 @@ Notion 博文同步采用两阶段：
 
 - 动态 OG 图：`src/app/api/og/post/route.tsx`
 - 旧链接重定向：`src/middleware.ts`
-- Notion 同步后台：`src/app/[locale]/admin/blog/page.tsx`
+- 博客后台编辑器：`/admin/blog`，支持 AI 元数据生成。
+- 性能优化：第三方脚本延迟加载、首页图片 loader 适配。
+
+## 关键设计策略
+
+### AI 服务
+
+统一通过 `AI_MODEL` 环境变量控制 provider。
+- `gemini*`：使用 `@google/genai`。
+- 其他：使用 `openai` SDK（兼容 OpenAI 格式的代理）。
+
+### 性能优化 (Web Vitals)
+
+- **第三方脚本**：Google Adsense/GA 等脚本在 `ThirdPartyScripts` 组件中延迟加载。在用户滚动超过首屏或空闲时才注入。
+- **图片加载**：全站 `next/image` 使用自定义 `image-loader.ts`，对接 Cloudflare 的 `/cdn-cgi/image/` 路径，实现边缘裁剪与格式转换。
+
+### 环境变量
+
+- `NEXT_PUBLIC_` 变量：应在构建时提供，以便注入代码。同时在 `wrangler.jsonc` 的 `vars` 中保留一份记录，方便在 Cloudflare Dashboard 管理。
+- **运行时变量/Secrets**：通过 `getCloudflareContext()` 获取。
 
 ## 维护约定
 

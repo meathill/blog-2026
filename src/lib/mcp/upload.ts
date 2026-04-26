@@ -70,7 +70,7 @@ export async function uploadToR2(input: UploadInput): Promise<UploadResult> {
     httpMetadata: { contentType: input.contentType },
   });
 
-  const assetsUrl = env.NEXT_PUBLIC_ASSETS_URL || 'https://i.meathill.com';
+  const assetsUrl = process.env.NEXT_PUBLIC_ASSETS_URL || 'https://i.meathill.com';
   const baseUrl = assetsUrl.endsWith('/') ? assetsUrl.slice(0, -1) : assetsUrl;
   return { key, url: `${baseUrl}/${key}` };
 }

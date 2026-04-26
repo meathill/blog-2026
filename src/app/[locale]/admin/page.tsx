@@ -22,9 +22,7 @@ export default async function AdminDashboard() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">My Apps</h1>
-          <p className="max-w-3xl text-sm text-muted-foreground">
-            管理你的应用和项目。创建新应用后可以在前台展示。
-          </p>
+          <p className="max-w-3xl text-sm text-muted-foreground">管理你的应用和项目。创建新应用后可以在前台展示。</p>
         </div>
         <Button render={<Link href="/admin/apps/new" />}>
           <Plus className="size-4" />

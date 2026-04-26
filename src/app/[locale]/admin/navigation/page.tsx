@@ -39,11 +39,7 @@ function buildStatusMessage(params: { saved?: string; reset?: string; error?: st
   return null;
 }
 
-function SegmentedControl({
-  items,
-}: {
-  items: { label: string; href: string; active: boolean }[];
-}) {
+function SegmentedControl({ items }: { items: { label: string; href: string; active: boolean }[] }) {
   return (
     <div className="flex rounded-lg bg-muted p-1">
       {items.map((item) => (
@@ -52,9 +48,7 @@ function SegmentedControl({
           href={item.href}
           className={cn(
             'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
-            item.active
-              ? 'bg-background shadow-sm text-foreground'
-              : 'text-muted-foreground hover:text-foreground',
+            item.active ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground',
           )}
         >
           {item.label}
@@ -90,16 +84,32 @@ export default async function NavigationAdminPage({ searchParams }: NavigationAd
         </div>
         <SegmentedControl
           items={[
-            { label: '中文', href: `/admin/navigation?locale=zh&section=${editorData.section}`, active: editorData.locale === 'zh' },
-            { label: 'English', href: `/admin/navigation?locale=en&section=${editorData.section}`, active: editorData.locale === 'en' },
+            {
+              label: '中文',
+              href: `/admin/navigation?locale=zh&section=${editorData.section}`,
+              active: editorData.locale === 'zh',
+            },
+            {
+              label: 'English',
+              href: `/admin/navigation?locale=en&section=${editorData.section}`,
+              active: editorData.locale === 'en',
+            },
           ]}
         />
       </div>
 
       <SegmentedControl
         items={[
-          { label: 'Header', href: `/admin/navigation?locale=${editorData.locale}&section=header`, active: editorData.section === 'header' },
-          { label: 'Footer', href: `/admin/navigation?locale=${editorData.locale}&section=footer`, active: editorData.section === 'footer' },
+          {
+            label: 'Header',
+            href: `/admin/navigation?locale=${editorData.locale}&section=header`,
+            active: editorData.section === 'header',
+          },
+          {
+            label: 'Footer',
+            href: `/admin/navigation?locale=${editorData.locale}&section=footer`,
+            active: editorData.section === 'footer',
+          },
         ]}
       />
 

@@ -96,10 +96,7 @@ describe('blog-sync', () => {
       const post = buildMockPost({ tags: ['react', 'nextjs'] });
       await syncBlogPostToWordPress(mockEnv, post);
 
-      expect(mockCreatePost).toHaveBeenCalledWith(
-        mockEnv,
-        expect.objectContaining({ tags: [10, 20] }),
-      );
+      expect(mockCreatePost).toHaveBeenCalledWith(mockEnv, expect.objectContaining({ tags: [10, 20] }));
     });
   });
 

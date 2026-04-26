@@ -12,8 +12,10 @@
 ## 核心能力
 
 - 文章列表、详情、分类、标签、搜索
-- Open Graph 动态图片
-- 后台 Notion 同步：`Notion -> D1 备份 -> WordPress`
+- Admin 博客编辑器：集成 BlockNote 所见即所得编辑器，支持图文混排与自动保存
+- AI 辅助创作：基于 OpenAI/Gemini 自动生成文章 slug、摘要、标签
+- Open Graph 动态图片：基于 Satori 与边缘图片处理动态生成
+- 后台 Notion 同步：`Notion -> D1 备份 -> WordPress`（遗留功能，目前主推后台编辑器）
 - 应用（Apps）管理与标签管理
 
 ## 技术栈
@@ -22,6 +24,7 @@
 - OpenNext (`@opennextjs/cloudflare`)
 - Tailwind CSS v4
 - Drizzle ORM + Cloudflare D1
+- OpenAI & Google Generative AI SDKs
 - Vitest + Testing Library
 
 ## 本地开发

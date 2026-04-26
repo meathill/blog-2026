@@ -19,8 +19,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
 
   // 获取标签 (wp:term[1] 通常是标签，[0] 是分类)
   // @ts-ignore
-  const tags = (post._embedded?.['wp:term']?.[1] || [])
-    .filter((tag: any) => tag.name?.trim());
+  const tags = (post._embedded?.['wp:term']?.[1] || []).filter((tag: any) => tag.name?.trim());
 
   // 获取缩略图
   const thumbnail = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;

@@ -6,7 +6,7 @@ import { hashPassword } from 'better-auth/crypto';
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getCloudflareContext();
+    const { env } = await getCloudflareContext();
     // @ts-ignore
     const secret = env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET;
     const authHeader = req.headers.get('Authorization');
