@@ -72,6 +72,7 @@
     "AI_MODEL": "gpt-5-mini",
     "BETTER_AUTH_BASE_URL": "https://meathill.com",
     "CRON_SECRET": "meathill-2026",
-    "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2"
+    "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2",
+    "MCP_TOKEN": "bb781a49939c6e49ef25032742e308dc887ac6b6d8d0fc43ecb1a79b4f6ad2cb"
   }
 }

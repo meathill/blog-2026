@@ -1,14 +1,16 @@
 'use server';
 
-import { getDb } from '@/lib/db';
-import { apps } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { buildAppSlug } from '@/lib/app-slug';
-import { getFeaturedAppsTag } from '@/lib/public-apps';
+import { getAuth } from '@/lib/auth';
+import {
+  createAppCore,
+  deleteAppCore,
+  revalidateAfterAppMutation,
+  setAppTagsCore,
+  updateAppCore,
+  type AppStatus,
+} from '@/lib/apps-core';
 
 async function checkAuth() {
   const auth = await getAuth();
@@ -21,13 +23,6 @@ async function checkAuth() {
   return session;
 }
 
-function revalidateFeaturedApps() {
-  revalidatePath('/');
-  revalidatePath('/en');
-  revalidateTag(getFeaturedAppsTag('zh'), 'max');
-  revalidateTag(getFeaturedAppsTag('en'), 'max');
-}
-
 export async function createApp(formData: FormData) {
   await checkAuth();
 
@@ -37,36 +32,23 @@ export async function createApp(formData: FormData) {
   const url = formData.get('url') as string;
   const repoUrl = formData.get('repoUrl') as string;
   const icon = formData.get('icon') as string;
-  const status = formData.get('status') as 'published' | 'draft' | 'archived';
-  const slug = (formData.get('slug') as string) || buildAppSlug(name);
+  const status = formData.get('status') as AppStatus;
+  const slug = (formData.get('slug') as string) || undefined;
   const tagIds = (formData.get('tagIds') as string)?.split(',').filter(Boolean) || [];
 
-  const db = await getDb();
-  const id = crypto.randomUUID();
-
-  await db.insert(apps).values({
-    id,
+  const { slug: createdSlug } = await createAppCore({
     name,
     description,
     content,
-    slug,
     url,
     repoUrl,
     icon,
     status: status || 'draft',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    slug,
+    tagIds,
   });
 
-  if (tagIds.length > 0) {
-    const { updateAppTags } = await import('./tags');
-    await updateAppTags(id, tagIds);
-  }
-
-  revalidatePath('/admin');
-  revalidatePath('/app');
-  revalidatePath('/en/app');
-  revalidateFeaturedApps();
+  revalidateAfterAppMutation(createdSlug);
   redirect('/admin');
 }
 
@@ -80,35 +62,24 @@ export async function updateApp(id: string, formData: FormData) {
     const url = formData.get('url') as string;
     const repoUrl = formData.get('repoUrl') as string;
     const icon = formData.get('icon') as string;
-    const status = formData.get('status') as 'published' | 'draft' | 'archived';
+    const status = formData.get('status') as AppStatus;
     const slug = formData.get('slug') as string;
     const tagIds = (formData.get('tagIds') as string)?.split(',').filter(Boolean) || [];
 
-    const db = await getDb();
-    await db
-      .update(apps)
-      .set({
-        name,
-        description,
-        content,
-        slug,
-        url,
-        repoUrl,
-        icon,
-        status,
-        updatedAt: new Date(),
-      })
-      .where(eq(apps.id, id));
+    const { slug: nextSlug, prevSlug } = await updateAppCore(id, {
+      name,
+      description,
+      content,
+      url,
+      repoUrl,
+      icon,
+      status,
+      slug,
+    });
 
-    const { updateAppTags } = await import('./tags');
-    await updateAppTags(id, tagIds);
+    await setAppTagsCore(id, tagIds);
 
-    revalidatePath('/admin');
-    revalidatePath('/app');
-    revalidatePath('/en/app');
-    revalidatePath(`/app/${slug}`);
-    revalidatePath(`/en/app/${slug}`);
-    revalidateFeaturedApps();
+    revalidateAfterAppMutation(nextSlug, prevSlug);
     redirect('/admin');
   } catch (e) {
     console.error('Failed to update app:', e);
@@ -118,10 +89,6 @@ export async function updateApp(id: string, formData: FormData) {
 
 export async function deleteApp(id: string) {
   await checkAuth();
-  const db = await getDb();
-  await db.delete(apps).where(eq(apps.id, id));
-  revalidatePath('/admin');
-  revalidatePath('/app');
-  revalidatePath('/en/app');
-  revalidateFeaturedApps();
+  const result = await deleteAppCore(id);
+  revalidateAfterAppMutation(result?.slug ?? null);
 }

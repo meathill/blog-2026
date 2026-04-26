@@ -7,6 +7,7 @@ import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { getFeaturedAppsTag } from '@/lib/public-apps';
+import { setAppTagsCore } from '@/lib/apps-core';
 
 function revalidateFeaturedApps() {
   revalidatePath('/');
@@ -89,21 +90,7 @@ export async function updateAppTags(appId: string, tagIds: string[]) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error('Unauthorized');
 
-  const db = await getDb();
-
-  // Delete existing associations
-  await db.delete(appTags).where(eq(appTags.appId, appId));
-
-  // Insert new associations
-  if (tagIds.length > 0) {
-    const uniqueTagIds = [...new Set(tagIds)];
-    await db.insert(appTags).values(
-      uniqueTagIds.map((tagId) => ({
-        appId,
-        tagId,
-      })),
-    );
-  }
+  await setAppTagsCore(appId, tagIds);
 
   revalidatePath('/admin');
   revalidatePath(`/app`);
