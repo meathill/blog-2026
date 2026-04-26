@@ -1,6 +1,25 @@
 import { ImageResponse } from 'next/og';
 import { getPost, stripHtml } from '@/lib/wordpress';
 import { NextRequest } from 'next/server';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+
+async function loadCoverDataUrl(url: string): Promise<string | null> {
+  try {
+    const { env } = await getCloudflareContext({ async: true });
+    if (!env.IMAGES) return null;
+    const upstream = await fetch(url);
+    if (!upstream.ok || !upstream.body) return null;
+    const out = await env.IMAGES
+      .input(upstream.body)
+      .transform({ width: 1200 })
+      .output({ format: 'image/png' });
+    const buf = await out.response().arrayBuffer();
+    const b64 = Buffer.from(buf).toString('base64');
+    return `data:image/png;base64,${b64}`;
+  } catch {
+    return null;
+  }
+}
 
 // Image metadata
 export const size = {
@@ -63,12 +82,9 @@ export async function GET(request: NextRequest) {
 
   const title = stripHtml(post.title.rendered);
   const rawFeaturedMedia = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
-  const origin = new URL(request.url).origin;
-  // Satori (next/og ImageResponse) 不支持 WebP，通过当前域名的 Cloudflare Image Resizing 转为 PNG
-  const featuredMedia =
-    rawFeaturedMedia && rawFeaturedMedia.match(/\.webp(\?|$)/i)
-      ? `${origin}/cdn-cgi/image/format=png,width=1200/${rawFeaturedMedia}`
-      : rawFeaturedMedia;
+  // Satori 不支持 WebP，且从 Worker 内发往同 zone cdn-cgi 子请求在 global_fetch_strictly_public
+  // 下会被打回 Worker 自己导致非图片响应；改用 IMAGES binding 转码后以 data URL 喂给 Satori。
+  const featuredMedia = rawFeaturedMedia ? await loadCoverDataUrl(rawFeaturedMedia) : null;
 
   return new ImageResponse(
     <div
