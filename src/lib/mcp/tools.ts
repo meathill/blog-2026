@@ -15,6 +15,16 @@ import {
   upsertAppTranslationCore,
 } from '@/lib/apps-core';
 import { fetchRemoteImage, uploadToR2 } from '@/lib/mcp/upload';
+import {
+  createBlogPostRecord,
+  getBlogPostRecord,
+  listBlogPostRecords,
+  updateBlogPostRecord,
+} from '@/lib/blog-storage';
+import { buildBlogSlug, normalizeBlogPostStatus } from '@/lib/blog-post';
+import { buildDraftContentFromMarkdown, revalidateBlogAdminPaths } from '@/lib/mcp/blog-draft';
+
+const BlogStatus = z.enum(['draft', 'published', 'archived']);
 
 const Status = z.enum(['published', 'draft', 'archived']);
 const Locale = z.enum(['en', 'zh']);
@@ -260,6 +270,122 @@ export const tools: McpTool[] = [
       return { ok: true };
     },
   }),
+
+  tool({
+    name: 'list_blog_posts',
+    description: 'List blog posts with pagination, ordered by updatedAt desc.',
+    inputSchema: z
+      .object({
+        page: z.number().int().min(1).optional(),
+        pageSize: z.number().int().min(1).max(50).optional(),
+      })
+      .strict(),
+    handler: async (args) => listBlogPostRecords(args),
+  }),
+
+  tool({
+    name: 'get_blog_post',
+    description: 'Get a single blog post by id.',
+    inputSchema: z.object({ id: z.string() }).strict(),
+    handler: async ({ id }) => getBlogPostRecord(id),
+  }),
+
+  tool({
+    name: 'create_blog_draft',
+    description:
+      'Create a new blog post draft from markdown. Renders html via marked and stores markdown in BlockNote-compatible blocks. Returns the created post.',
+    inputSchema: z
+      .object({
+        title: z.string().min(1),
+        markdown: z.string().min(1),
+        slug: z.string().optional(),
+        excerpt: z.string().optional(),
+        status: BlogStatus.optional(),
+        coverImage: z.string().nullish(),
+        tags: z.array(z.string()).optional(),
+        categories: z.array(z.string()).optional(),
+      })
+      .strict(),
+    handler: async (args) => {
+      const slug = buildBlogSlug(args.title, args.slug);
+      const status = normalizeBlogPostStatus(args.status);
+      const content = await buildDraftContentFromMarkdown(args.markdown);
+      const id = await createBlogPostRecord({
+        title: args.title,
+        slug,
+        excerpt: args.excerpt ?? '',
+        status,
+        coverImage: args.coverImage ?? null,
+        categories: args.categories ?? [],
+        tags: args.tags ?? [],
+        blocksJson: content.blocksJson,
+        markdown: content.markdown,
+        html: content.html,
+      });
+      revalidateBlogAdminPaths(id);
+      return getBlogPostRecord(id);
+    },
+  }),
+
+  tool({
+    name: 'update_blog_post',
+    description:
+      'Update fields on a blog post. If `markdown` is provided, html and blocksJson are regenerated. Only provided fields are changed; tags/categories replace the whole list.',
+    inputSchema: z
+      .object({
+        id: z.string(),
+        patch: z
+          .object({
+            title: z.string().min(1).optional(),
+            slug: z.string().optional(),
+            excerpt: z.string().optional(),
+            status: BlogStatus.optional(),
+            coverImage: z.string().nullish(),
+            tags: z.array(z.string()).optional(),
+            categories: z.array(z.string()).optional(),
+            markdown: z.string().optional(),
+          })
+          .strict(),
+      })
+      .strict(),
+    handler: async ({ id, patch }) => {
+      const existing = await getBlogPostRecord(id);
+      if (!existing) throw new Error(`Blog post not found: ${id}`);
+
+      const title = patch.title ?? existing.title;
+      const slug = patch.slug
+        ? buildBlogSlug(title, patch.slug)
+        : patch.title
+          ? buildBlogSlug(title, existing.slug)
+          : existing.slug;
+
+      let blocksJson = existing.blocksJson;
+      let markdown = existing.markdown;
+      let html = existing.html;
+      if (patch.markdown !== undefined) {
+        const content = await buildDraftContentFromMarkdown(patch.markdown);
+        blocksJson = content.blocksJson;
+        markdown = content.markdown;
+        html = content.html;
+      }
+
+      await updateBlogPostRecord(id, {
+        title,
+        slug,
+        excerpt: patch.excerpt ?? existing.excerpt,
+        status: patch.status ?? existing.status,
+        coverImage: patch.coverImage === undefined ? existing.coverImage : (patch.coverImage ?? null),
+        categories: patch.categories ?? existing.categories,
+        tags: patch.tags ?? existing.tags,
+        blocksJson,
+        markdown,
+        html,
+      });
+      revalidateBlogAdminPaths(id);
+      return getBlogPostRecord(id);
+    },
+  }),
+
 ];
 
 export const toolMap = new Map(tools.map((t) => [t.name, t]));
