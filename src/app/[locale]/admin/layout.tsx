@@ -19,6 +19,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
+    <>
+      <style>{`ins.adsbygoogle,[id^="aswift_"],iframe[src*="googlesyndication"],iframe[src*="googleads"]{display:none !important;}`}</style>
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
@@ -32,5 +34,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </SidebarInset>
       <Toaster position="bottom-right" richColors />
     </SidebarProvider>
+    </>
   );
 }
