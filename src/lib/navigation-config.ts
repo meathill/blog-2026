@@ -4,6 +4,7 @@ import { getHeaderNavItems } from '@/components/layout/header/nav-items';
 interface HeaderNavLabels {
   about: string;
   apps: string;
+  skills: string;
   tech: string;
   works: string;
   resources: string;
@@ -12,6 +13,7 @@ interface HeaderNavLabels {
 interface FooterNavLabels {
   archives: string;
   apps: string;
+  skills: string;
   about: string;
   sponsor: string;
 }
@@ -27,6 +29,7 @@ const DEFAULT_LABELS_BY_LOCALE: Record<string, HeaderNavLabels> = {
   zh: {
     about: '关于',
     apps: '应用',
+    skills: 'Skills',
     tech: '技术',
     works: '作品',
     resources: '资源',
@@ -34,6 +37,7 @@ const DEFAULT_LABELS_BY_LOCALE: Record<string, HeaderNavLabels> = {
   en: {
     about: 'About',
     apps: 'Apps',
+    skills: 'Skills',
     tech: 'Tech',
     works: 'Works',
     resources: 'Resources',
@@ -44,12 +48,14 @@ const DEFAULT_FOOTER_LABELS_BY_LOCALE: Record<string, FooterNavLabels> = {
   zh: {
     archives: '归档',
     apps: '应用',
+    skills: 'Skills',
     about: '关于',
     sponsor: '赞助',
   },
   en: {
     archives: 'Archives',
     apps: 'Apps',
+    skills: 'Skills',
     about: 'About',
     sponsor: 'Sponsor',
   },
@@ -114,6 +120,7 @@ function getDefaultFooterNavigationItems(locale: string): NavItem[] {
   return [
     { href: '/posts', label: labels.archives },
     { href: '/app', label: labels.apps },
+    { href: '/skills', label: labels.skills },
     { href: '/about', label: labels.about },
     { href: 'https://github.com/sponsors/meathill', label: labels.sponsor, external: true },
   ];

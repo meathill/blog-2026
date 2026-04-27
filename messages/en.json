@@ -11,6 +11,7 @@
   "Header": {
     "about": "About",
     "apps": "Apps",
+    "skills": "Skills",
     "tech": "Tech",
     "works": "Works",
     "resources": "Resources",
@@ -32,6 +33,21 @@
     "label": "Language",
     "en": "English",
     "zh": "中文"
+  },
+  "Skills": {
+    "title": "Claude Code Skills",
+    "subtitle": "Skills I authored for Claude Code — engineering, content ops, video, and more.",
+    "empty": "No skills published yet."
+  },
+  "SkillDetail": {
+    "home": "Home",
+    "back_to_list": "Back to Skills",
+    "not_found_title": "Skill Not Found",
+    "not_found_desc": "The skill you are looking for does not exist or has been moved.",
+    "package": "Package",
+    "view_source": "View source on GitHub",
+    "how_to_use_title": "How to use",
+    "how_to_use_body": "Skills extend Claude Code. Clone the repo, drop the skill folder into ~/.claude/skills/, and Claude Code will auto-load it based on the trigger conditions in the description."
   },
   "AppDetail": {
     "home": "Home",

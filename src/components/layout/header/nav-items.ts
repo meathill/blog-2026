@@ -3,6 +3,7 @@ import type { NavItem } from './types';
 interface HeaderNavLabels {
   about: string;
   apps: string;
+  skills: string;
   tech: string;
   works: string;
   resources: string;
@@ -12,6 +13,7 @@ export function getHeaderNavItems(labels: HeaderNavLabels): NavItem[] {
   return [
     { href: '/about', label: labels.about },
     { href: '/app', label: labels.apps },
+    { href: '/skills', label: labels.skills },
     { href: 'https://mizufinancial.com/', label: 'Mizu Financial', external: true },
     {
       href: '/tech',

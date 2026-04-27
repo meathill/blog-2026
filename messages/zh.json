@@ -11,6 +11,7 @@
   "Header": {
     "about": "关于我",
     "apps": "Apps",
+    "skills": "Skills",
     "tech": "技术分享",
     "works": "作品集",
     "resources": "各种代理",
@@ -32,6 +33,21 @@
     "label": "语言",
     "en": "English",
     "zh": "中文"
+  },
+  "Skills": {
+    "title": "Claude Code Skills",
+    "subtitle": "我为 Claude Code 编写的 Skills，覆盖工程协作、内容运营、视频处理等场景。",
+    "empty": "还没有发布任何 Skill。"
+  },
+  "SkillDetail": {
+    "home": "首页",
+    "back_to_list": "返回 Skills",
+    "not_found_title": "Skill 未找到",
+    "not_found_desc": "无法找到该 Skill，可能已被删除或移动。",
+    "package": "所属包",
+    "view_source": "在 GitHub 查看源码",
+    "how_to_use_title": "如何使用",
+    "how_to_use_body": "Skills 是 Claude Code 的能力扩展。把仓库 clone 到本地后，将对应 skill 目录放到 ~/.claude/skills/ 下，Claude Code 会按照 description 中描述的触发条件自动加载并调用。"
   },
   "AppDetail": {
     "home": "首页",

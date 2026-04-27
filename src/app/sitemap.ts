@@ -3,6 +3,7 @@ import { getPosts, getCategories, getTags } from '@/lib/wordpress';
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { getAllSkills } from '@/lib/skills';
 
 export const revalidate = 86400; // 1 day
 
@@ -35,6 +36,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/skills`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/skills`,
+          en: `${SITE_URL}/en/skills`,
+          'x-default': `${SITE_URL}/skills`,
+        },
+      },
     },
     {
       url: `${SITE_URL}/about`,
@@ -161,5 +175,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn('Failed to fetch apps for sitemap, skipping...', error);
   }
 
-  return [...staticPages, ...postPages, ...categoryPages, ...tagPages, ...appPages];
+  // Skills 详情页
+  let skillPages: MetadataRoute.Sitemap = [];
+  try {
+    const skills = getAllSkills();
+    skillPages = skills.map((skill) => {
+      const url = `${SITE_URL}/skills/${skill.slug}`;
+      return {
+        url,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+        alternates: {
+          languages: {
+            zh: url,
+            en: `${SITE_URL}/en/skills/${skill.slug}`,
+            'x-default': url,
+          },
+        },
+      };
+    });
+  } catch (error) {
+    console.warn('Failed to read skills for sitemap, skipping...', error);
+  }
+
+  return [...staticPages, ...postPages, ...categoryPages, ...tagPages, ...appPages, ...skillPages];
 }
