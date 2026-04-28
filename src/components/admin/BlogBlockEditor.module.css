@@ -26,9 +26,9 @@
 }
 
 :global(.bn-menu-dropdown .bn-menu-item:hover),
-:global(.bn-menu-dropdown .bn-menu-item[aria-selected='true']),
-:global(.bn-suggestion-menu-item[aria-selected='true']),
-:global(.bn-grid-suggestion-menu-item[aria-selected='true']) {
+:global(.bn-menu-dropdown .bn-menu-item[aria-selected="true"]),
+:global(.bn-suggestion-menu-item[aria-selected="true"]),
+:global(.bn-grid-suggestion-menu-item[aria-selected="true"]) {
   background: color-mix(in srgb, var(--accent) 16%, transparent);
   color: var(--foreground);
 }

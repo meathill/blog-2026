@@ -66,19 +66,15 @@ export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBloc
             const items = getFormattingToolbarItems();
             const strikeIndex = items.findIndex((item) => item.key === 'strikeStyleButton');
             const insertAt = strikeIndex >= 0 ? strikeIndex + 1 : items.length;
-            items.splice(
-              insertAt,
-              0,
-              <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />,
-            );
+            items.splice(insertAt, 0, <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />);
             return <FormattingToolbar>{items}</FormattingToolbar>;
           }}
         />
       </BlockNoteView>
 
       <p className="text-sm text-muted-foreground">
-        输入 <code>/</code> 可插入标题、列表、引用、代码块、分割线和图片。直接粘贴 Markdown 文本时会自动转换为
-        block，图片会直接上传到 R2。
+        输入 <code>/</code> 可插入标题、列表、任务列表、引用、代码块、表格、分割线和图片。直接粘贴 Markdown
+        文本时会自动转换为 block，图片会直接上传到 R2。
       </p>
     </div>
   );

@@ -22,6 +22,7 @@ interface InlineStyle {
   bold?: true;
   italic?: true;
   code?: true;
+  strike?: true;
 }
 
 interface TextNode {
@@ -38,15 +39,39 @@ interface LinkNode {
 
 type InlineContent = TextNode | LinkNode;
 
+type CellAlignment = 'left' | 'center' | 'right';
+
+interface TableCellNode {
+  type: 'tableCell';
+  props: {
+    backgroundColor: string;
+    textColor: string;
+    textAlignment: CellAlignment;
+    colspan: number;
+    rowspan: number;
+  };
+  content: InlineContent[];
+}
+
+interface TableContent {
+  type: 'tableContent';
+  columnWidths: (number | undefined)[];
+  headerRows?: number;
+  headerCols?: number;
+  rows: Array<{ cells: TableCellNode[] }>;
+}
+
+type BlockProps = Record<string, string | number | boolean>;
+
 interface BaseBlock {
   id: string;
   type: string;
-  props: Record<string, string | number>;
-  content: InlineContent[];
+  props: BlockProps;
+  content?: InlineContent[] | TableContent;
   children: BaseBlock[];
 }
 
-const PARAGRAPH_PROPS = {
+const PARAGRAPH_PROPS: BlockProps = {
   textColor: 'default',
   backgroundColor: 'default',
   textAlignment: 'left',
@@ -54,8 +79,8 @@ const PARAGRAPH_PROPS = {
 
 function makeBlock(
   type: string,
-  content: InlineContent[],
-  props: Record<string, string | number> = PARAGRAPH_PROPS,
+  content: InlineContent[] | TableContent | undefined,
+  props: BlockProps = PARAGRAPH_PROPS,
   children: BaseBlock[] = [],
 ): BaseBlock {
   return { id: crypto.randomUUID(), type, props, content, children };
@@ -83,7 +108,7 @@ function tokenToBlocks(token: Tokens.Generic): BaseBlock[] {
   switch (token.type) {
     case 'heading': {
       const t = token as Tokens.Heading;
-      const level = Math.min(Math.max(t.depth, 1), 3);
+      const level = Math.min(Math.max(t.depth, 1), 6);
       return [
         makeBlock('heading', inlineFromTokens(t.tokens || []), {
           ...PARAGRAPH_PROPS,
@@ -93,37 +118,52 @@ function tokenToBlocks(token: Tokens.Generic): BaseBlock[] {
     }
     case 'paragraph': {
       const t = token as Tokens.Paragraph;
-      return [makeBlock('paragraph', inlineFromTokens(t.tokens || []))];
+      const tokens = t.tokens || [];
+      if (tokens.length === 1 && tokens[0].type === 'image') {
+        const img = tokens[0] as Tokens.Image;
+        return [
+          makeBlock('image', undefined, {
+            backgroundColor: 'default',
+            textAlignment: 'left',
+            url: img.href || '',
+            name: img.text || '',
+            caption: img.title || '',
+            showPreview: true,
+          }),
+        ];
+      }
+      return [makeBlock('paragraph', inlineFromTokens(tokens))];
     }
     case 'code': {
       const t = token as Tokens.Code;
-      return [
-        makeBlock(
-          'codeBlock',
-          [{ type: 'text', text: t.text, styles: {} }],
-          { language: t.lang || 'text' },
-        ),
-      ];
+      return [makeBlock('codeBlock', [{ type: 'text', text: t.text, styles: {} }], { language: t.lang || 'text' })];
     }
     case 'blockquote': {
       const t = token as Tokens.Blockquote;
-      const inner: BaseBlock[] = [];
-      for (const child of t.tokens || []) pushBlocks(inner, tokenToBlocks(child));
-      // BlockNote's default schema doesn't ship a blockquote block; render as
-      // italic paragraphs so the visual cue survives.
-      return inner.map((b) =>
-        b.type === 'paragraph'
-          ? { ...b, content: applyStyle(b.content, { italic: true }) }
-          : b,
-      );
+      const childTokens = t.tokens || [];
+      let content: InlineContent[] = [];
+      const children: BaseBlock[] = [];
+      let consumedFirst = false;
+      for (const child of childTokens) {
+        if (!consumedFirst && child.type === 'paragraph') {
+          const p = child as Tokens.Paragraph;
+          content = inlineFromTokens(p.tokens || []);
+          consumedFirst = true;
+          continue;
+        }
+        pushBlocks(children, tokenToBlocks(child));
+      }
+      return [makeBlock('quote', content, { textColor: 'default', backgroundColor: 'default' }, children)];
     }
     case 'list': {
       const t = token as Tokens.List;
-      const itemType = t.ordered ? 'numberedListItem' : 'bulletListItem';
       const out: BaseBlock[] = [];
       for (const item of t.items) {
+        const isTask = item.task === true;
+        const itemType = isTask ? 'checkListItem' : t.ordered ? 'numberedListItem' : 'bulletListItem';
+        const props: BlockProps = isTask ? { ...PARAGRAPH_PROPS, checked: item.checked === true } : PARAGRAPH_PROPS;
+
         const itemTokens = item.tokens || [];
-        // First inline-ish token becomes the item content; nested blocks become children.
         let content: InlineContent[] = [];
         const children: BaseBlock[] = [];
         let consumedFirstText = false;
@@ -139,12 +179,60 @@ function tokenToBlocks(token: Tokens.Generic): BaseBlock[] {
         if (!consumedFirstText && itemTokens.length === 0) {
           content = [{ type: 'text', text: item.text, styles: {} }];
         }
-        out.push(makeBlock(itemType, content, PARAGRAPH_PROPS, children));
+        out.push(makeBlock(itemType, content, props, children));
       }
       return out;
     }
     case 'hr':
-      return [emptyParagraph()];
+      return [makeBlock('divider', undefined, {})];
+    case 'table': {
+      const t = token as Tokens.Table;
+      const numCols = Math.max(t.header.length, ...t.rows.map((r) => r.length), 1);
+      const align = t.align || [];
+
+      function cellAlignment(col: number): CellAlignment {
+        const a = align[col];
+        return a === 'center' || a === 'right' ? a : 'left';
+      }
+      function buildCells(cells: Tokens.TableCell[]): TableCellNode[] {
+        const out: TableCellNode[] = [];
+        for (let col = 0; col < numCols; col++) {
+          const cell = cells[col];
+          out.push({
+            type: 'tableCell',
+            props: {
+              backgroundColor: 'default',
+              textColor: 'default',
+              textAlignment: cellAlignment(col),
+              colspan: 1,
+              rowspan: 1,
+            },
+            content: cell ? inlineFromTokens(cell.tokens || []) : [],
+          });
+        }
+        return out;
+      }
+
+      const rows: Array<{ cells: TableCellNode[] }> = [
+        { cells: buildCells(t.header) },
+        ...t.rows.map((row) => ({ cells: buildCells(row) })),
+      ];
+
+      return [
+        {
+          id: crypto.randomUUID(),
+          type: 'table',
+          props: { textColor: 'default' },
+          content: {
+            type: 'tableContent',
+            columnWidths: Array.from({ length: numCols }, () => undefined),
+            headerRows: 1,
+            rows,
+          },
+          children: [],
+        },
+      ];
+    }
     case 'space':
       return [];
     case 'html': {
@@ -201,7 +289,11 @@ function walkInline(token: Tokens.Generic, styles: InlineStyle, out: InlineConte
       const inner: InlineContent[] = [];
       for (const sub of t.tokens || []) walkInline(sub, styles, inner);
       const textNodes = inner.filter((n): n is TextNode => n.type === 'text');
-      out.push({ type: 'link', href: t.href, content: textNodes.length > 0 ? textNodes : [{ type: 'text', text: t.text, styles }] });
+      out.push({
+        type: 'link',
+        href: t.href,
+        content: textNodes.length > 0 ? textNodes : [{ type: 'text', text: t.text, styles }],
+      });
       return;
     }
     case 'br': {
@@ -210,7 +302,8 @@ function walkInline(token: Tokens.Generic, styles: InlineStyle, out: InlineConte
     }
     case 'del': {
       const t = token as Tokens.Del;
-      for (const sub of t.tokens || []) walkInline(sub, styles, out);
+      const next = { ...styles, strike: true as const };
+      for (const sub of t.tokens || []) walkInline(sub, next, out);
       return;
     }
     case 'image': {
@@ -234,26 +327,13 @@ function mergeAdjacentText(nodes: InlineContent[]): InlineContent[] {
   const out: InlineContent[] = [];
   for (const n of nodes) {
     const prev = out[out.length - 1];
-    if (
-      prev &&
-      prev.type === 'text' &&
-      n.type === 'text' &&
-      JSON.stringify(prev.styles) === JSON.stringify(n.styles)
-    ) {
+    if (prev && prev.type === 'text' && n.type === 'text' && JSON.stringify(prev.styles) === JSON.stringify(n.styles)) {
       prev.text += n.text;
     } else {
       out.push(n);
     }
   }
   return out;
-}
-
-function applyStyle(content: InlineContent[], extra: InlineStyle): InlineContent[] {
-  return content.map((n) =>
-    n.type === 'text'
-      ? { ...n, styles: { ...n.styles, ...extra } }
-      : { ...n, content: n.content.map((tn) => ({ ...tn, styles: { ...tn.styles, ...extra } })) },
-  );
 }
 
 function decodeEntities(s: string): string {
