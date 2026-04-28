@@ -25,6 +25,10 @@ vi.mock('@/db/schema', () => ({
   apps: { status: 'status', slug: 'slug', updatedAt: 'updatedAt' },
 }));
 
+vi.mock('@/lib/skills', () => ({
+  getAllSkills: vi.fn().mockReturnValue([{ slug: 'react' }]),
+}));
+
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn(),
 }));
@@ -34,6 +38,8 @@ describe('Sitemap Generator', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    process.env.NEXT_PUBLIC_SITE_URL = SITE_URL;
 
     mockGetCloudflareContext.mockResolvedValue({
       env: {
@@ -117,8 +123,8 @@ describe('Sitemap Generator', () => {
     // Should NOT contain post-4 (removed from mock)
     const post4 = result.find((item) => item.url.includes('/posts/cat-1/post-4'));
     expect(post4).toBeUndefined();
-    // Validate count: static(4) + posts(3) + category(1) + tag(1) + app(1) = 10
-    expect(result.length).toBe(10);
+    // Validate count: static(5) + posts(3) + category(1) + tag(1) + app(1) + skill(1) = 12
+    expect(result.length).toBe(12);
 
     // Check categories
     expect(result).toEqual(
@@ -231,8 +237,8 @@ describe('Sitemap Generator', () => {
 
     const result = await sitemap();
 
-    // Should distinctively return just static pages
-    expect(result.length).toBe(4); // 4 static pages defined in sitemap.ts
+    // Should distinctively return just static pages + mocked skills (which is 1 skill)
+    expect(result.length).toBe(6); // 5 static pages defined in sitemap.ts + 1 skill page
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: SITE_URL })]));
   });
 });

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 
-const GOOGLE_ANALYTICS_ID = 'G-1S0T1HF97B';
 const DEFAULT_DELAY_MS = 4000;
 const HOME_ANALYTICS_DELAY_MS = 6000;
 const HOME_ADSENSE_DELAY_MS = 12000;
@@ -183,14 +182,14 @@ export default function ThirdPartyScripts() {
       {isAnalyticsReady ? (
         <>
           <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
             strategy="afterInteractive"
           />
           <Script id="google-analytics-init" strategy="afterInteractive">
             {`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${GOOGLE_ANALYTICS_ID}');`}
+gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}');`}
           </Script>
         </>
       ) : null}

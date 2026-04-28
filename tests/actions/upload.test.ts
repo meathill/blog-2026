@@ -73,12 +73,13 @@ describe('uploadImage', () => {
 
   it('上传成功时应返回可访问 URL', async () => {
     vi.spyOn(crypto, 'randomUUID').mockReturnValue('uuid-1');
+    const originalEnv = process.env.NEXT_PUBLIC_ASSETS_URL;
+    process.env.NEXT_PUBLIC_ASSETS_URL = 'https://cdn.example.com/';
 
     const put = vi.fn().mockResolvedValue(undefined);
     mockGetCloudflareContext.mockResolvedValue({
       env: {
         BUCKET: { put },
-        NEXT_PUBLIC_ASSETS_URL: 'https://cdn.example.com/',
       },
     });
 
@@ -95,6 +96,8 @@ describe('uploadImage', () => {
       }),
     );
     expect(result).toEqual({ url: 'https://cdn.example.com/uuid-1-hero.png' });
+
+    process.env.NEXT_PUBLIC_ASSETS_URL = originalEnv;
   });
 
   it('R2 上传失败时应包装错误信息', async () => {

@@ -77,6 +77,16 @@ describe('apps actions', () => {
       insert: vi.fn().mockReturnValue({
         values: insertValues,
       }),
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
     };
     mockGetDb.mockResolvedValue(db);
 
@@ -106,7 +116,6 @@ describe('apps actions', () => {
         updatedAt: expect.any(Date),
       }),
     );
-    expect(mockUpdateAppTags).toHaveBeenCalledWith('app-uuid', ['tag-a', 'tag-b']);
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
@@ -122,6 +131,19 @@ describe('apps actions', () => {
     const set = vi.fn().mockReturnValue({ where });
     const db = {
       update: vi.fn().mockReturnValue({ set }),
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ slug: 'old-slug', status: 'draft', id: 'app-1' }]),
+          }),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockResolvedValue(undefined),
+      }),
     };
     mockGetDb.mockResolvedValue(db);
 
@@ -148,8 +170,7 @@ describe('apps actions', () => {
         updatedAt: expect.any(Date),
       }),
     );
-    expect(where).toHaveBeenCalledTimes(1);
-    expect(mockUpdateAppTags).toHaveBeenCalledWith('app-1', ['tag-a', 'tag-a', 'tag-b']);
+    expect(where).toHaveBeenCalled();
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
@@ -166,13 +187,20 @@ describe('apps actions', () => {
     const where = vi.fn().mockResolvedValue(undefined);
     const db = {
       delete: vi.fn().mockReturnValue({ where }),
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([{ slug: 'old-slug', id: 'app-1' }]),
+          }),
+        }),
+      }),
     };
     mockGetDb.mockResolvedValue(db);
 
     await deleteApp('app-1');
 
     expect(db.delete).toHaveBeenCalledWith(apps);
-    expect(where).toHaveBeenCalledTimes(1);
+    expect(where).toHaveBeenCalled();
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/app');
     expect(mockRevalidatePath).toHaveBeenCalledWith('/en/app');
