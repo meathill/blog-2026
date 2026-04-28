@@ -1,13 +1,6 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-const ALLOWED_MIME = new Set([
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'image/gif',
-  'image/avif',
-  'image/svg+xml',
-]);
+const ALLOWED_MIME = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif', 'image/svg+xml']);
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 const MIME_EXT: Record<string, string> = {

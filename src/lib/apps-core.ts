@@ -110,24 +110,16 @@ async function ensureUniqueSlug(rawSlug: string, ignoreId?: string): Promise<str
   let candidate = rawSlug || 'app';
   let suffix = 1;
   while (true) {
-    const existing = await db
-      .select({ id: apps.id })
-      .from(apps)
-      .where(eq(apps.slug, candidate))
-      .limit(1);
+    const existing = await db.select({ id: apps.id }).from(apps).where(eq(apps.slug, candidate)).limit(1);
     if (existing.length === 0 || existing[0].id === ignoreId) return candidate;
     suffix += 1;
     candidate = `${rawSlug}-${suffix}`;
   }
 }
 
-export async function listApps(opts: {
-  status?: AppStatus;
-  tagSlug?: string;
-  search?: string;
-  limit?: number;
-  offset?: number;
-} = {}): Promise<Array<AppRow & { tags: AppTagRow[] }>> {
+export async function listApps(
+  opts: { status?: AppStatus; tagSlug?: string; search?: string; limit?: number; offset?: number } = {},
+): Promise<Array<AppRow & { tags: AppTagRow[] }>> {
   const db = await getDb();
   const limit = Math.min(opts.limit ?? 20, 100);
   const offset = opts.offset ?? 0;
@@ -151,13 +143,7 @@ export async function listApps(opts: {
   }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
-  const rows = await db
-    .select()
-    .from(apps)
-    .where(where)
-    .orderBy(desc(apps.updatedAt))
-    .limit(limit)
-    .offset(offset);
+  const rows = await db.select().from(apps).where(where).orderBy(desc(apps.updatedAt)).limit(limit).offset(offset);
 
   const filtered = appIds ? rows.filter((r) => appIds!.includes(r.id)) : rows;
   const tagMap = await getTagsForApps(filtered.map((r) => r.id));
@@ -253,10 +239,7 @@ export async function createAppCore(input: CreateAppInput): Promise<{ id: string
   return { id, slug };
 }
 
-export async function updateAppCore(
-  id: string,
-  patch: UpdateAppPatch,
-): Promise<{ slug: string; prevSlug: string }> {
+export async function updateAppCore(id: string, patch: UpdateAppPatch): Promise<{ slug: string; prevSlug: string }> {
   const db = await getDb();
   const existing = await db.select().from(apps).where(eq(apps.id, id)).limit(1);
   if (existing.length === 0) throw new Error(`App not found: ${id}`);
@@ -383,7 +366,5 @@ export async function upsertAppTranslationCore(input: {
 
 export async function deleteAppTranslationCore(appId: string, locale: AppLocale): Promise<void> {
   const db = await getDb();
-  await db
-    .delete(appTranslations)
-    .where(and(eq(appTranslations.appId, appId), eq(appTranslations.locale, locale)));
+  await db.delete(appTranslations).where(and(eq(appTranslations.appId, appId), eq(appTranslations.locale, locale)));
 }

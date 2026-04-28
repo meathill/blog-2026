@@ -15,12 +15,7 @@ import {
   upsertAppTranslationCore,
 } from '@/lib/apps-core';
 import { fetchRemoteImage, uploadToR2 } from '@/lib/mcp/upload';
-import {
-  createBlogPostRecord,
-  getBlogPostRecord,
-  listBlogPostRecords,
-  updateBlogPostRecord,
-} from '@/lib/blog-storage';
+import { createBlogPostRecord, getBlogPostRecord, listBlogPostRecords, updateBlogPostRecord } from '@/lib/blog-storage';
 import { buildBlogSlug, normalizeBlogPostStatus } from '@/lib/blog-post';
 import { buildDraftContentFromMarkdown, revalidateBlogAdminPaths } from '@/lib/mcp/blog-draft';
 
@@ -385,7 +380,6 @@ export const tools: McpTool[] = [
       return getBlogPostRecord(id);
     },
   }),
-
 ];
 
 export const toolMap = new Map(tools.map((t) => [t.name, t]));

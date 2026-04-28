@@ -84,15 +84,11 @@ export async function POST(req: Request) {
         }
         const parsed = tool.inputSchema.safeParse(params.arguments ?? {});
         if (!parsed.success) {
-          return NextResponse.json(
-            rpcError(body.id, -32602, 'Invalid arguments', parsed.error.issues),
-          );
+          return NextResponse.json(rpcError(body.id, -32602, 'Invalid arguments', parsed.error.issues));
         }
         try {
           const out = await tool.handler(parsed.data);
-          console.log(
-            JSON.stringify({ mcp: true, tool: tool.name, ms: Date.now() - startedAt, ok: true }),
-          );
+          console.log(JSON.stringify({ mcp: true, tool: tool.name, ms: Date.now() - startedAt, ok: true }));
           return NextResponse.json(
             rpcResult(body.id, {
               content: [{ type: 'text', text: JSON.stringify(out, null, 2) }],

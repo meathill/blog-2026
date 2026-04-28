@@ -21,19 +21,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <>
       <style>{`ins.adsbygoogle,[id^="aswift_"],iframe[src*="googlesyndication"],iframe[src*="googleads"]{display:none !important;}`}</style>
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-14 items-center gap-3 border-b border-border px-4">
-          <SidebarTrigger />
-          <div className="h-5 w-px bg-border" />
-          <span className="text-sm font-medium text-foreground">Admin</span>
-          <span className="ml-auto text-sm text-muted-foreground">{session.user.name}</span>
-        </header>
-        <div className="p-6">{children}</div>
-      </SidebarInset>
-      <Toaster position="bottom-right" richColors />
-    </SidebarProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-14 items-center gap-3 border-b border-border px-4">
+            <SidebarTrigger />
+            <div className="h-5 w-px bg-border" />
+            <span className="text-sm font-medium text-foreground">Admin</span>
+            <span className="ml-auto text-sm text-muted-foreground">{session.user.name}</span>
+          </header>
+          <div className="p-6">{children}</div>
+        </SidebarInset>
+        <Toaster position="bottom-right" richColors />
+      </SidebarProvider>
     </>
   );
 }

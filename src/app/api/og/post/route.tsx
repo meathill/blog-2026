@@ -9,10 +9,7 @@ async function loadCoverDataUrl(url: string): Promise<string | null> {
     if (!env.IMAGES) return null;
     const upstream = await fetch(url);
     if (!upstream.ok || !upstream.body) return null;
-    const out = await env.IMAGES
-      .input(upstream.body)
-      .transform({ width: 1200 })
-      .output({ format: 'image/png' });
+    const out = await env.IMAGES.input(upstream.body).transform({ width: 1200 }).output({ format: 'image/png' });
     const buf = await out.response().arrayBuffer();
     const b64 = Buffer.from(buf).toString('base64');
     return `data:image/png;base64,${b64}`;
