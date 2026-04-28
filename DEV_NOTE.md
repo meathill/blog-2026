@@ -70,17 +70,50 @@
 
 ## 已知限制与解法
 
-### next/og (Satori) 不支持 WebP
-
-`next/og` 的 `ImageResponse` 底层使用 Satori，只支持 PNG/JPEG。遇到 WebP 格式的 featured image 时，
-通过 Cloudflare Image Resizing 在边缘转换为 PNG：
-
-```
-原始：https://blog.meathill.com/wp-content/uploads/2024/03/1-2.webp
-转换：https://blog.meathill.com/cdn-cgi/image/format=png,width=1200/wp-content/uploads/2024/03/1-2.webp
-```
+### 动态 OG 图（next/og + Cloudflare IMAGES binding）
 
 实现位置：`src/app/api/og/post/route.tsx`
+
+两个关键约束需要在 Worker 内同时处理：
+
+1. **Satori 不支持 WebP**：`next/og` 底层 Satori 只接受 PNG/JPEG。WordPress featured image 经常是 WebP，必须先转码再喂给 Satori。
+2. **`global_fetch_strictly_public` 禁止子请求回打同 zone CDN**：所以**不能**用 `https://blog.meathill.com/cdn-cgi/image/...` 这种 URL；得改用 `env.IMAGES` binding 在 Worker 内直接转码。
+
+#### 输入侧（喂给 Satori 的封面图）
+
+```ts
+env.IMAGES.input(stream)
+  .transform({ width: 1200, height: 630, fit: 'cover' })
+  .output({ format: 'image/png' })
+```
+
+裁到 1200×630（OG 画布尺寸）省 base64 体积和 Satori 解码内存。
+
+#### 输出侧（最终响应给社交平台）
+
+`next/og` 的 `ImageResponse` **始终输出 PNG**，没有参数能改。带照片的 1200×630 合成图 PNG 普遍 ~1MB，超过 WhatsApp 300KB 严格上限会触发预览降级（不带图甚至不显示卡片）。
+
+解法：把 `ImageResponse` 的 PNG 再走一次 IMAGES binding 转 JPEG@82：
+
+```ts
+const transformed = await env.IMAGES.input(pngStream).output({
+  format: 'image/jpeg', quality: 82,
+});
+return new Response(transformed.image(), {
+  headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': '...' },
+});
+```
+
+实测体积可降到 150–280KB，稳过各家平台。
+
+#### 各平台 OG 图体积红线（参考）
+
+- WhatsApp：< 300KB（严格）/ < 600KB（推荐）——最严
+- Twitter/X：< 5MB
+- Facebook：< 8MB
+- LinkedIn：< 5MB
+
+按 WhatsApp 卡线就够了。
 
 ### Feed 代理
 
