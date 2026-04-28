@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { getAllSkills } from '@/lib/skills';
+import { getAllSkills, getSkillGroups } from '@/lib/skills';
 import SkillCard from '@/components/SkillCard';
 import { SITE_URL } from '@/lib/constants';
 
@@ -42,7 +42,15 @@ export default async function SkillsListPage({ params }: { params: Promise<{ loc
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Skills' });
   const skills = getAllSkills();
+  const groups = getSkillGroups();
   const baseUrl = locale === 'en' ? `${SITE_URL}/en` : SITE_URL;
+  function groupLabel(labelKey: string, fallback: string): string {
+    try {
+      return t(labelKey as never);
+    } catch {
+      return fallback;
+    }
+  }
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -73,9 +81,21 @@ export default async function SkillsListPage({ params }: { params: Promise<{ loc
       {skills.length === 0 ? (
         <div className="text-center py-12 text-zinc-500 italic">{t('empty')}</div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {skills.map((skill) => (
-            <SkillCard key={skill.slug} skill={skill} locale={locale} />
+        <div className="space-y-16">
+          {groups.map((group) => (
+            <section key={group.package}>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                  {groupLabel(group.labelKey, group.package)}
+                </span>
+                <span className="text-sm font-normal text-muted-foreground">{group.skills.length}</span>
+              </h2>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {group.skills.map((skill) => (
+                  <SkillCard key={skill.slug} skill={skill} locale={locale} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

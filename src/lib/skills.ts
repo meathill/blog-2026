@@ -81,3 +81,36 @@ export function getSkillsRepoUrl(): string {
 export function getLocalizedDescription(skill: Skill, locale: string): string {
   return locale === 'en' ? skill.description.en : skill.description.zh;
 }
+
+export interface SkillGroup {
+  package: string;
+  /** i18n key suffix in the `Skills` namespace, e.g. `group_coding` */
+  labelKey: string;
+  skills: Skill[];
+}
+
+const GROUP_ORDER: { package: string; labelKey: string }[] = [
+  { package: 'meathill-coding-skills', labelKey: 'group_coding' },
+  { package: 'video-skills', labelKey: 'group_video' },
+];
+
+export function getSkillGroups(): SkillGroup[] {
+  const all = getAllSkills();
+  const groups: SkillGroup[] = GROUP_ORDER.map((g) => ({
+    package: g.package,
+    labelKey: g.labelKey,
+    skills: all.filter((s) => s.package === g.package),
+  })).filter((g) => g.skills.length > 0);
+
+  const known = new Set(GROUP_ORDER.map((g) => g.package));
+  const remaining = all.filter((s) => !known.has(s.package));
+  for (const skill of remaining) {
+    let group = groups.find((g) => g.package === skill.package);
+    if (!group) {
+      group = { package: skill.package, labelKey: skill.package, skills: [] };
+      groups.push(group);
+    }
+    group.skills.push(skill);
+  }
+  return groups;
+}

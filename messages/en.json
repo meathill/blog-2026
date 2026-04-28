@@ -35,9 +35,11 @@
     "zh": "中文"
   },
   "Skills": {
-    "title": "Claude Code Skills",
+    "title": "Skills",
     "subtitle": "Skills I authored for Claude Code — engineering, content ops, video, and more.",
-    "empty": "No skills published yet."
+    "empty": "No skills published yet.",
+    "group_coding": "Coding Skills",
+    "group_video": "Video Skills"
   },
   "SkillDetail": {
     "home": "Home",

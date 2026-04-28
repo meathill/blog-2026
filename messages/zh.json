@@ -35,9 +35,11 @@
     "zh": "中文"
   },
   "Skills": {
-    "title": "Claude Code Skills",
+    "title": "Skills",
     "subtitle": "我为 Claude Code 编写的 Skills，覆盖工程协作、内容运营、视频处理等场景。",
-    "empty": "还没有发布任何 Skill。"
+    "empty": "还没有发布任何 Skill。",
+    "group_coding": "代码相关",
+    "group_video": "视频相关"
   },
   "SkillDetail": {
     "home": "首页",
