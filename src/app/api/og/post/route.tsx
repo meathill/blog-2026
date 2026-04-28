@@ -114,6 +114,11 @@ export async function GET(request: NextRequest) {
   // 下会被打回 Worker 自己导致非图片响应；改用 IMAGES binding 转码后以 data URL 喂给 Satori。
   const featuredMedia = rawFeaturedMedia ? await loadCoverDataUrl(rawFeaturedMedia) : null;
 
+  // 取第一个有效分类作为顶部主题徽标，跳过 uncategorized 这类兜底分类。
+  const categoryName = post._embedded?.['wp:term']?.[0]?.find(
+    (term) => term.name && term.slug !== 'uncategorized',
+  )?.name;
+
   return transcodeToJpeg(
     new ImageResponse(
       <div
@@ -180,6 +185,24 @@ export async function GET(request: NextRequest) {
             maxWidth: '80%',
           }}
         >
+          {categoryName && (
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 600,
+                color: 'rgba(255, 255, 255, 0.95)',
+                marginBottom: 20,
+                padding: '6px 18px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.35)',
+                borderRadius: 999,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              {categoryName}
+            </div>
+          )}
           <div
             style={{
               fontSize: 64,
@@ -193,7 +216,7 @@ export async function GET(request: NextRequest) {
           </div>
           <div
             style={{
-              marginTop: 16,
+              marginTop: 8,
               padding: '14px 36px',
               background: 'rgba(255, 255, 255, 0.95)',
               color: '#111',
