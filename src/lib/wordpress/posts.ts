@@ -246,6 +246,19 @@ export function stripHtml(html: string): string {
     .trim();
 }
 
+// SEO/OG 描述目标长度：110–160 字符（OG/Twitter 卡片普遍最佳区间）。
+// excerpt 太短时用 content 兜底凑到合理长度。
+export function buildPostDescription(post: WPPost): string {
+  const TARGET_MIN = 110;
+  const TARGET_MAX = 160;
+  const excerpt = stripHtml(post.excerpt.rendered);
+  if (excerpt.length >= TARGET_MIN) {
+    return excerpt.slice(0, TARGET_MAX);
+  }
+  const body = stripHtml(post.content.rendered);
+  return body.slice(0, TARGET_MAX) || excerpt;
+}
+
 export function calculateReadingTime(content: string): number {
   const text = stripHtml(content);
   const wordCount = text.length;

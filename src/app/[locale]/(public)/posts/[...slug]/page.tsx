@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { getPost, stripHtml, getCategories, getMediaBySlug } from '@/lib/wordpress';
+import { getPost, stripHtml, getCategories, getMediaBySlug, buildPostDescription } from '@/lib/wordpress';
 import PostView from '@/views/PostView';
 import AttachmentView from '@/views/AttachmentView';
 import { routing } from '@/i18n/routing';
@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   }
 
   const title = stripHtml(post.title.rendered);
-  const description = stripHtml(post.excerpt.rendered).slice(0, 160);
+  const description = buildPostDescription(post);
 
   const ogImageUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/og/post?slug=${cleanSlug}`;
   const images = [ogImageUrl];

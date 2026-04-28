@@ -191,6 +191,24 @@ export async function GET(request: NextRequest) {
           >
             {title}
           </div>
+          <div
+            style={{
+              marginTop: 16,
+              padding: '14px 36px',
+              background: 'rgba(255, 255, 255, 0.95)',
+              color: '#111',
+              borderRadius: 999,
+              fontSize: 28,
+              fontWeight: 700,
+              letterSpacing: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            Read more →
+          </div>
         </div>
 
         {/* Footer Brand */}
