@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { apps } from '@/db/schema';
+
+const { mockDesc } = vi.hoisted(() => ({
+  mockDesc: vi.fn((column: unknown) => ({ column, direction: 'desc' })),
+}));
 
 const mockGetDb = vi.fn();
 const mockUnstableCache = vi.fn();
@@ -11,6 +16,15 @@ vi.mock('next/cache', () => ({
   unstable_cache: (...args: unknown[]) => mockUnstableCache(...args),
 }));
 
+vi.mock('drizzle-orm', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('drizzle-orm')>();
+
+  return {
+    ...actual,
+    desc: (column: unknown) => mockDesc(column),
+  };
+});
+
 import { getCachedFeaturedApps, getFeaturedAppsTag } from '@/lib/public-apps';
 
 describe('public-apps', () => {
@@ -19,7 +33,7 @@ describe('public-apps', () => {
     mockUnstableCache.mockImplementation((fn: () => Promise<unknown>) => fn);
   });
 
-  it('getCachedFeaturedApps: 应注册 locale 维度缓存并合并翻译与 tags', async () => {
+  it('getCachedFeaturedApps: 应注册 locale 缓存、合并翻译与 tags，并按更新时间倒序', async () => {
     const appRows = [
       {
         apps: {
@@ -90,6 +104,8 @@ describe('public-apps', () => {
       revalidate: 900,
       tags: ['home:featured-apps:en'],
     });
+    expect(mockDesc).toHaveBeenCalledWith(apps.updatedAt);
+    expect(appOrderBy).toHaveBeenCalledWith({ column: apps.updatedAt, direction: 'desc' });
     expect(getFeaturedAppsTag('en')).toBe('home:featured-apps:en');
   });
 });

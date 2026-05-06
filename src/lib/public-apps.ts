@@ -80,7 +80,7 @@ export async function getCachedFeaturedApps(localeInput: string) {
         .from(apps)
         .leftJoin(appTranslations, and(eq(appTranslations.appId, apps.id), eq(appTranslations.locale, locale)))
         .where(eq(apps.status, 'published'))
-        .orderBy(desc(apps.createdAt))
+        .orderBy(desc(apps.updatedAt))
         .limit(3);
 
       const tagMap = await getPublicAppTagsMap(rows.map(({ apps: app }) => app.id));
