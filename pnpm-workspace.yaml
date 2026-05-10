@@ -1,5 +1,12 @@
 packages:
   - .
+allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
+  esbuild: false
+  protobufjs: false
+  sharp: false
+  workerd: false
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

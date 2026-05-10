@@ -1,4 +1,4 @@
-import { and, desc, eq, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
 import { blogPosts } from '@/db/schema';
 import { getDb } from '@/lib/db';
 import {
@@ -127,7 +127,12 @@ export async function listBlogPostRecords(options?: { page?: number; pageSize?: 
   const page = Math.min(requestedPage, totalPages);
   const offset = (page - 1) * pageSize;
 
-  const rows = await db.select().from(blogPosts).orderBy(desc(blogPosts.updatedAt)).limit(pageSize).offset(offset);
+  const rows = await db
+    .select()
+    .from(blogPosts)
+    .orderBy(asc(sql<number>`case when ${blogPosts.status} = 'draft' then 0 else 1 end`), desc(blogPosts.updatedAt))
+    .limit(pageSize)
+    .offset(offset);
   const posts: BlogPostListItem[] = rows.map((row) => {
     const post = mapBlogPostRecord(row);
 
