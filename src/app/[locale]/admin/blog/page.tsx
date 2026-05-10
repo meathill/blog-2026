@@ -2,13 +2,11 @@ import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, PenSquareIcon } from 'lucide-react';
 import { listBlogPosts } from '@/actions/blog';
 import { BlogStatusBadge, BlogWordPressSyncBadge } from '@/components/admin/BlogStatusBadge';
-import { NotionSyncButton } from '@/components/admin/NotionSyncButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { routing } from '@/i18n/routing';
-import { listBackupPosts } from '@/lib/notion-post-backup';
 
 const PAGE_SIZE = 12;
 
@@ -76,16 +74,10 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
   const { locale } = await params;
   const query = await searchParams;
   const requestedPage = parsePageParam(query.page);
-  const [result, legacyResult] = await Promise.all([
-    listBlogPosts({
-      page: requestedPage,
-      pageSize: PAGE_SIZE,
-    }),
-    listBackupPosts({
-      page: 1,
-      pageSize: 5,
-    }),
-  ]);
+  const result = await listBlogPosts({
+    page: requestedPage,
+    pageSize: PAGE_SIZE,
+  });
 
   const previousPageHref = buildPaginationHref(locale, result.page - 1);
   const nextPageHref = buildPaginationHref(locale, result.page + 1);
@@ -228,37 +220,6 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
           </Link>
         </div>
       )}
-
-      <Card>
-        <CardHeader className="sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <CardTitle>遗留同步工具</CardTitle>
-            <CardDescription>
-              仍可手动同步 Notion 备份到 WordPress。当前 D1 里共有 {legacyResult.total} 篇 Notion 备份，下面只展示最近 5
-              条。
-            </CardDescription>
-          </div>
-          <div className="pt-1">
-            <NotionSyncButton />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {legacyResult.posts.map((post) => (
-            <div
-              key={post.id}
-              className="flex flex-col gap-2 rounded-2xl border border-border/70 px-4 py-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between"
-            >
-              <div>
-                <div className="font-medium text-foreground">{post.title}</div>
-                <div className="mt-1">
-                  {post.slug || '无 slug'} · Notion 更新 {formatDateTime(post.lastUpdateTime, locale)}
-                </div>
-              </div>
-              <div className="text-xs">{post.needsSyncToWordPress ? '待同步到 WP' : '已同步到 WP'}</div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   );
 }
