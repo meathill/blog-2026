@@ -1,5 +1,7 @@
 # 博客 2026
 
+> Live: https://meathill.com
+
 基于 `Next.js 16 + OpenNext + Cloudflare` 的个人博客项目。
 
 ## 项目目标
