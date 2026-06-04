@@ -1,6 +1,7 @@
 export interface WPPost {
   id: number;
   date: string;
+  modified: string;
   slug: string;
   title: { rendered: string };
   excerpt: { rendered: string };

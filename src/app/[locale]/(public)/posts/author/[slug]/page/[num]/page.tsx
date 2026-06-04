@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: AuthorPageNumProps): Promise<
   return {
     title: `${author.name} 的文章归档 - 第 ${pageNum} 页`,
     description: `查看由 ${author.name} 编写的所有文章归档 - 第 ${pageNum} 页`,
+    robots: { index: false, follow: true },
     alternates: {
       canonical: canonicalUrl,
       languages: {

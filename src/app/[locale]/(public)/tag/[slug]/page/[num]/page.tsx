@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
   return {
     title: `${tag.name} - 文章标签 - 第 ${num} 页`,
     description: `查看 ${tag.name} 标签下的所有文章 - 第 ${num} 页`,
+    robots: { index: false, follow: true },
     alternates: {
       canonical: canonicalUrl,
       languages: {

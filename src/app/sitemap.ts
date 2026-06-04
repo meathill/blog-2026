@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getPosts, getCategories, getTags } from '@/lib/wordpress';
+import { getPosts, getCategories } from '@/lib/wordpress';
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -84,27 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn('Failed to fetch categories for sitemap, skipping...', error);
   }
 
-  // 获取所有标签
-  let tagPages: MetadataRoute.Sitemap = [];
-  try {
-    const tags = await getTags({ perPage: 100 });
-    tagPages = tags
-      .filter((tag) => tag.count > 0)
-      .map((tag) => ({
-        url: `${SITE_URL}/tag/${tag.slug}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.6,
-        alternates: {
-          languages: {
-            zh: `${SITE_URL}/tag/${tag.slug}`,
-            en: `${SITE_URL}/en/tag/${tag.slug}`,
-          },
-        },
-      }));
-  } catch (error) {
-    console.warn('Failed to fetch tags for sitemap, skipping...', error);
-  }
+  // 标签页价值偏低（薄内容），不纳入 sitemap，并在页面上 noindex。见 issue #4 SEO 收口。
 
   // 获取所有文章
   let postPages: MetadataRoute.Sitemap = [];
@@ -112,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const firstPage = await getPosts({
       perPage: 100,
       embed: false,
-      fields: ['slug', 'date', 'categories'],
+      fields: ['slug', 'date', 'modified', 'categories'],
     });
     const allPostsMap = new Map();
     firstPage.posts.forEach((post) => allPostsMap.set(post.slug, post));
@@ -125,7 +105,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             page,
             perPage: 100,
             embed: false,
-            fields: ['slug', 'date', 'categories'],
+            fields: ['slug', 'date', 'modified', 'categories'],
           }),
         ),
       );
@@ -145,7 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const url = `${SITE_URL}/posts/${categorySlug}/${post.slug}`;
       return {
         url,
-        lastModified: safeDate(post.date),
+        lastModified: safeDate(post.modified || post.date),
         changeFrequency: 'weekly' as const,
         priority: 0.8,
         alternates: {
@@ -199,5 +179,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn('Failed to read skills for sitemap, skipping...', error);
   }
 
-  return [...staticPages, ...postPages, ...categoryPages, ...tagPages, ...appPages, ...skillPages];
+  return [...staticPages, ...postPages, ...categoryPages, ...appPages, ...skillPages];
 }

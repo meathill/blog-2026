@@ -34,6 +34,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       return {
         title,
         description,
+        robots: { index: false, follow: true },
         alternates: {
           canonical: canonicalUrl,
           languages: {
@@ -97,6 +98,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       description,
       type: 'article',
       publishedTime: post.date,
+      modifiedTime: post.modified,
       images,
     },
     twitter: {
@@ -153,5 +155,5 @@ export default async function PostPage({ params }: PostPageProps) {
     redirect(`${prefix}/posts/${expectedPath}`);
   }
 
-  return <PostView post={post} />;
+  return <PostView post={post} locale={locale} />;
 }

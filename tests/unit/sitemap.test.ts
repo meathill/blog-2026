@@ -9,11 +9,10 @@ vi.mock('@opennextjs/cloudflare', () => ({
 
 const mockGetPosts = vi.fn();
 const mockGetCategories = vi.fn();
-const mockGetTags = vi.fn();
+// 注意：标签页已从 sitemap 移除（issue #4 SEO 收口），不再 import getTags
 vi.mock('@/lib/wordpress', () => ({
   getPosts: (...args: any[]) => mockGetPosts(...args),
   getCategories: (...args: any[]) => mockGetCategories(...args),
-  getTags: (...args: any[]) => mockGetTags(...args),
 }));
 
 const mockGetDb = vi.fn();
@@ -47,15 +46,13 @@ describe('Sitemap Generator', () => {
       },
     });
 
-    // Default successful mocks
-    // Default successful mocks
     mockGetPosts.mockImplementation((params) => {
       const page = params?.page || 1;
       if (page === 1) {
         return Promise.resolve({
           posts: [
-            { slug: 'post-1', date: '2023-01-01', categories: [101] },
-            { slug: 'post-2', date: '2023-01-02', categories: [101] },
+            { slug: 'post-1', date: '2023-01-01', modified: '2023-02-01', categories: [101] },
+            { slug: 'post-2', date: '2023-01-02', modified: '2023-01-02', categories: [101] },
           ],
           total: 4,
           totalPages: 2,
@@ -64,8 +61,8 @@ describe('Sitemap Generator', () => {
       if (page === 2) {
         return Promise.resolve({
           posts: [
-            { slug: 'post-2', date: '2023-01-02', categories: [101] }, // Duplicate
-            { slug: 'post-3', date: '2023-01-03', categories: [101] },
+            { slug: 'post-2', date: '2023-01-02', modified: '2023-01-02', categories: [101] }, // Duplicate
+            { slug: 'post-3', date: '2023-01-03', modified: '2023-01-03', categories: [101] },
           ],
           total: 4,
           totalPages: 2,
@@ -79,11 +76,6 @@ describe('Sitemap Generator', () => {
       { id: 102, slug: 'cat-2', count: 0 }, // Should be filtered out
     ]);
 
-    mockGetTags.mockResolvedValue([
-      { id: 201, slug: 'tag-1', count: 10 },
-      { id: 202, slug: 'tag-2', count: 0 }, // Should be filtered out
-    ]);
-
     mockGetDb.mockResolvedValue({
       select: () => ({
         from: () => ({
@@ -93,7 +85,7 @@ describe('Sitemap Generator', () => {
     });
   });
 
-  it('should generate sitemap with static pages, posts, categories, tags, and apps', async () => {
+  it('should generate sitemap with static pages, posts, categories, and apps (no tag pages)', async () => {
     const result = await sitemap();
 
     // Check static pages
@@ -120,11 +112,13 @@ describe('Sitemap Generator', () => {
         expect.objectContaining({ url: `${SITE_URL}/posts/cat-1/post-3` }),
       ]),
     );
-    // Should NOT contain post-4 (removed from mock)
-    const post4 = result.find((item) => item.url.includes('/posts/cat-1/post-4'));
-    expect(post4).toBeUndefined();
-    // Validate count: static(5) + posts(3) + category(1) + tag(1) + app(1) + skill(1) = 12
-    expect(result.length).toBe(12);
+
+    // post lastModified 使用 post.modified（新鲜度信号）
+    const post1 = result.find((item) => item.url === `${SITE_URL}/posts/cat-1/post-1`);
+    expect(post1?.lastModified).toEqual(new Date('2023-02-01'));
+
+    // Validate count: static(5) + posts(3) + category(1) + app(1) + skill(1) = 11（标签已移除）
+    expect(result.length).toBe(11);
 
     // Check categories
     expect(result).toEqual(
@@ -140,27 +134,12 @@ describe('Sitemap Generator', () => {
         }),
       ]),
     );
-    // Empty category should assume filtered (checking logic implicitly by absence or length)
-    // But arrayContaining doesn't check absence. Let's check length approx or specific absence.
     const cat2 = result.find((item) => item.url === `${SITE_URL}/category/cat-2`);
     expect(cat2).toBeUndefined();
 
-    // Check tags
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          url: `${SITE_URL}/tag/tag-1`,
-          alternates: {
-            languages: {
-              zh: `${SITE_URL}/tag/tag-1`,
-              en: `${SITE_URL}/en/tag/tag-1`,
-            },
-          },
-        }),
-      ]),
-    );
-    const tag2 = result.find((item) => item.url === `${SITE_URL}/tag/tag-2`);
-    expect(tag2).toBeUndefined();
+    // 标签页不应出现在 sitemap 中
+    const anyTag = result.find((item) => item.url.includes('/tag/'));
+    expect(anyTag).toBeUndefined();
 
     // Check apps
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/app/app-1` })]));
@@ -171,7 +150,7 @@ describe('Sitemap Generator', () => {
 
     const result = await sitemap();
 
-    // Key assertion: Should not throw, should return static pages + apps + categories + tags
+    // Key assertion: Should not throw, should return static pages + apps + categories
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: SITE_URL })]));
     // Should NOT have posts
     const anyPost = result.find((item) => item.url.includes('/posts/post-1'));
@@ -196,23 +175,6 @@ describe('Sitemap Generator', () => {
     expect(anyCat).toBeUndefined();
   });
 
-  it('should handle WordPress API errors gracefully (getTags failure)', async () => {
-    mockGetTags.mockRejectedValue(new Error('WP Down'));
-
-    const result = await sitemap();
-
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ url: SITE_URL }),
-        expect.objectContaining({ url: `${SITE_URL}/posts/cat-1/post-1` }),
-        expect.objectContaining({ url: `${SITE_URL}/category/cat-1` }),
-      ]),
-    );
-    // Should NOT have tags
-    const anyTag = result.find((item) => item.url.includes('/tag/'));
-    expect(anyTag).toBeUndefined();
-  });
-
   it('should handle DB errors gracefully', async () => {
     mockGetDb.mockRejectedValue(new Error('DB Error'));
 
@@ -232,7 +194,6 @@ describe('Sitemap Generator', () => {
   it('should handle TOTAL failure gracefully', async () => {
     mockGetPosts.mockRejectedValue(new Error('Fail'));
     mockGetCategories.mockRejectedValue(new Error('Fail'));
-    mockGetTags.mockRejectedValue(new Error('Fail'));
     mockGetDb.mockRejectedValue(new Error('Fail'));
 
     const result = await sitemap();

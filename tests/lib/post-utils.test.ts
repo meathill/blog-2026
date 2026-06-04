@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractTOC, hasCodeBlocks } from '../../src/lib/post-utils';
+import { extractTOC, hasCodeBlocks, extractFaq, selectRelatedPosts } from '../../src/lib/post-utils';
 
 describe('post-utils', () => {
   describe('extractTOC', () => {
@@ -65,6 +65,93 @@ describe('post-utils', () => {
 
     it('不应匹配 <prefix> 等标签', () => {
       expect(hasCodeBlocks('<prefix>Not a pre</prefix>')).toBe(false);
+    });
+  });
+
+  describe('extractFaq', () => {
+    it('从「常见问题（FAQ）」区块提取问答对', () => {
+      const html = `
+        <h2 id="intro">引言</h2>
+        <p>正文</p>
+        <h2 id="faq">常见问题（FAQ）</h2>
+        <h3>Worker 有什么限制？</h3>
+        <p>CPU 时间和内存有上限。</p>
+        <h3>如何调试？</h3>
+        <p>使用 wrangler tail。</p>
+      `;
+      const faq = extractFaq(html);
+      expect(faq).toHaveLength(2);
+      expect(faq[0]).toEqual({ question: 'Worker 有什么限制？', answer: 'CPU 时间和内存有上限。' });
+      expect(faq[1].question).toBe('如何调试？');
+    });
+
+    it('英文 FAQ 标题也能命中（大小写不敏感）', () => {
+      const html = '<h2>FAQ</h2><h3>Q?</h3><p>A.</p>';
+      expect(extractFaq(html)).toEqual([{ question: 'Q?', answer: 'A.' }]);
+    });
+
+    it('FAQ 区块在下一个 h2 处结束', () => {
+      const html = `
+        <h2>常见问题</h2>
+        <h3>Q1?</h3><p>A1.</p>
+        <h2>后续章节</h2>
+        <h3>不应计入</h3><p>X</p>
+      `;
+      const faq = extractFaq(html);
+      expect(faq).toHaveLength(1);
+      expect(faq[0].question).toBe('Q1?');
+    });
+
+    it('无 FAQ 区块返回空数组', () => {
+      expect(extractFaq('<h2>引言</h2><p>无 FAQ</p>')).toEqual([]);
+    });
+
+    it('忽略带标签的标题并清理 HTML', () => {
+      const html = '<h2 id="faq">常见问题</h2><h3><strong>问</strong>题？</h3><p>答<em>案</em>。</p>';
+      expect(extractFaq(html)).toEqual([{ question: '问题？', answer: '答案。' }]);
+    });
+  });
+
+  describe('selectRelatedPosts', () => {
+    const current = { slug: 'current', tags: [1, 2, 3] };
+
+    it('剔除自身并按共享标签数降序', () => {
+      const candidates = [
+        { slug: 'current', tags: [1, 2, 3] },
+        { slug: 'a', tags: [9] },
+        { slug: 'b', tags: [1, 2] },
+        { slug: 'c', tags: [1] },
+      ];
+      const result = selectRelatedPosts(current, candidates, 3);
+      expect(result.map((p) => p.slug)).toEqual(['b', 'c', 'a']);
+    });
+
+    it('按 slug 去重', () => {
+      const candidates = [
+        { slug: 'a', tags: [1] },
+        { slug: 'a', tags: [1] },
+        { slug: 'b', tags: [2] },
+      ];
+      const result = selectRelatedPosts(current, candidates, 5);
+      expect(result.map((p) => p.slug)).toEqual(['a', 'b']);
+    });
+
+    it('截取前 n 篇', () => {
+      const candidates = [
+        { slug: 'a', tags: [1] },
+        { slug: 'b', tags: [2] },
+        { slug: 'c', tags: [3] },
+      ];
+      expect(selectRelatedPosts(current, candidates, 2)).toHaveLength(2);
+    });
+
+    it('无共享标签时仍返回候选顺序的前 n 篇（分类兜底）', () => {
+      const noTagCurrent = { slug: 'current', tags: [] };
+      const candidates = [
+        { slug: 'a', tags: [9] },
+        { slug: 'b', tags: [8] },
+      ];
+      expect(selectRelatedPosts(noTagCurrent, candidates, 3).map((p) => p.slug)).toEqual(['a', 'b']);
     });
   });
 });

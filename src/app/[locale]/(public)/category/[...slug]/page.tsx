@@ -36,6 +36,8 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   return {
     title,
     description: `查看 ${category.name} 分类下的所有文章`,
+    // 分类首页保留索引；分页（/page/N, N>1）为薄内容，noindex
+    ...(pageNum > 1 ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: canonicalUrl,
       languages: {

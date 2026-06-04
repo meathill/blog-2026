@@ -6,6 +6,7 @@ import {
   formatDate,
   stripHtml,
   processContent,
+  buildPostDescription,
   getTags,
   WPTag,
   WPPost,
@@ -14,15 +15,19 @@ import {
 import CodeHighlight from '@/components/CodeHighlight';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getDb } from '@/lib/db';
+import { SITE_URL } from '@/lib/constants';
+import { buildArticleJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo/jsonld';
 import { PostToc } from '@/components/posts/post-toc';
-import { extractTOC, hasCodeBlocks } from '@/lib/post-utils';
+import { extractTOC, extractFaq, hasCodeBlocks } from '@/lib/post-utils';
 import FeaturedImage from '@/components/posts/featured-image';
 import PostBreadcrumb from '@/components/posts/post-breadcrumb';
 import PostHeader from '@/components/posts/post-header';
 import PostFooter from '@/components/posts/post-footer';
+import RelatedPosts from '@/components/posts/related-posts';
 
 interface PostViewProps {
   post: WPPost;
+  locale: string;
 }
 
 // 查找关联的 App
@@ -58,10 +63,14 @@ const PROSE_CLASSES = `prose prose-invert prose-lg max-w-none
   prose-blockquote:border-l-[var(--accent)] prose-blockquote:text-[var(--text-muted)]
   prose-li:text-[var(--text-secondary)]`;
 
-export default async function PostView({ post }: PostViewProps) {
+export default async function PostView({ post, locale }: PostViewProps) {
   const title = stripHtml(post.title.rendered);
   const readingTime = calculateReadingTime(post.content.rendered);
   const dateFormatted = formatDate(post.date);
+  // 仅当更新时间比发布时间晚 1 天以上才展示「更新于」，避免每次保存都误报新鲜度
+  const isMeaningfullyUpdated =
+    !!post.modified && new Date(post.modified).getTime() - new Date(post.date).getTime() > 24 * 60 * 60 * 1000;
+  const updatedFormatted = isMeaningfullyUpdated ? formatDate(post.modified) : undefined;
   const processedContent = processContent(post.content.rendered);
   const toc = extractTOC(processedContent, stripHtml);
   const needsCodeHighlight = hasCodeBlocks(processedContent);
@@ -77,8 +86,54 @@ export default async function PostView({ post }: PostViewProps) {
   const relatedApp = await findRelatedApp(tags, categories);
   const thumbnail = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
 
+  // 结构化数据：规范 URL 需与页面 canonical 一致（按 post.categories[0] 取主分类）
+  const baseUrl = locale === 'en' ? `${SITE_URL}/en` : SITE_URL;
+  const primaryCategory = post.categories?.length
+    ? allCategories.find((cat) => cat.id === post.categories[0])
+    : undefined;
+  const categorySlug = primaryCategory ? decodeURIComponent(primaryCategory.slug) : 'uncategorized';
+  const canonicalUrl = `${baseUrl}/posts/${categorySlug}/${post.slug}`;
+  const ogImage = thumbnail || `${SITE_URL}/api/og/post?slug=${post.slug}`;
+  const faqPairs = extractFaq(processedContent);
+
+  const articleJsonLd = buildArticleJsonLd({
+    title,
+    description: buildPostDescription(post),
+    url: canonicalUrl,
+    datePublished: post.date,
+    dateModified: post.modified,
+    image: ogImage,
+    locale,
+    keywords: tags.map((tag) => tag.name),
+  });
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: '首页', url: baseUrl },
+    primaryCategory
+      ? { name: primaryCategory.name, url: `${baseUrl}/category/${primaryCategory.slug}` }
+      : { name: '全部文章', url: `${baseUrl}/posts` },
+    { name: title, url: canonicalUrl },
+  ]);
+  const faqJsonLd = buildFaqJsonLd(faqPairs);
+
   return (
     <div className="min-h-screen pt-24 pb-16">
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className={`lg:flex lg:gap-8 ${toc.length === 0 ? 'lg:justify-center' : ''}`}>
           <PostToc items={toc} />
@@ -90,6 +145,7 @@ export default async function PostView({ post }: PostViewProps) {
             <PostHeader
               title={title}
               dateFormatted={dateFormatted}
+              updatedFormatted={updatedFormatted}
               readingTime={readingTime}
               categories={categories}
               tags={tags}
@@ -110,6 +166,8 @@ export default async function PostView({ post }: PostViewProps) {
 
             {/* Article Content */}
             <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: processedContent }} />
+
+            <RelatedPosts post={post} />
 
             <PostFooter categories={categories} tags={tags} />
 
