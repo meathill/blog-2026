@@ -1,0 +1,44 @@
+# SEO 文章文案更新（Issue #4，wp-cli 在服务器执行）
+
+更新 5(+1) 篇技术文章的 **标题 / meta 描述（excerpt）**，并幂等插入 **FAQ** 与 **延伸阅读（站内互链）** 区块。配合仓库前端改动：FAQ 区块会被 `extractFaq` 解析为 FAQPage 富结果；excerpt 即 meathill.com 的 meta description（见 `src/lib/wordpress/posts.ts` `buildPostDescription`）。
+
+> ⚠️ 这些脚本操作 **生产 WordPress 内容**。请在服务器上、先 dry-run、确认 diff 后再写入。脚本**不修改 slug**，不会影响既有 URL / 排名。
+
+## 前置条件
+- 在 WordPress 所在服务器上，且 `wp`（WP-CLI）可用、指向正确站点（`wp option get siteurl` 自检）。
+- 把本目录（`scripts/seo/`）传到服务器，或直接在已 checkout 仓库的机器上、于 WordPress 根目录运行。
+- 涉及文章（按 `post_name`）：见 `manifest.json`。
+
+## 步骤
+```bash
+# 1) 备份当前内容（写入 scripts/seo/backup/，不入库）
+wp eval-file scripts/seo/export-current.php
+
+# 2) 预览将要发生的变更（dry-run，不写库）
+wp eval-file scripts/seo/apply.php
+
+# 3) 审阅无误后实际写入
+SEO_APPLY=1 wp eval-file scripts/seo/apply.php
+
+# 如需回滚
+SEO_APPLY=1 wp eval-file scripts/seo/restore.php
+```
+
+## 文件
+- `manifest.json` — 数据源：每篇的 `title` / `excerpt` / `faq[]` / `related[]` / `category` / `linkLabel`。**改文案改这里**。
+- `apply.php` — 读 manifest，更新 title/excerpt + 幂等插入 FAQ / 延伸阅读区块。默认 dry-run，`SEO_APPLY=1` 才写库。
+- `export-current.php` — 备份当前 title/excerpt/content 到 `backup/`。
+- `restore.php` — 从 `backup/` 回滚。
+- `backup/` — 运行时生成，已 gitignore。
+
+## 幂等与安全
+- FAQ / 延伸阅读 用 HTML 注释 marker 包裹（`<!-- seo:faq:start -->` 等），重复运行只替换区块内部，不重复追加。
+- 只动 `post_title` / `post_excerpt` / `post_content`，不动 `post_name`（slug）。
+- 正文主体（代码、上下文、配图）不在脚本内盲改 —— 那部分更适合在 WP 后台按 manifest 思路人工精修。脚本负责机械、高价值、低风险的 SEO 增益（标题、描述、FAQ、互链）。
+
+## 与前端的衔接
+- excerpt → meathill.com 文章 meta description + OG description。
+- FAQ 区块（`<h2>常见问题（FAQ）</h2>` + `<h3>`问`<p>`答）→ 被 `extractFaq` 解析，生成 FAQPage JSON-LD。
+- 延伸阅读 站内链接为相对路径 `/posts/{category}/{slug}`，与站点规范 URL 一致。
+- 文章页另有 `RelatedPosts` 组件按标签/分类自动推荐，与本处手选 cluster 互链互补。
+- WordPress 更新后，meathill.com 经 ISR（fetch revalidate 300s / 页面 86400s）刷新。

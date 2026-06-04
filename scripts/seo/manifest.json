@@ -1,0 +1,151 @@
+{
+  "_comment": "Issue #4 SEO 文案数据。key = WordPress post_name（slug 末段）。apply.php 据此更新 title/excerpt 并幂等插入 FAQ + 延伸阅读 区块。先 dry-run 审阅，再 --apply。不修改 slug。",
+  "posts": {
+    "best-practice-for-nextjs-on-cloudflare-worker-2026": {
+      "category": "next-js",
+      "linkLabel": "在 Cloudflare Workers 上部署 Next.js 最佳实践",
+      "title": "2026 最佳实践：在 Cloudflare Workers 上部署 Next.js（OpenNext 完整指南）",
+      "excerpt": "用 OpenNext 把 Next.js 部署到 Cloudflare Workers 的 2026 最佳实践：构建配置、缓存、ISR、环境变量与常见坑，附可复制的 wrangler 配置与排错清单。",
+      "faq": [
+        {
+          "q": "Next.js 能直接部署到 Cloudflare Workers 吗？",
+          "a": "需要通过 @opennextjs/cloudflare 适配器把 Next.js 构建产物转换为 Workers 可运行的格式，再用 wrangler 部署；App Router、ISR、Route Handlers 都受支持。"
+        },
+        {
+          "q": "OpenNext 和 next-on-pages 有什么区别？",
+          "a": "next-on-pages 面向 Cloudflare Pages 且依赖 Edge Runtime；@opennextjs/cloudflare 面向 Workers，支持 Node.js 运行时与更完整的 Next.js 特性，是目前推荐路径。"
+        },
+        {
+          "q": "部署后 ISR / 缓存不生效怎么办？",
+          "a": "确认已配置 R2 增量缓存与对应绑定，并检查 revalidate 设置；Workers 环境的缓存依赖 OpenNext 的 incremental cache，与 Vercel 默认行为不同。"
+        }
+      ],
+      "related": [
+        "migrate-next-js-from-vercel-to-cloudflare",
+        "best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker",
+        "vercel-vs-cloudflare-pages-how-to-choose-to-deploy-your-website"
+      ]
+    },
+    "best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker": {
+      "category": "cloudflare-worker",
+      "linkLabel": "Workers + Supabase + Hyperdrive 最佳实践",
+      "title": "Cloudflare Workers + Supabase + Hyperdrive 最佳实践（2026）：连接池与低延迟查询",
+      "excerpt": "在 Cloudflare Workers 上用 Hyperdrive 连接 Supabase Postgres 的最佳实践：连接池、冷启动、Hyperdrive 配置与查询延迟优化，含 Next.js 集成示例与避坑指南。",
+      "faq": [
+        {
+          "q": "为什么在 Workers 里要用 Hyperdrive 连 Supabase？",
+          "a": "Workers 无常驻连接，直连 Postgres 会受连接数与握手延迟困扰；Hyperdrive 提供连接池与边缘缓存，显著降低查询延迟、避免连接耗尽。"
+        },
+        {
+          "q": "Hyperdrive 支持 Supabase 的连接方式吗？",
+          "a": "支持。使用 Supabase 提供的 Postgres 连接串（建议用 pooler 端口）配置 Hyperdrive，即可在 Workers 中通过 Hyperdrive 绑定访问。"
+        },
+        {
+          "q": "Hyperdrive 会缓存写操作吗？",
+          "a": "不会。Hyperdrive 只缓存可缓存的读查询，写操作与事务始终直达数据库，因此不必担心数据一致性问题。"
+        }
+      ],
+      "related": [
+        "best-practice-for-nextjs-on-cloudflare-worker-2026",
+        "upload-file-via-cloudflare-r2",
+        "vibe-coding-lightweight-kms-on-cloudflare"
+      ]
+    },
+    "vercel-vs-cloudflare-pages-how-to-choose-to-deploy-your-website": {
+      "category": "infra",
+      "linkLabel": "Vercel vs Cloudflare：部署平台怎么选",
+      "title": "Vercel vs Cloudflare：2026 怎么选部署平台？价格、性能与适用场景对比",
+      "excerpt": "Vercel 与 Cloudflare 部署网站怎么选？从价格、冷启动、带宽费用、函数运行时到 Next.js 支持全面对比，给出不同项目规模与预算下的选型建议（2026 更新）。",
+      "faq": [
+        {
+          "q": "Vercel 和 Cloudflare 哪个更便宜？",
+          "a": "中小流量下两者免费额度都够用；流量增大后 Cloudflare 在带宽（出站不计费）和请求计费上通常更省，Vercel 的带宽与函数调用费用增长更快。"
+        },
+        {
+          "q": "Cloudflare 能完整支持 Next.js 吗？",
+          "a": "可以。通过 OpenNext 适配器，App Router、ISR、Route Handlers 等大部分特性都能在 Cloudflare Workers 上运行，少数 Vercel 专有能力需替代方案。"
+        },
+        {
+          "q": "已经在 Vercel 上，值得迁移到 Cloudflare 吗？",
+          "a": "若主要诉求是降低带宽成本、用 Workers/R2/D1 等一体化生态，迁移收益明显；若重度依赖 Vercel 专有特性或团队流程，则需权衡迁移成本。"
+        }
+      ],
+      "related": [
+        "migrate-next-js-from-vercel-to-cloudflare",
+        "best-practice-for-nextjs-on-cloudflare-worker-2026"
+      ]
+    },
+    "upload-file-via-cloudflare-r2": {
+      "category": "infra",
+      "linkLabel": "用 Cloudflare R2 上传文件实战",
+      "title": "用 Cloudflare R2 上传文件：预签名 URL、直传与 Workers 集成实战（2026）",
+      "excerpt": "Cloudflare R2 文件上传实战：通过 Workers 生成预签名 URL 实现浏览器直传，处理 CORS、大文件分片与权限控制，附 S3 兼容 API 示例与常见错误排查。",
+      "faq": [
+        {
+          "q": "R2 上传要用预签名 URL 吗？",
+          "a": "推荐。由 Worker 用 S3 兼容 API 生成预签名 URL，让浏览器直传到 R2，避免文件经过 Worker 中转，节省 CPU 时间与带宽。"
+        },
+        {
+          "q": "R2 兼容 S3 SDK 吗？",
+          "a": "兼容 S3 API。可用 aws4fetch 或 AWS SDK 配置 R2 的 endpoint 与凭证来生成预签名 URL；在 Workers 中更推荐轻量的 aws4fetch。"
+        },
+        {
+          "q": "上传遇到 CORS 报错怎么解决？",
+          "a": "在 R2 存储桶的 CORS 策略中放行你的源站域名与所需方法（PUT/GET），并确保预签名 URL 的请求头与签名时一致。"
+        }
+      ],
+      "related": [
+        "best-practice-for-nextjs-on-cloudflare-worker-2026",
+        "best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker"
+      ]
+    },
+    "migrate-next-js-from-vercel-to-cloudflare": {
+      "category": "next-js",
+      "linkLabel": "把 Next.js 从 Vercel 迁移到 Cloudflare",
+      "title": "把 Next.js 从 Vercel 迁移到 Cloudflare Workers：完整迁移清单（2026）",
+      "excerpt": "Next.js 从 Vercel 迁移到 Cloudflare Workers 的完整步骤：OpenNext 适配、环境变量与绑定、ISR/缓存迁移、图片优化与域名切换，附迁移检查清单与回滚建议。",
+      "faq": [
+        {
+          "q": "从 Vercel 迁到 Cloudflare 难吗？",
+          "a": "多数 Next.js 项目用 @opennextjs/cloudflare 适配后改动不大，主要工作在环境变量/绑定迁移、缓存与图片优化的差异处理，以及域名与 DNS 切换。"
+        },
+        {
+          "q": "迁移后图片优化怎么办？",
+          "a": "Vercel 的 next/image 优化需替换为 Cloudflare Images 或自定义 loader；可配置 images.loader 指向 Cloudflare 的图片缩放服务。"
+        },
+        {
+          "q": "环境变量和密钥如何迁移？",
+          "a": "用 wrangler secret 管理敏感变量，公开变量写入 wrangler 配置；注意 Workers 不读取 .env，需显式声明绑定。"
+        }
+      ],
+      "related": [
+        "vercel-vs-cloudflare-pages-how-to-choose-to-deploy-your-website",
+        "best-practice-for-nextjs-on-cloudflare-worker-2026"
+      ]
+    },
+    "vibe-coding-lightweight-kms-on-cloudflare": {
+      "category": "cloudflare-worker",
+      "linkLabel": "在 Cloudflare 上自建轻量 KMS",
+      "title": "在 Cloudflare 上 Vibe Coding 一个轻量 KMS：用 Workers 管理密钥（2026）",
+      "excerpt": "用 Cloudflare Workers 打造轻量级 KMS：基于 Web Crypto 与 Secrets Store/KV 实现密钥加密、轮换与访问控制的思路与实践，适合小团队的低成本密钥管理方案。",
+      "faq": [
+        {
+          "q": "Cloudflare 上能自建 KMS 吗？",
+          "a": "可以做轻量级方案：用 Workers 的 Web Crypto API 做加解密，用 Secrets Store/KV 存放主密钥，配合访问控制实现密钥的加密、轮换与分发。"
+        },
+        {
+          "q": "和云厂商的托管 KMS 比有什么取舍？",
+          "a": "自建胜在低成本、与 Workers 生态贴合、可定制；但合规、审计、硬件级保护不如托管 KMS，敏感场景仍建议用专业 KMS。"
+        },
+        {
+          "q": "密钥轮换怎么做？",
+          "a": "保留密钥版本号，新数据用新密钥加密、旧数据按版本解密并惰性重写，轮换期间同时保留新旧密钥即可平滑过渡。"
+        }
+      ],
+      "related": [
+        "best-practice-for-nextjs-on-cloudflare-worker-2026",
+        "best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker"
+      ]
+    }
+  }
+}
