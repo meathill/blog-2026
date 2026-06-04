@@ -9,6 +9,17 @@
 - 把本目录（`scripts/seo/`）传到服务器，或直接在已 checkout 仓库的机器上、于 WordPress 根目录运行。
 - 涉及文章（按 `post_name`）：见 `manifest.json`。
 
+> **没有 WP-CLI 的服务器**：用 `runner.php` 直接 bootstrap WordPress 跑同一套脚本（自带 WP_CLI 垫片），无需安装任何外部工具。以能读 `wp-config.php` 的用户运行（通常 `www-data`）：
+> ```bash
+> scp -r scripts/seo <host>:/tmp/seo            # 上传（含 runner.php / verify.php）
+> chmod -R 777 /tmp/seo                          # 让 www-data 能写 backup/
+> sudo -u www-data php /tmp/seo/runner.php export-current.php          # 备份
+> sudo -u www-data php /tmp/seo/runner.php apply.php                   # dry-run
+> sudo -u www-data env SEO_APPLY=1 php /tmp/seo/runner.php apply.php   # 写入
+> sudo -u www-data php /tmp/seo/runner.php verify.php                  # 校验
+> ```
+> WordPress 路径默认 `/var/www/blog`，可用 `WP_PATH` 覆盖。
+
 ## 步骤
 ```bash
 # 1) 备份当前内容（写入 scripts/seo/backup/，不入库）
