@@ -1,0 +1,32 @@
+# blog.meathill.com —— 历史公开 URL 收敛到 meathill.com（Apache 版，Issue #4）
+#
+# 放进 blog.meathill.com docroot 的 .htaccess，置于「# BEGIN WordPress」块**之前**。
+# Apache 2.4+ 建议把保留规则的 [L] 换成 [END]，确保彻底跳过后续规则。
+# ⚠️ 应用前先在测试环境验证，并用 README 里的 curl 检查 API/媒体未被误伤。
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # ---- 1) 保留：API / 后台 / 媒体（命中即停，不重定向）----
+  RewriteRule ^wp-json/      - [END]
+  RewriteRule ^wp-admin/     - [END]
+  RewriteRule ^wp-login\.php - [END]
+  RewriteRule ^wp-content/   - [END]
+  RewriteRule ^wp-includes/  - [END]
+  RewriteRule ^xmlrpc\.php   - [END]
+
+  # ---- 2) 旧 sitemap -> 410 ----
+  RewriteRule sitemap.*\.xml$  - [G,L]
+  RewriteRule ^news-sitemap\.xml$ - [G,L]
+
+  # ---- 3) .html 文章 -> meathill 规范页 ----
+  RewriteRule ^(.+)\.html$ https://meathill.com/posts/$1 [R=301,L]
+
+  # ---- 4) 分类 / 标签 / 作者 ----
+  RewriteRule ^category/(.*)$ https://meathill.com/category/$1 [R=301,L]
+  RewriteRule ^tag/(.*)$      https://meathill.com/tag/$1 [R=301,L]
+  RewriteRule ^author/(.*)$   https://meathill.com/posts/author/$1 [R=301,L]
+
+  # ---- 5) 其余公开路径兜底 -> 首页 ----
+  RewriteRule ^(.*)$ https://meathill.com/ [R=301,L]
+</IfModule>

@@ -16,12 +16,14 @@ https://github.com/meathill/blog-2026/issues/4
 - [x] A6 sitemap：移除 tag 页　[x] A7 robots：disallow `/search`
 - [x] 单测：jsonld、post-utils(+extractFaq/+selectRelatedPosts)、sitemap(改断言无 tag)
 
-### Workstream B — 5 篇文案（wp-cli 服务器执行）⬜
-- [ ] `scripts/seo/`：export-current.sh / content/<slug>.new.html / manifest / apply.sh(--dry-run)，不改 slug
+### Workstream B — 6 篇文案（wp-cli 服务器执行）✅ 脚本就绪，待用户在服务器跑
+- [x] `scripts/seo/`：manifest.json（title/excerpt/FAQ/互链）+ apply.php（幂等、dry-run、不改 slug）+ export-current/restore.php + README
+- [ ] 用户在服务器执行：`export-current.php` → `apply.php`（dry-run）→ `SEO_APPLY=1 apply.php`
 
-### Workstream C — GSC + 服务器清理 ⬜
-- [ ] `docs/seo-gsc-cleanup.md`（删历史 sitemap 清单）
-- [ ] `scripts/seo/server/`（nginx/apache：301 旧前台 HTML、410 旧 sitemap，保留 /wp-json /wp-admin /wp-content）
+### Workstream C — GSC + 服务器清理 ✅ 文档/片段就绪，待用户执行
+- [x] `docs/seo-gsc-cleanup.md`（删历史 sitemap 清单 + 验证 + 指标）
+- [x] `scripts/seo/server/`（nginx/apache：301 旧前台 HTML、410 旧 sitemap，保留 /wp-json /wp-admin /wp-content；含 noindex 过渡版）
+- [ ] 用户执行：GSC 删历史 sitemap；服务器停旧 sitemap 插件 + 应用收敛片段
 
 ## 决策记录（与原计划的偏差）
 - **i18n**：文章页 UI 子树（PostView/PostHeader/PostCard）本就硬编码中文（"分钟阅读" 等）、无 next-intl。为与周边一致，"更新于"/"相关文章" 同样硬编码中文，未新增 i18n key。文章页本地化是独立议题。
