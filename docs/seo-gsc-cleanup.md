@@ -84,6 +84,20 @@ GSC 侧（部署后几天）：
 
 ---
 
+## 执行记录（2026-06-05，服务器侧已完成）
+
+服务器 `34.177.119.169`（host `vps`）实际架构：**Cloudflare Tunnel → Caddy `:8080` → PHP-FPM 8.5 → WordPress `/var/www/blog`**；无 WP-CLI。
+
+已完成：
+- **B 文案**：用 `scripts/seo/runner.php` 跑 `apply.php`，6 篇文章 title/excerpt/FAQ/延伸阅读 全部更新并 `verify.php` 校验通过（excerpt 原为空，现 90–111 字）。备份在服务器 `~/seo-backup-20260605` 与 `/tmp/seo/backup`。
+- **C2 服务器收敛**：安装 `scripts/seo/server/blog-redirect.Caddyfile`（origin 纵深防御）。origin 实测：`/wp-json`/媒体/验证文件 200；`*sitemap*.xml` 410；`.html`/`category`/`tag`/`author`/兜底 301。
+  - ⚠️ 该 Caddy 含 `admin off`，**用 `systemctl restart caddy`**（非 reload）。原配置备份在 `/etc/caddy/Caddyfile.bak-issue4`，回滚：`sudo cp /etc/caddy/Caddyfile.bak-issue4 /etc/caddy/Caddyfile && sudo systemctl restart caddy`。
+  - **Cloudflare 边缘已有 blog→meathill 跳转**：边缘 `/sitemap.xml`、`.html`、`/` 均已 301 到 meathill；origin 规则为冗余保险。旧 sitemap 在边缘以 301 退役（GSC 仍需手动删条目，见第一节）。
+
+仍需手动：
+- **C1（GSC）**：删 6 份历史 sitemap 条目（只能在 Search Console UI，API 不支持删除）。
+- 可选：Cloudflare 控制台清一次缓存，让边缘跳转尽快生效；wp-admin → Jetpack → Traffic 关掉 "Generate XML sitemaps"（origin 已 410，非必须）。
+
 ## 四、验收指标（部署 + 清理后，延后测量）
 - Top 技术文（Next.js/CF Worker、Hyperdrive、Vercel-vs-CF、R2 等）在之后 28 天窗口回到 **4%+ CTR**（主要由 `scripts/seo/` 文案更新驱动）。
 - 活跃 HTTPS sitemap 0 error 且近期被抓取（基本已满足）。
