@@ -35,8 +35,16 @@
 		file_server
 	}
 
-	# 1c) feed：/feed/、/tag/x/feed/、/comments/feed/ 等，交给 WP 输出 RSS
-	@feed path_regexp feed ^/(.+/)?feed/?$
+	# 1c-1) 带斜杠的 feed:由 Caddy 直接 301 到无斜杠规范 URL(带 https)。
+	#       不能交给 WP canonical——origin 不知道自己在 https 后面,会发
+	#       Location: http://...,Worker fetch 跟随会失败
+	@feedslash path_regexp feedslash ^(/(.+/)?feed)/$
+	handle @feedslash {
+		redir https://blog.meathill.com{re.feedslash.1} 301
+	}
+
+	# 1c-2) 无斜杠 feed(/feed、/tag/x/feed、/comments/feed):WP 的规范形态,直接输出 RSS
+	@feed path_regexp feed ^/(.+/)?feed$
 	handle @feed {
 		php_fastcgi unix//run/php/php8.5-fpm.sock
 	}

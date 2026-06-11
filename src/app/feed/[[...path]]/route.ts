@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-export const runtime = 'edge';
+// 不要加 `export const runtime = 'edge'`:OpenNext Cloudflare 只打包 Node runtime
+// 路由,edge runtime 的 route 不会进产物,线上会变成裸 500(2026-06-11 实测踩坑)
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ path?: string[] }> }) {
   try {
@@ -18,13 +19,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
     // Extract the origin URL
     const originUrl = new URL(apiUrl).origin;
 
-    let feedUrl = `${originUrl}/feed/`;
+    // WP 的规范 feed URL 是无尾斜杠(/feed、/tag/x/feed),带斜杠会触发
+    // canonical 301,Worker fetch 跟随重定向不可靠,这里直接请求规范形态
+    let feedUrl = `${originUrl}/feed`;
 
     // If there are sub-paths, construct the origin feed URL correctly
-    // e.g. /feed/tag/父亲节 -> Origin: /tag/父亲节/feed/
+    // e.g. /feed/tag/父亲节 -> Origin: /tag/父亲节/feed
     if (path && path.length > 0) {
       const originalPath = path.map((segment) => encodeURIComponent(segment)).join('/');
-      feedUrl = `${originUrl}/${originalPath}/feed/`;
+      feedUrl = `${originUrl}/${originalPath}/feed`;
     }
 
     const originResponse = await fetch(feedUrl, {
@@ -50,6 +53,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
     });
   } catch (error) {
     console.error('Error proxying nested feed:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return new NextResponse(`Feed proxy error: ${message}`, { status: 500 });
   }
 }
