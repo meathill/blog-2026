@@ -9,9 +9,9 @@
 - [x] 1-8 全部完成:Caddy 静态化止血、scripts/cloudflare/(inventory/apply/rollback)、
   wp-json 边缘缓存(已提至 24h)、wp-content WAF、feed 修复(含 OpenNext edge runtime 根因)、
   Access 全量收口(匿名 401)、Smart Tiered Cache、文档/memory
-- [ ] **purge-on-publish**:发文流程自动 Purge Everything + revalidatePath(需带
-  Zone.Cache Purge 权限的 token 进 Worker secret)。落地前发文后想立即可见需手动
-  dashboard → Caching → Purge Everything
+- [x] **purge-on-publish** 已上线(2026-06-11):发文成功 → purge_everything +
+  revalidatePath('/','/posts','/feed');purge 失败不阻断发布,toast 提示手动 purge。
+  token(仅 Zone.Cache Purge)已入 Worker secret `CLOUDFLARE_PURGE_TOKEN`
 - [ ] 观察 24-48h:TiDB RU 应随长尾入缓存持续走低(目标 <10 RU/s 基线);源站
   访问日志 `/var/log/caddy/blog-access.log` 可复查回源构成
 - [ ] 可选:恢复 wp-cron(服务器 system cron 打 127.0.0.1:8080/wp-cron.php),定时发布依赖它
