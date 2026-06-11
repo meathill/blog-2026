@@ -2,24 +2,29 @@
 
 任务完成后，请清理本项目，将重要约定并入 `DEV_NOTE.md` 或 `README.md`。
 
-Issue #4 SEO 恢复 & sitemap 清理　|　分支 `feat/seo-recovery-issue-4`
-https://github.com/meathill/blog-2026/issues/4
+## TiDB 降载:blog.meathill.com 边缘收口 + wp-json 缓存(2026-06-11)
 
-## 代码部分 ✅ 已完成（format / typecheck / test 288 / build 全通过）
-仓库 SEO 基建（新鲜度、JSON-LD、相关文章、FAQ、noindex、sitemap 收口）+ wp-cli 文案脚本 + GSC/服务器清理文档/片段。durable 约定已并入 `DEV_NOTE.md`「SEO 约定」。
+计划全文:`~/.claude/plans/tidb-spicy-flute.md`(已批准)。
+背景:TiDB 账单暴涨。真正打 DB 的口子:① wp-json 零边缘缓存(WP 发 no-store);② wp-content 缺失文件回落 index.php 启动全量 WP(实测 15s 超时)。
 
-## 服务器侧（2026-06-05 已由 AI 在 34.177.119.169 执行完成）
-- [x] **WordPress 内容**：`runner.php`(无 WP-CLI) 跑 `apply.php`，6 篇 title/excerpt/FAQ/互链更新 + `verify.php` 通过；备份 `~/seo-backup-20260605`
-- [x] **服务器收敛**：装 `blog-redirect.Caddyfile`（admin off → restart 生效），origin 410 旧 sitemap + 301 历史 URL + 保住 /wp-json /wp-content；meathill.com 全程 200
-- 发现：Cloudflare 边缘已有 blog→meathill 跳转，origin 规则为纵深防御
+- [ ] 1. 源站 Caddy 修复:@preserve 拆三块(assets 纯静态 / PHP 保留 / feed),部署 + 验证
+- [ ] 2. scripts/cloudflare/ 工具脚本(inventory / apply / rollback,幂等,快照)
+- [ ] 3. inventory 盘点(**需用户创建 CLOUDFLARE_API_TOKEN**,权限清单见 scripts/cloudflare/README.md)
+- [ ] 4. Cache Rule:wp-json 边缘缓存 600s(override_origin,排除 authorization)
+- [ ] 5. WAF Rule:block 非 uploads 的 /wp-content/*
+- [ ] 6. 边缘 feed 例外 → 修复 meathill.com/feed(当前 500,自 2026-06-05 起,blog/feed 被边缘 301 所致)
+- [ ] 7. Access 全量收口 /wp-json(决策树 Case A-D,预检后执行,最后做)
+- [ ] 8. 收尾:Smart Tiered Cache、DEV_NOTE、memory、清理本文件
 
-## 仍需用户手动（我无法代劳）
-- [ ] **GSC**：删 6 份历史 sitemap 条目（Search Console UI；API 不支持删除）；重新提交活跃 sitemap
-- [ ] 可选：Cloudflare 清缓存；Jetpack 关掉 XML sitemaps（origin 已 410，非必须）
+发现(不在本次范围):wp-cron.php 被边缘 301 → WP loopback cron 失效(定时发布等),DEV_NOTE 提醒。
 
-## 待验证
-- [ ] 端到端：开一篇文章用 Rich Results Test 校验 BlogPosting/Breadcrumb/(FAQ)；查看 tag/search 输出 noindex；`/sitemap.xml` 不含 `/tag/`
-- [ ] 部署后 GSC：活跃 sitemap 0 error 且被抓取；blog.* 重复 URL 递减
-- [ ] 指标（28 天窗口）：Top 技术文回到 4%+ CTR（主要靠文案更新）
+## 遗留:Issue #4 SEO(代码与服务器侧已完成)
 
-> 全部线下动作完成、指标确认后，可删除本 WIP.md（约定已在 DEV_NOTE.md）。
+仍需用户手动:
+- [ ] **GSC**:删 6 份历史 sitemap 条目(Search Console UI;API 不支持删除);重新提交活跃 sitemap
+- [ ] 可选:Jetpack 关掉 XML sitemaps(origin 已 410,非必须)
+
+待验证:
+- [ ] 端到端:Rich Results Test 校验 BlogPosting/Breadcrumb/(FAQ);tag/search 有 noindex;`/sitemap.xml` 不含 `/tag/`
+- [ ] 部署后 GSC:活跃 sitemap 0 error 且被抓取;blog.* 重复 URL 递减
+- [ ] 指标(28 天窗口,至 2026-07-03):Top 技术文回到 4%+ CTR

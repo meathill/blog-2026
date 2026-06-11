@@ -1,6 +1,11 @@
 # blog.meathill.com origin（Cloudflare Tunnel -> Caddy :8080 -> PHP-FPM -> WordPress）
 # Issue #4：退役旧 sitemap + 把历史公开 URL 收敛到 meathill.com。
-# ⚠️ 保留 /wp-json /wp-admin /wp-content 等，meathill.com 的 API/媒体依赖它们。
+# 2026-06-11（TiDB 降载）：@preserve 拆三块——
+#   1a) /wp-content /wp-includes 纯静态：缺失文件直接 Caddy 404，不再经 php_fastcgi
+#       try_files 回落 index.php 启动全量 WP 打 DB（bot 探测缺失文件曾导致 15s 超时请求）。
+#   1c) feed 路径走 PHP：meathill.com 的 RSS 代理（/feed/、/tag/x/feed/）回源依赖，
+#       必须排在 @category/@tag/@author 重定向之前（handle 按出现顺序首个命中生效）。
+# ⚠️ 保留 /wp-json /wp-content 等，meathill.com 的 API/媒体依赖它们。
 # 安装：备份原 Caddyfile -> caddy validate -> 覆盖 -> systemctl restart caddy -> 验证 /wp-json 仍 200。
 # ⚠️ 本机 Caddyfile 含 `admin off`，`caddy reload`/`systemctl reload` 不可用（无 admin API），
 #    必须用 `systemctl restart caddy`（ExecStart 直接读本文件）。回滚：cp 备份 + restart。
@@ -17,11 +22,23 @@
 	root * /var/www/blog
 	encode gzip zstd
 
-	# 1) 保留：WP API / 后台 / 媒体 / cron / 验证目录（meathill.com 依赖，原样交给 PHP/文件服务）
-	@preserve path /wp-json* /wp-admin* /wp-login.php /wp-cron.php /xmlrpc.php /wp-content* /wp-includes* /.well-known*
+	# 1a) 纯静态：wp-content / wp-includes —— 零 PHP，缺失文件直接 404（TiDB 止血）
+	@assets path /wp-content/* /wp-includes/*
+	handle @assets {
+		file_server
+	}
+
+	# 1b) PHP 保留：WP API / 后台 / cron / 验证目录（meathill.com 依赖，原样交给 PHP/文件服务）
+	@preserve path /wp-json* /wp-admin* /wp-login.php /wp-cron.php /xmlrpc.php /.well-known*
 	handle @preserve {
 		php_fastcgi unix//run/php/php8.5-fpm.sock
 		file_server
+	}
+
+	# 1c) feed：/feed/、/tag/x/feed/、/comments/feed/ 等，交给 WP 输出 RSS
+	@feed path_regexp feed ^/(.+/)?feed/?$
+	handle @feed {
+		php_fastcgi unix//run/php/php8.5-fpm.sock
 	}
 
 	# 2) 旧 sitemap（Jetpack 生成）-> 410，让 Google 彻底放弃
