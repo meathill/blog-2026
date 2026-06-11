@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { getAuth } from '@/lib/auth';
 import { type BlogPostRecord, buildBlogSlug, normalizeBlogPostStatus, parseBlogStringListInput } from '@/lib/blog-post';
 import { syncBlogPostToWordPress } from '@/lib/blog-sync';
+import { purgeCloudflareCache } from '@/lib/cloudflare-purge';
 import { type BlogMetadataAiEnv, generateBlogMetadataSuggestion } from '@/lib/blog-ai';
 import { buildBlogContentSnapshot } from '@/lib/blog-content';
 import {
@@ -31,7 +32,7 @@ export interface BlogEditorMutationResult {
   id: string;
   slug: string;
   status: 'saved' | 'published';
-  warning?: 'cover-image-upload-failed';
+  warning?: 'cover-image-upload-failed' | 'cache-purge-failed';
 }
 
 export async function createBlogPost(formData: FormData): Promise<BlogEditorMutationResult> {
@@ -91,13 +92,22 @@ export async function publishBlogPost(formData: FormData): Promise<BlogEditorMut
     publishedAt: now,
   });
 
+  // wp-json 边缘缓存 TTL 24h,发文时效靠这里的 purge(失败不阻断发布,给 UI 提示)
+  const purgeResult = await purgeCloudflareCache(env);
+  if (!purgeResult.success) {
+    console.error('[publish] 边缘缓存清理失败:', purgeResult.warning);
+  }
+
   revalidateBlogAdminPaths(id);
+  revalidatePath('/');
+  revalidatePath('/posts');
+  revalidatePath('/feed');
 
   return {
     id,
     slug,
     status: 'published',
-    warning: syncResult.warning,
+    warning: syncResult.warning ?? (purgeResult.success ? undefined : 'cache-purge-failed'),
   };
 }
 

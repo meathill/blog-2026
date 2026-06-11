@@ -29,7 +29,7 @@ interface BlogEditorActionResult {
   id: string;
   slug: string;
   status: 'saved' | 'published';
-  warning?: 'cover-image-upload-failed';
+  warning?: 'cover-image-upload-failed' | 'cache-purge-failed';
 }
 
 interface BlogMetadataActionResult {
@@ -164,6 +164,13 @@ export default function BlogEditorForm({
     if (result.warning === 'cover-image-upload-failed') {
       toast.warning('封面图未同步到 WordPress', {
         description: '正文已经发布成功，可稍后重新发布一次补传特色图。',
+      });
+    }
+
+    if (result.warning === 'cache-purge-failed') {
+      toast.warning('边缘缓存未能清理', {
+        description:
+          '文章已发布,但 wp-json 边缘缓存(24h)没清掉,站上可能要明天才可见。可去 Cloudflare dashboard 手动 Purge Everything。',
       });
     }
 

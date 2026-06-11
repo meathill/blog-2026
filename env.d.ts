@@ -20,6 +20,8 @@ declare namespace Cloudflare {
     AI_MODEL: 'gpt-5-mini';
     CRON_SECRET: 'meathill-2026';
     WORDPRESS_API_URL: 'https://blog.meathill.com/wp-json/wp/v2';
+    CF_ZONE_ID: '4fcd4be90a03cfd52b317514268d9cf4';
+    CLOUDFLARE_PURGE_TOKEN: string;
     MCP_TOKEN: 'bb781a49939c6e49ef25032742e308dc887ac6b6d8d0fc43ecb1a79b4f6ad2cb';
     NODEJS_ENV: string;
     CF_ACCESS_CLIENT_ID: string;
