@@ -8,16 +8,19 @@ import { BLOG_HOST } from '../lib/api.ts';
 import { upsertZoneEntrypointRule } from '../lib/rulesets.ts';
 import type { RulesetRule } from '../lib/types.ts';
 
+// TTL 24h:wp-json 流量全部来自 Worker 渲染,长尾 URL(每篇 slug、每个 tag/分类页)
+// 重访间隔远大于短 TTL,600s 时几乎全 MISS;24h 让每个唯一 URL 每天最多回源一次。
+// 时效性靠发布时 purge(见 DEV_NOTE),不靠 TTL。
 export const CACHE_RULE: RulesetRule = {
   ref: 'blog2026_wpjson_edge_cache',
-  description: 'blog-2026: wp-json 读端点边缘缓存 600s(TiDB 降载)',
+  description: 'blog-2026: wp-json 读端点边缘缓存 24h(TiDB 降载,发布时 purge)',
   expression: `(http.host eq "${BLOG_HOST}" and starts_with(http.request.uri.path, "/wp-json/") and not any(http.request.headers.names[*] == "authorization"))`,
   action: 'set_cache_settings',
   action_parameters: {
     cache: true,
     edge_ttl: {
       mode: 'override_origin',
-      default: 600,
+      default: 86400,
       status_code_ttl: [{ status_code_range: { from: 400 }, value: -1 }],
     },
     browser_ttl: { mode: 'respect_origin' },

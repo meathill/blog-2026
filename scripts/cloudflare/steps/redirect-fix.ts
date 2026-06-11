@@ -9,8 +9,10 @@ import { saveSnapshot } from '../lib/snapshot.ts';
 import type { RulesetRule } from '../lib/types.ts';
 
 const PHASE = 'http_request_dynamic_redirect';
-const FEED_EXCEPTION =
-  ' and not (ends_with(http.request.uri.path, "/feed") or ends_with(http.request.uri.path, "/feed/"))';
+// 现状(2026-06-11 盘点):规则已有 `not ends_with(path, "/feed")`,但 Worker 的
+// feed 代理请求带斜杠的 /feed/,未被豁免 → RSS 500。这里按缺什么补什么。
+const FEED_NO_SLASH = ' and not ends_with(http.request.uri.path, "/feed")';
+const FEED_WITH_SLASH = ' and not ends_with(http.request.uri.path, "/feed/")';
 
 export async function applyRedirectFix(snapshotDir: string, dryRun: boolean, ruleId?: string): Promise<void> {
   const zoneId = await getZoneId();
@@ -41,13 +43,20 @@ export async function applyRedirectFix(snapshotDir: string, dryRun: boolean, rul
     process.exit(1);
   }
 
-  if (target.expression.includes('"/feed"')) {
-    console.log('✅ 规则已包含 feed 例外,无需改动');
+  // 注意区分两种写法:`"/feed")` 是无斜杠变体,`"/feed/")` 是带斜杠变体
+  const hasNoSlash = target.expression.includes('"/feed")');
+  const hasWithSlash = target.expression.includes('"/feed/")');
+  if (hasNoSlash && hasWithSlash) {
+    console.log('✅ 规则已包含 /feed 与 /feed/ 两种例外,无需改动');
     return;
   }
 
+  let addition = '';
+  if (!hasNoSlash) addition += FEED_NO_SLASH;
+  if (!hasWithSlash) addition += FEED_WITH_SLASH;
+
   const patched = sanitizeRule(target);
-  patched.expression = `(${target.expression})${FEED_EXCEPTION}`;
+  patched.expression = `(${target.expression})${addition}`;
   delete patched.id; // PATCH 的 rule id 在 URL 里,body 不需要
 
   if (dryRun) {

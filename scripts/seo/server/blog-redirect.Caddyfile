@@ -22,6 +22,15 @@
 	root * /var/www/blog
 	encode gzip zstd
 
+	# 访问日志:排查「什么在打 PHP/DB」的一手证据(JSON,自动滚动)
+	log {
+		output file /var/log/caddy/blog-access.log {
+			roll_size 50MiB
+			roll_keep 3
+		}
+		format json
+	}
+
 	# 1a) 纯静态：wp-content / wp-includes —— 零 PHP，缺失文件直接 404（TiDB 止血）
 	@assets path /wp-content/* /wp-includes/*
 	handle @assets {

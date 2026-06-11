@@ -36,7 +36,7 @@ export CLOUDFLARE_API_TOKEN=xxx
 # 0) 只读盘点(改任何东西之前必跑)
 node scripts/cloudflare/inventory.ts
 
-# 1) wp-json 边缘缓存 600s(先 --dry-run 看 diff)
+# 1) wp-json 边缘缓存 24h(先 --dry-run 看 diff)
 node scripts/cloudflare/apply.ts --step cache --dry-run
 node scripts/cloudflare/apply.ts --step cache
 
@@ -84,5 +84,6 @@ curl -so /dev/null -w '%{http_code}\n' https://meathill.com/
   将来要用 wp-admin 后台需先撤 waf 规则(后台依赖 plugins/includes 静态资源)。
 - **Access 红线**:destinations 不得覆盖 `/feed*`、`/wp-content/uploads*`、整个 host
  (feed 代理与图片转码都是匿名 fetch,脚本有断言)。
-- 发布时效:边缘 600s + ISR 300s ≈ 新文章最长 15 分钟可见。要立即可见可在 dashboard 清缓存
- (Caching → Purge → Custom Purge → prefix `blog.meathill.com/wp-json/`)。
+- 发布时效:边缘 24h + ISR 300s——发文后要及时可见**必须 purge**(free plan 无 prefix
+  purge,用 Purge Everything:dashboard → Caching → Purge)。purge-on-publish 自动化
+  待接入发文流程。

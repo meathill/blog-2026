@@ -11,15 +11,18 @@ export const BLOG_HOST = 'blog.meathill.com';
 const API_BASE = 'https://api.cloudflare.com/client/v4';
 
 export class CfApiError extends Error {
-  constructor(
-    public status: number,
-    public errors: CfError[],
-    public path: string,
-  ) {
+  status: number;
+  errors: CfError[];
+  path: string;
+
+  constructor(status: number, errors: CfError[], path: string) {
     super(
       `Cloudflare API ${status} @ ${path}: ${errors.map((e) => `[${e.code}] ${e.message}`).join('; ') || '(无错误详情)'}`,
     );
     this.name = 'CfApiError';
+    this.status = status;
+    this.errors = errors;
+    this.path = path;
   }
 }
 

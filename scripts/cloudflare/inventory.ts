@@ -59,13 +59,17 @@ async function main(): Promise<void> {
     summarizeRuleset(phase, entrypoint);
   }
 
-  // 2) 旧版 Page Rules
-  const pageRules = await cfGet<PageRule[]>(`/zones/${zoneId}/pagerules`);
-  saveSnapshot(dir, 'pagerules', pageRules);
-  console.log(`\n## Page Rules(legacy):${pageRules.length} 条`);
-  for (const pageRule of pageRules) {
-    const target = pageRule.targets[0]?.constraint.value ?? '?';
-    console.log(`  - [${pageRule.status}] ${target} → ${JSON.stringify(pageRule.actions)}`);
+  // 2) 旧版 Page Rules(account-owned token 不支持该接口,失败只警告)
+  try {
+    const pageRules = await cfGet<PageRule[]>(`/zones/${zoneId}/pagerules`);
+    saveSnapshot(dir, 'pagerules', pageRules);
+    console.log(`\n## Page Rules(legacy):${pageRules.length} 条`);
+    for (const pageRule of pageRules) {
+      const target = pageRule.targets[0]?.constraint.value ?? '?';
+      console.log(`  - [${pageRule.status}] ${target} → ${JSON.stringify(pageRule.actions)}`);
+    }
+  } catch (error) {
+    console.warn(`\n## Page Rules(legacy):跳过(${error instanceof Error ? error.message : String(error)})`);
   }
 
   // 3) 账号级 Bulk Redirects

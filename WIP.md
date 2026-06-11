@@ -4,19 +4,17 @@
 
 ## TiDB 降载:blog.meathill.com 边缘收口 + wp-json 缓存(2026-06-11)
 
-计划全文:`~/.claude/plans/tidb-spicy-flute.md`(已批准)。
-背景:TiDB 账单暴涨。真正打 DB 的口子:① wp-json 零边缘缓存(WP 发 no-store);② wp-content 缺失文件回落 index.php 启动全量 WP(实测 15s 超时)。
+计划全文:`~/.claude/plans/tidb-spicy-flute.md`。约定已并入 DEV_NOTE「TiDB 降载」节。
 
-- [ ] 1. 源站 Caddy 修复:@preserve 拆三块(assets 纯静态 / PHP 保留 / feed),部署 + 验证
-- [ ] 2. scripts/cloudflare/ 工具脚本(inventory / apply / rollback,幂等,快照)
-- [ ] 3. inventory 盘点(**需用户创建 CLOUDFLARE_API_TOKEN**,权限清单见 scripts/cloudflare/README.md)
-- [ ] 4. Cache Rule:wp-json 边缘缓存 600s(override_origin,排除 authorization)
-- [ ] 5. WAF Rule:block 非 uploads 的 /wp-content/*
-- [ ] 6. 边缘 feed 例外 → 修复 meathill.com/feed(当前 500,自 2026-06-05 起,blog/feed 被边缘 301 所致)
-- [ ] 7. Access 全量收口 /wp-json(决策树 Case A-D,预检后执行,最后做)
-- [ ] 8. 收尾:Smart Tiered Cache、DEV_NOTE、memory、清理本文件
-
-发现(不在本次范围):wp-cron.php 被边缘 301 → WP loopback cron 失效(定时发布等),DEV_NOTE 提醒。
+- [x] 1-8 全部完成:Caddy 静态化止血、scripts/cloudflare/(inventory/apply/rollback)、
+  wp-json 边缘缓存(已提至 24h)、wp-content WAF、feed 修复(含 OpenNext edge runtime 根因)、
+  Access 全量收口(匿名 401)、Smart Tiered Cache、文档/memory
+- [ ] **purge-on-publish**:发文流程自动 Purge Everything + revalidatePath(需带
+  Zone.Cache Purge 权限的 token 进 Worker secret)。落地前发文后想立即可见需手动
+  dashboard → Caching → Purge Everything
+- [ ] 观察 24-48h:TiDB RU 应随长尾入缓存持续走低(目标 <10 RU/s 基线);源站
+  访问日志 `/var/log/caddy/blog-access.log` 可复查回源构成
+- [ ] 可选:恢复 wp-cron(服务器 system cron 打 127.0.0.1:8080/wp-cron.php),定时发布依赖它
 
 ## 遗留:Issue #4 SEO(代码与服务器侧已完成)
 

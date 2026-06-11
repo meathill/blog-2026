@@ -121,6 +121,11 @@ return new Response(transformed.image(), {
 
 - 从 `WORDPRESS_API_URL` 推导 origin（取 `new URL(apiUrl).origin`）
 - 中间件将 `/tag/xxx/feed` 等路径 rewrite 为 `/feed/tag/xxx`
+- 回源 URL 用**无尾斜杠**形态（`/feed`、`/tag/x/feed`）：带斜杠会触发 WP canonical 301
+  （且 origin 不知道自己在 https 后面，Location 是 `http://`），Worker fetch 跟随不可靠
+- ⚠️ **route 不能 `export const runtime = 'edge'`**：OpenNext Cloudflare 只打包 Node runtime
+  路由，edge runtime 的 route 不进产物，线上变成裸 500（2026-06-11 踩坑，feed 自迁移
+  OpenNext 起就因此是坏的）
 
 ### Middleware 是 async
 
@@ -141,4 +146,45 @@ return new Response(transformed.image(), {
 - **内容文案更新链路**：历史文章在 WordPress，用 `scripts/seo/`（wp-cli `eval-file`，幂等、dry-run、不改 slug）在服务器更新 title/excerpt + 插入 FAQ/延伸阅读。meta description 来自 `post.excerpt`（`buildPostDescription`）。
 - ⚠️ **`blog.meathill.com` 双角色**：既是历史公开站，又是 meathill.com 的 REST API 后端 + 媒体源。做旧站收敛（301/410/noindex，见 `scripts/seo/server/` 与 `docs/seo-gsc-cleanup.md`）时必须保留 `/wp-json/`、`/wp-admin/`、`/wp-content/`。
 - **GSC 清理**：GSC MCP 只能 list/submit、不能删 sitemap；历史 sitemap 退役按 `docs/seo-gsc-cleanup.md` 手动执行。
+
+## TiDB 降载与 blog.meathill.com 边缘收口（2026-06-11）
+
+WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单见 `scripts/cloudflare/README.md`。
+
+**当时真正打 TiDB 的两个口子（已堵）：**
+1. wp-json 零边缘缓存（WP 对 REST 发 `no-store`）→ Cache Rule `blog2026_wpjson_edge_cache`
+   override_origin **24h**（override 完全无视 origin cache-control，官方文档已核实），
+   排除带 `authorization` 头的请求，4xx/5xx 不缓存。
+   TTL 为什么这么长：origin 日志实测（2026-06-11，12 分钟窗口 67 次回源 66 个唯一 URL）
+   证明回源全是 Worker 渲染的**长尾唯一 URL**（每篇 slug、每个 tag/分类页、sitemap 分页），
+   重复回源≈0，短 TTL 无意义；24h 让每个唯一 URL 每天最多打一次 TiDB。
+2. wp-content 缺失文件经 Caddy `php_fastcgi` try_files 回落 index.php → 全量 WP 启动打 DB
+   （bot 探测一次 = 15s 超时）→ Caddy 把 `/wp-content/*`、`/wp-includes/*` 改纯 `file_server`，
+   缺失文件 4ms 静态 404。
+
+**边缘规则现状（zone meathill.com）：**
+- Single Redirect `blog -> @`：blog 全路径 301 到 meathill.com（保 SEO），例外：`/wp-json/`、
+  `/wp-content/`、`/feed` 与 `/feed/` 结尾（RSS 代理依赖）。
+- WAF `blog2026_wpcontent_lockdown`：block 非 uploads 的 `/wp-content/*`（封插件/主题探测）。
+  ⚠️ 将来要用 wp-admin 后台需先撤此规则。
+- **wp-json 全量在 Cloudflare Access 后面**（app "blog api"，destinations `/wp-json` + `/wp-json/*`，
+  service token policy "Allow worker"，`service_auth_401_redirect: true`）。只有带 service token 的
+  Worker 能调用，匿名 401。Access 在 Cache 之前执行，带 token 的请求照常命中边缘缓存。
+  ⚠️ Access destinations 不得覆盖 `/feed*`、`/wp-content/uploads*`（都是匿名 fetch）。
+- Smart Tiered Cache 已开。
+
+**坑与约定：**
+- Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
+  （脚本已封装，规则 ref：`blog2026_*`）。
+- Page Rules 接口不支持 account-owned token（盘点脚本已做非致命处理）。
+- wrangler 走系统代理会连不上 Cloudflare API，跑 wrangler/部署前 `env -u HTTPS_PROXY ...` 清代理；
+  多账号 OAuth 需 `CLOUDFLARE_ACCOUNT_ID=fdc63ee...` 跳过交互选择。
+- **wp-cron.php 被边缘 301，WP loopback cron 已失效**（定时发布等）。如需恢复：服务器
+  system cron 定时 `curl -H "Host: blog.meathill.com" http://127.0.0.1:8080/wp-cron.php`。
+- 发布时效：边缘 **24h** + ISR 300s——发文后**必须 purge** 才能及时可见（free plan 无
+  prefix purge，用 Purge Everything：dashboard → Caching → Purge，或 API `purge_cache`
+  `{"purge_everything":true}`）。purge-on-publish 自动化待接入发文流程（需带
+  Zone.Cache Purge 权限的 token 作为 Worker secret）。
+- Worker 每次 deploy 会换 build id → ISR 缓存整体失效 → 部署后有一波回源/RU 尖峰;
+  wp-json 边缘缓存(24h)能吸收大部分,属预期现象。
 
