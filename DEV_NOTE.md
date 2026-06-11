@@ -154,7 +154,8 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 **当时真正打 TiDB 的两个口子（已堵）：**
 1. wp-json 零边缘缓存（WP 对 REST 发 `no-store`）→ Cache Rule `blog2026_wpjson_edge_cache`
    override_origin **24h**（override 完全无视 origin cache-control，官方文档已核实），
-   排除带 `authorization` 头的请求，4xx/5xx 不缓存。
+   排除带 `authorization` 头的请求；404 缓存 5 分钟，401/403/5xx 绝不缓存
+   （Access 拒绝页缓存住会把合法 Worker 一起挡掉）。
    TTL 为什么这么长：origin 日志实测（2026-06-11，12 分钟窗口 67 次回源 66 个唯一 URL）
    证明回源全是 Worker 渲染的**长尾唯一 URL**（每篇 slug、每个 tag/分类页、sitemap 分页），
    重复回源≈0，短 TTL 无意义；24h 让每个唯一 URL 每天最多打一次 TiDB。
@@ -167,6 +168,13 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   `/wp-content/`、`/feed` 与 `/feed/` 结尾（RSS 代理依赖）。
 - WAF `blog2026_wpcontent_lockdown`：block 非 uploads 的 `/wp-content/*`（封插件/主题探测）。
   ⚠️ 将来要用 wp-admin 后台需先撤此规则。
+- WAF `blog2026_mainsite_scanner_block`：meathill.com 上备份/配置文件后缀
+  （php/sql/bak/env/sh/gz…）、`/.git`、`.env`、`/wp-` 前缀 → 403。
+  背景：漏洞扫描器 45 分钟扫了 1214 个唯一垃圾路径，每个被 catch-all 路由放大成
+  2~3 个 WP 查询且 URL 唯一、缓存无法吸收（= RU 尖刺的来源）。WAF 在 Worker
+  **之前**执行，403 = 零渲染零 DB。⚠️ 后缀集合不能加 xml/txt/js/css（主站合法后缀）。
+- Cache Rule `blog2026_feed_edge_cache`：blog 的 `*/feed` 边缘缓存 **30d**（RSS 阅读器
+  仍订着 blog 老地址直连，实测 4h 138 次全量 WP 渲染）。时效靠 purge-on-publish。
 - **wp-json 全量在 Cloudflare Access 后面**（app "blog api"，destinations `/wp-json` + `/wp-json/*`，
   service token policy "Allow worker"，`service_auth_401_redirect: true`）。只有带 service token 的
   Worker 能调用，匿名 401。Access 在 Cache 之前执行，带 token 的请求照常命中边缘缓存。
@@ -181,10 +189,9 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   多账号 OAuth 需 `CLOUDFLARE_ACCOUNT_ID=fdc63ee...` 跳过交互选择。
 - **wp-cron.php 被边缘 301，WP loopback cron 已失效**（定时发布等）。如需恢复：服务器
   system cron 定时 `curl -H "Host: blog.meathill.com" http://127.0.0.1:8080/wp-cron.php`。
-- 发布时效：边缘 **24h** + ISR 300s——发文后**必须 purge** 才能及时可见（free plan 无
-  prefix purge，用 Purge Everything：dashboard → Caching → Purge，或 API `purge_cache`
-  `{"purge_everything":true}`）。purge-on-publish 自动化待接入发文流程（需带
-  Zone.Cache Purge 权限的 token 作为 Worker secret）。
+- 发布时效：边缘 wp-json 24h / feed 30d + ISR 300s——时效由 **purge-on-publish** 保证
+  （publishBlogPost 成功后自动 `purge_everything`，secret `CLOUDFLARE_PURGE_TOKEN`，
+  失败不阻断发布、toast 提醒手动 Purge Everything）。
 - Worker 每次 deploy 会换 build id → ISR 缓存整体失效 → 部署后有一波回源/RU 尖峰;
   wp-json 边缘缓存(24h)能吸收大部分,属预期现象。
 
