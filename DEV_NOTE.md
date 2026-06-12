@@ -188,6 +188,11 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 - ⚠️ CLI(runner.php)下 APCu 禁用,drop-in 自动退化;**CLI 改库后要
   `systemctl restart php8.5-fpm`** 使 FPM 侧缓存失效。
 - 回滚:删 `wp-content/object-cache.php` + 重启 FPM。
+- **持久连接(2026-06-12)**:`DB_HOST` 改为 `p:gateway01...`(mysqli 持久连接,
+  FPM 每 worker 复用)。效果:wp-json 时延 1.3s → 0.3s(省掉每请求对 TiDB 网关的
+  TLS+会话初始化;serverless 对新连接的会话开销按 RU 计费,是 SQL 之外 RU 的主要
+  嫌疑)。备份 `wp-config.php.bak-pconn`;回滚 = 还原 + 重启 FPM。
+  ⚠️ 排查时实测:服务器→TiDB RTT 仅 ~13ms(同在美西),单查询很便宜,贵在连接。
 
 **坑与约定：**
 - Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
