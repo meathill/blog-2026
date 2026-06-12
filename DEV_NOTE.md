@@ -181,6 +181,14 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   ⚠️ Access destinations 不得覆盖 `/feed*`、`/wp-content/uploads*`（都是匿名 fetch）。
 - Smart Tiered Cache 已开。
 
+**WP 对象缓存(2026-06-12,APCu drop-in):**
+- TiDB SQL 统计定位单请求 ~100+ RU:autoload 全量读(30 RU/次,每请求一次)+
+  逐条 options/terms/postmeta 重复读 → 装 `php8.5-apcu` + `scripts/wp/object-cache.php`
+  部署到 `wp-content/object-cache.php`,重复读走本机共享内存。
+- ⚠️ CLI(runner.php)下 APCu 禁用,drop-in 自动退化;**CLI 改库后要
+  `systemctl restart php8.5-fpm`** 使 FPM 侧缓存失效。
+- 回滚:删 `wp-content/object-cache.php` + 重启 FPM。
+
 **坑与约定：**
 - Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
   （脚本已封装，规则 ref：`blog2026_*`）。
