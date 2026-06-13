@@ -14,12 +14,23 @@
   token(仅 Zone.Cache Purge)已入 Worker secret `CLOUDFLARE_PURGE_TOKEN`
 - [x] 第二轮(2026-06-12):APCu 对象缓存(SQL 92K→1.8K RU/30min)+ 持久连接
   (wp-json 1.3s→0.3s)+ 扫描器 WAF + feed 30d 缓存。RU 基线 110-120 → ~20
-- [x] **静默实验判决**(2026-06-12 16:43:40–16:54:40 UTC 停 FPM):窗口内零连接
-  零查询,RU 仍 ~20 纹丝不动 ⇒ **地板 100% 是 TiDB 平台后台开销**(官方 FAQ 承认的
-  schema 同步/权限刷新/统计收集等),用户侧真实负载仅 1-3 RU/s,无可再优化
-- [ ] 可选:开 PingCAP support ticket(证据:2026-06-12 16:43-16:55 UTC 零连接零查询
-  窗口 RU 恒 20;集群 id 1379661944643764243)问后台 RU 能否降;或长期考虑把 383MB
-  的库迁回 VPS 本地 MariaDB,彻底告别 RU 计费
+- [x] ~~静默实验判决:20 RU/s 是平台地板~~ **结论被推翻(2026-06-13)**:跨集群对照
+  显示别的集群能到 0,说明 20 RU/s 是 `blog` 集群特有,不是平台地板
+- [x] **TiFlash 副本已删但不是地板成因(2026-06-13,负结果)**:
+  `sample_data.github_events`(TiDB 演示数据)曾挂 TiFlash 列存副本,03:16:06 UTC 执行
+  `ALTER TABLE ... SET TIFLASH REPLICA 0` 删除,**Columnar Storage 已归 0**(确认清理)。
+  但 03:16 前后 RU 无任何台阶式下降,删后 17 分钟(含真实流量 QPS 0-4)RU 仍 ~20-25
+  ⇒ **TiFlash 不是 ~20 RU/s 地板的成因**。`blog` 库真实数据仅 7.6MB。
+- [x] **DROP sample_data 整库(03:39:57 UTC)→ 仍无效**:删后 RU 基线 ~22-26,
+  与删前一致,无台阶下降 ⇒ **演示数据也不是地板成因**。
+- [x] **地板成因排查穷尽(三假设全证伪)**:平台地板✗(别的集群为0)、TiFlash✗
+  (删后列存归0、RU不变)、sample_data✗(整库删后RU不变)。已排除:外部连接(静默测试)、
+  CLI cron(无)、TiFlash 副本、演示库。**结论:~20 RU/s 是该集群 TiDB 内部后台开销,
+  无法从我方(删数据/改配置)消除**。剩余只两条路:
+  (b) 开 PingCAP 工单 —— 证据现已铁证:删光所有非应用数据 + 唯一 TiFlash 副本后地板
+      仍 20、零连接静默窗口仍 20、别的集群为 0。要么解释要么 credit。
+  (c) 7.6MB 的 blog 库迁回 VPS 本地 MariaDB —— 永久终结 RU 计费,DB 极小迁移成本低,
+      代价是自己管备份。**这是唯一能从我方彻底解决的办法**。
 - [ ] 边缘缓存未解之谜:同 URL 曾 10 分钟回源 30 次(疑似 Access 给响应加
   Set-Cookie 阻止缓存存储),需 Worker 的 CF_ACCESS 凭证做两发 curl 实测 cf-cache-status
 - [ ] 观察:下月 run-rate 预计 55-65M RU(超 50M 免费额度 $1-3);爆炸前是 250M+
