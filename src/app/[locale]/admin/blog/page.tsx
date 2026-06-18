@@ -1,7 +1,8 @@
-import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, PenSquareIcon } from 'lucide-react';
-import { listBlogPosts } from '@/actions/blog';
+import Link from 'next/link';
+import { deleteBlogPost, listBlogPosts } from '@/actions/blog';
 import { BlogStatusBadge, BlogWordPressSyncBadge } from '@/components/admin/BlogStatusBadge';
+import DeleteBlogPostButton from '@/components/admin/DeleteBlogPostButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +53,10 @@ function buildPaginationHref(locale: string, page: number): string {
 
 function buildPublicPreviewHref(locale: string, slug: string): string {
   return `${getLocalePrefix(locale)}/posts/${slug}`;
+}
+
+function buildBlogEditHref(locale: string, id: string): string {
+  return `${getLocalePrefix(locale)}/admin/blog/${id}`;
 }
 
 function formatDateTime(date: Date | null, locale: string): string {
@@ -119,7 +124,12 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
                 <TableRow key={post.id}>
                   <TableCell>
                     <div className="space-y-1">
-                      <div className="font-medium text-foreground">{post.title}</div>
+                      <Link
+                        href={buildBlogEditHref(locale, post.id)}
+                        className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      >
+                        {post.title}
+                      </Link>
                       <div className="flex flex-wrap items-center gap-2">
                         <BlogStatusBadge status={post.status} />
                         <BlogWordPressSyncBadge
@@ -175,13 +185,11 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
                           <ExternalLinkIcon className="size-4" />
                         </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        render={<Link href={`${getLocalePrefix(locale)}/admin/blog/${post.id}`} />}
-                      >
-                        编辑
-                      </Button>
+                      <DeleteBlogPostButton
+                        action={deleteBlogPost.bind(null, post.id)}
+                        hasWordPressSync={post.wpSyncedAt !== null}
+                        postTitle={post.title}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

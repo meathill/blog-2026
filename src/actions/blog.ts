@@ -1,22 +1,23 @@
 'use server';
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { getAuth } from '@/lib/auth';
-import { type BlogPostRecord, buildBlogSlug, normalizeBlogPostStatus, parseBlogStringListInput } from '@/lib/blog-post';
-import { syncBlogPostToWordPress } from '@/lib/blog-sync';
-import { purgeCloudflareCache } from '@/lib/cloudflare-purge';
 import { type BlogMetadataAiEnv, generateBlogMetadataSuggestion } from '@/lib/blog-ai';
 import { buildBlogContentSnapshot } from '@/lib/blog-content';
+import { type BlogPostRecord, buildBlogSlug, normalizeBlogPostStatus, parseBlogStringListInput } from '@/lib/blog-post';
 import {
-  type SaveBlogPostInput,
   createBlogPostRecord,
+  deleteBlogPostRecord,
   getBlogPostRecord,
   listBlogPostRecords,
   markBlogPostPublished,
+  type SaveBlogPostInput,
   updateBlogPostRecord,
 } from '@/lib/blog-storage';
+import { syncBlogPostToWordPress } from '@/lib/blog-sync';
+import { purgeCloudflareCache } from '@/lib/cloudflare-purge';
 
 export async function listBlogPosts(options?: { page?: number; pageSize?: number }) {
   await checkAuth();
@@ -64,6 +65,13 @@ export async function updateBlogPost(formData: FormData): Promise<BlogEditorMuta
     slug: payload.slug,
     status: 'saved',
   };
+}
+
+export async function deleteBlogPost(id: string): Promise<void> {
+  await checkAuth();
+
+  await deleteBlogPostRecord(id);
+  revalidateBlogAdminPaths(id);
 }
 
 export async function publishBlogPost(formData: FormData): Promise<BlogEditorMutationResult> {

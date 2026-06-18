@@ -1,6 +1,5 @@
 import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
 import { blogPosts } from '@/db/schema';
-import { getDb } from '@/lib/db';
 import {
   type BlogPostListItem,
   type BlogPostListResult,
@@ -10,6 +9,7 @@ import {
   serializeBlogStringList,
   shouldSyncBlogPostToWordPress,
 } from '@/lib/blog-post';
+import { getDb } from '@/lib/db';
 
 const DEFAULT_PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 50;
@@ -97,6 +97,12 @@ export async function markBlogPostPublished(id: string, state: BlogPostPublishSt
       updatedAt: state.wpSyncedAt,
     })
     .where(eq(blogPosts.id, id));
+}
+
+export async function deleteBlogPostRecord(id: string): Promise<void> {
+  const db = await getDb();
+
+  await db.delete(blogPosts).where(eq(blogPosts.id, id));
 }
 
 export async function getBlogPostRecord(id: string): Promise<BlogPostRecord | null> {
