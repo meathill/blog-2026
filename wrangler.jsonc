@@ -70,7 +70,7 @@
     "NEXT_PUBLIC_GOOGLE_ADSENSE_ID": "ca-pub-9946806099979342",
     "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID": "G-1S0T1HF97B",
     "NEXT_PUBLIC_SEARCH_API_URL": "https://mui-search.meathill.com",
-    "AI_MODEL": "gpt-5-mini",
+    "AI_MODEL": "gpt-5.4-mini",
     "BETTER_AUTH_BASE_URL": "https://meathill.com",
     "CRON_SECRET": "meathill-2026",
     "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2",

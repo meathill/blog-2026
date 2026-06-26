@@ -66,7 +66,10 @@ describe('ThirdPartyScripts', () => {
   it('应正确判断 admin 与首页路径', () => {
     expect(shouldSkipThirdPartyScripts('/admin')).toBe(true);
     expect(shouldSkipThirdPartyScripts('/en/admin/navigation')).toBe(true);
+    expect(shouldSkipThirdPartyScripts('/login')).toBe(true);
+    expect(shouldSkipThirdPartyScripts('/en/login')).toBe(true);
     expect(shouldSkipThirdPartyScripts('/en/posts/admin-guide')).toBe(false);
+    expect(shouldSkipThirdPartyScripts('/en/posts/login-flow')).toBe(false);
     expect(isHomePagePath('/')).toBe(true);
     expect(isHomePagePath('/en')).toBe(true);
     expect(isHomePagePath('/en/posts/css/example')).toBe(false);

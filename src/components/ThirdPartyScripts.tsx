@@ -10,7 +10,7 @@ const HOME_ADSENSE_DELAY_MS = 12000;
 const USER_INTENT_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const;
 
 export function shouldSkipThirdPartyScripts(pathname: string): boolean {
-  return /(^|\/)admin(\/|$)/.test(pathname);
+  return /(^|\/)(admin|login)(\/|$)/.test(pathname);
 }
 
 export function isHomePagePath(pathname: string): boolean {
