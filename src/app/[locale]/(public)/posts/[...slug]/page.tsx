@@ -66,7 +66,13 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   const description = buildPostDescription(post);
 
   const ogImageUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/og/post?slug=${cleanSlug}`;
-  const images = [ogImageUrl];
+  const ogImage = {
+    url: ogImageUrl,
+    width: 1200,
+    height: 630,
+    alt: title,
+    type: 'image/jpeg',
+  };
 
   // Determine primary category for canonical URL
   let primaryCategorySlug = 'uncategorized';
@@ -96,16 +102,18 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     openGraph: {
       title,
       description,
+      url: canonicalUrl,
+      siteName: '山维空间',
       type: 'article',
       publishedTime: post.date,
       modifiedTime: post.modified,
-      images,
+      images: [ogImage],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images,
+      images: [{ url: ogImageUrl, alt: title }],
     },
   };
 }
