@@ -6,7 +6,6 @@ import Script from 'next/script';
 
 const DEFAULT_DELAY_MS = 4000;
 const HOME_ANALYTICS_DELAY_MS = 6000;
-const HOME_ADSENSE_DELAY_MS = 12000;
 const USER_INTENT_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const;
 
 export function shouldSkipThirdPartyScripts(pathname: string): boolean {
@@ -15,6 +14,17 @@ export function shouldSkipThirdPartyScripts(pathname: string): boolean {
 
 export function isHomePagePath(pathname: string): boolean {
   return pathname === '/' || pathname === '/en';
+}
+
+/**
+ * 是否在该页面投放广告（Adsense）。
+ * 仅博客内容页投放：文章、分类、标签、站内搜索。
+ * 公司站页面（首页 / 方案 / 产品 / 关于 等）不投放。
+ * 工具类广告在独立站 tools.meathill.com，不在本仓库。
+ */
+export function shouldShowAds(pathname: string): boolean {
+  const path = pathname.replace(/^\/(en|zh)(?=\/|$)/, '') || '/';
+  return /^\/(posts|category|tag|search)(\/|$)/.test(path);
 }
 
 function getAdsenseScriptSrc(): string | null {
@@ -29,12 +39,10 @@ function getAdsenseScriptSrc(): string | null {
 export default function ThirdPartyScripts() {
   const pathname = usePathname();
   const [isAnalyticsReady, setIsAnalyticsReady] = useState(false);
-  const [isAdsenseReady, setIsAdsenseReady] = useState(false);
-  const [hasScrolledPastHero, setHasScrolledPastHero] = useState(false);
-  const [hasHomeAdsenseDelayElapsed, setHasHomeAdsenseDelayElapsed] = useState(false);
   const adsenseScriptSrc = getAdsenseScriptSrc();
   const shouldSkip = shouldSkipThirdPartyScripts(pathname);
   const isHomePage = isHomePagePath(pathname);
+  const adsEnabled = shouldShowAds(pathname);
 
   useEffect(() => {
     if (shouldSkip) {
@@ -86,96 +94,12 @@ export default function ThirdPartyScripts() {
     };
   }, [isHomePage, shouldSkip]);
 
-  useEffect(() => {
-    if (shouldSkip || !isHomePage) {
-      setHasScrolledPastHero(false);
-      return;
-    }
-
-    if (hasScrolledPastHero) {
-      return;
-    }
-
-    function removeScrollListener() {
-      window.removeEventListener('scroll', onScrollPastHero);
-    }
-
-    function onScrollPastHero() {
-      if (window.scrollY < Math.max(320, window.innerHeight * 0.65)) {
-        return;
-      }
-
-      setHasScrolledPastHero(true);
-      removeScrollListener();
-    }
-
-    window.addEventListener('scroll', onScrollPastHero, { passive: true });
-    onScrollPastHero();
-
-    return () => {
-      removeScrollListener();
-    };
-  }, [hasScrolledPastHero, isHomePage, shouldSkip]);
-
-  useEffect(() => {
-    if (shouldSkip) {
-      setIsAdsenseReady(false);
-      return;
-    }
-
-    if (!adsenseScriptSrc) {
-      setIsAdsenseReady(false);
-      return;
-    }
-
-    if (isHomePage) {
-      return;
-    }
-
-    setIsAdsenseReady(isAnalyticsReady);
-  }, [adsenseScriptSrc, isAnalyticsReady, isHomePage, shouldSkip]);
-
-  useEffect(() => {
-    if (shouldSkip || !isHomePage) {
-      setHasHomeAdsenseDelayElapsed(false);
-      return;
-    }
-
-    const timeoutId = setTimeout(() => {
-      setHasHomeAdsenseDelayElapsed(true);
-    }, HOME_ADSENSE_DELAY_MS);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [isHomePage, shouldSkip]);
-
-  useEffect(() => {
-    if (shouldSkip) {
-      setIsAdsenseReady(false);
-      return;
-    }
-
-    if (!adsenseScriptSrc) {
-      setIsAdsenseReady(false);
-      return;
-    }
-
-    if (!isHomePage) {
-      return;
-    }
-
-    if (!isAnalyticsReady) {
-      setIsAdsenseReady(false);
-      return;
-    }
-
-    setIsAdsenseReady(hasScrolledPastHero || hasHomeAdsenseDelayElapsed);
-  }, [adsenseScriptSrc, hasHomeAdsenseDelayElapsed, hasScrolledPastHero, isAnalyticsReady, isHomePage, shouldSkip]);
-
   if (shouldSkip) {
     return null;
   }
+
+  // 广告仅在博客内容页、且分析脚本就绪后加载
+  const isAdsenseReady = adsEnabled && isAnalyticsReady && Boolean(adsenseScriptSrc);
 
   return (
     <>
