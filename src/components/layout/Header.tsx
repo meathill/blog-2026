@@ -13,7 +13,7 @@ export default async function Header({ navItems }: HeaderProps) {
   const t = await getTranslations('Header');
   const brand = (
     <Link href="/" className="text-xl font-bold text-gradient hover:opacity-80 transition-opacity">
-      山维空间
+      Meathill LLC
     </Link>
   );
   const searchButton = (

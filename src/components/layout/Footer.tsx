@@ -24,7 +24,7 @@ export default async function Footer({ navItems }: FooterProps) {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="space-y-4">
             <Link href="/" className="text-xl font-bold text-gradient inline-block">
-              山维空间
+              Meathill LLC
             </Link>
             <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{t('brand_desc')}</p>
             <div className="flex items-center gap-3">

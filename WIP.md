@@ -2,6 +2,34 @@
 
 任务完成后，请清理本项目，将重要约定并入 `DEV_NOTE.md` 或 `README.md`。
 
+## 转向 Meathill LLC 公司站（2026-06-28）
+
+计划全文：`~/.claude/plans/meathill-llc-1-compressed-lagoon.md`。
+目标首页结构：`Hero → ValueStrip → Products → Solutions → Tools → RecentPosts(精简) → ContactCTA`
+（TagCloud 从首页移除，迁往 /posts）。
+
+- [x] A. Hero 重写为公司定位 + Home i18n 命名空间
+- [x] C. ValueStrip 定位角（一人公司/远程/19年/按需报价）
+- [x] B. Solutions：lib/solutions.ts + 首页区 + /solutions 列表与详情（镜像 skills）
+- [x] D. Products：apps 表加 featured/sortOrder + 迁移(0006)；featured 查询取封面；AppForm/action 开关；
+      ProductCard 富卡；首页 Products 区；/app 全集 + 标签筛选；scripts/seed-products.ts
+- [x] E. Tools：lib/tools.ts + Tools.tsx（链出 tools.meathill.com）
+- [x] F. 博客降权：page.tsx 重组移除 TagCloud；RecentPosts 精简到 6 条；TagCloud 迁 /posts
+- [x] G. ContactCTA：聊聊你的项目 + mailto + GitHub，Hero CTA 锚点 #contact
+- [x] I. About：刷新 timeline/社交/技能栈 + 公司语境 + metadata；个人 prose 草稿见 docs/about-content-draft.md
+- [x] H. 全站品牌：layout/posts/Footer/messages/jsonld 改 Meathill LLC；导航默认加 Solutions/Tools；
+      format ✅ / tsc(src) 0 错 ✅ / next build ✅
+
+### ⏳ 待用户执行（代码已就绪）
+- [ ] 应用迁移：`pnpm db:migrate:local` 和 `pnpm db:migrate:prod`（加 apps.featured/sort_order 列）
+- [ ] 补产品：`pnpm seed:products`（本地）/ `pnpm seed:products --remote`（线上）→ 建 dyqr/muirouter/muicv
+      （已发布 + Featured + 中英文案，幂等可重跑；已存在的产品不覆盖文案）
+- [ ] 到 `/admin/apps/[id]` 给三个产品上传封面（type=cover，封面 prompt 见 docs/product-cover-prompts.md）；
+      按需勾选 baifo/mizu 等为 Featured
+- [ ] 把 docs/about-content-draft.md 的 zh/en 文案粘到 `/admin/about`
+- [ ] 核对 about/page.tsx timeline 新增两条的**年份**（有 TODO 注释）
+- [ ] 若 Header 不显示「方案/工具」：DB 已存导航配置会覆盖默认，去 `/admin/navigation` 补两项
+
 ## TiDB 降载:blog.meathill.com 边缘收口 + wp-json 缓存(2026-06-11)
 
 计划全文:`~/.claude/plans/tidb-spicy-flute.md`。约定已并入 DEV_NOTE「TiDB 降载」节。

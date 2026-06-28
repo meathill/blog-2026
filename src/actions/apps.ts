@@ -34,6 +34,8 @@ export async function createApp(formData: FormData) {
   const icon = formData.get('icon') as string;
   const status = formData.get('status') as AppStatus;
   const slug = (formData.get('slug') as string) || undefined;
+  const featured = formData.get('featured') === 'on';
+  const sortOrder = Number(formData.get('sortOrder')) || 0;
   const tagIds = (formData.get('tagIds') as string)?.split(',').filter(Boolean) || [];
 
   const { slug: createdSlug } = await createAppCore({
@@ -44,6 +46,8 @@ export async function createApp(formData: FormData) {
     repoUrl,
     icon,
     status: status || 'draft',
+    featured,
+    sortOrder,
     slug,
     tagIds,
   });
@@ -64,6 +68,8 @@ export async function updateApp(id: string, formData: FormData) {
     const icon = formData.get('icon') as string;
     const status = formData.get('status') as AppStatus;
     const slug = formData.get('slug') as string;
+    const featured = formData.get('featured') === 'on';
+    const sortOrder = Number(formData.get('sortOrder')) || 0;
     const tagIds = (formData.get('tagIds') as string)?.split(',').filter(Boolean) || [];
 
     const { slug: nextSlug, prevSlug } = await updateAppCore(id, {
@@ -74,6 +80,8 @@ export async function updateApp(id: string, formData: FormData) {
       repoUrl,
       icon,
       status,
+      featured,
+      sortOrder,
       slug,
     });
 

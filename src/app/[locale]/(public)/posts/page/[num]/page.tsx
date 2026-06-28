@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `文章归档 - 第 ${pageNum} 页`,
-    description: `山维空间技术文章归档 - 第 ${pageNum} 页`,
+    description: `Meathill LLC技术文章归档 - 第 ${pageNum} 页`,
     robots: { index: false, follow: true },
     alternates: {
       canonical: canonicalUrl,
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     openGraph: {
       title: `文章归档 - 第 ${pageNum} 页`,
-      description: `山维空间技术文章归档 - 第 ${pageNum} 页`,
+      description: `Meathill LLC技术文章归档 - 第 ${pageNum} 页`,
       url: canonicalUrl,
     },
   };

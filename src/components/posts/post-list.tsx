@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { PostSummaryItem } from '@/components/posts/post-summary-item';
@@ -10,6 +11,7 @@ export function PostList({
   currentPage,
   categories,
   basePath = '/posts',
+  topSlot,
 }: {
   posts: any[];
   total: number;
@@ -17,6 +19,7 @@ export function PostList({
   currentPage: number;
   categories: any[];
   basePath?: string;
+  topSlot?: ReactNode;
 }) {
   // 按年份分组
   const postsByYear: Record<string, typeof posts> = {};
@@ -46,6 +49,8 @@ export function PostList({
             {totalPages > 1 && `，当前第 ${currentPage}/${totalPages} 页`}
           </p>
         </header>
+
+        {topSlot}
 
         {/* Timeline */}
         <div className="space-y-12">

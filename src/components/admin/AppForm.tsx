@@ -19,6 +19,8 @@ interface AppFormProps {
     repoUrl: string | null;
     icon: string | null;
     status: 'published' | 'draft' | 'archived';
+    featured?: boolean;
+    sortOrder?: number;
   };
   action: (formData: FormData) => Promise<void>;
   allTags?: { id: string; name: string; slug: string }[];
@@ -120,6 +122,28 @@ export default function AppForm({ initialData, action, allTags = [], initialTags
               Archived
             </option>
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground">Sort Order</label>
+          <input
+            name="sortOrder"
+            type="number"
+            defaultValue={initialData?.sortOrder ?? 0}
+            className="mt-1 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+          />
+        </div>
+
+        <div className="flex items-end">
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+            <input
+              name="featured"
+              type="checkbox"
+              defaultChecked={initialData?.featured ?? false}
+              className="h-4 w-4 rounded border-input text-amber-600 focus:ring-amber-500"
+            />
+            Featured（首页重点产品）
+          </label>
         </div>
 
         <div className="col-span-2">

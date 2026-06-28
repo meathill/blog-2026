@@ -1,12 +1,76 @@
 {
+  "Home": {
+    "hero_badge": "Full-stack engineering · Remote delivery · Solo studio",
+    "hero_title_lead": "Meathill LLC",
+    "hero_title_main": "Ideas turned into products that ship and earn",
+    "hero_subtitle": "19 years of full-stack experience, focused on <em>Cloudflare architecture</em>, <em>AI apps & billing</em>, and <em>cross-platform delivery</em>. Remote, priced to scope.",
+    "hero_cta_primary": "Let's talk",
+    "hero_cta_secondary": "View solutions",
+    "hero_stat_experience": "years full-stack",
+    "hero_stat_projects": "shipped projects",
+    "hero_stat_remote": "remote delivery",
+    "hero_scroll": "Scroll down",
+    "value_title": "Why Meathill LLC",
+    "value_subtitle": "One person, fully accountable for your project.",
+    "value_solo_title": "Solo studio, direct line",
+    "value_solo_desc": "No middle layer or sales pitch — the person you talk to is the one who builds.",
+    "value_remote_title": "Remote-first",
+    "value_remote_desc": "At home with async communication and cross-timezone work, driven by milestones.",
+    "value_experience_title": "19 years full-stack",
+    "value_experience_desc": "From frontend to infrastructure, owning the whole product solo.",
+    "value_pricing_title": "Priced to scope",
+    "value_pricing_desc": "Estimated by project scope — clear, transparent, no long lock-in.",
+    "posts_title": "Insights",
+    "posts_subtitle": "Notes on architecture, pitfalls, and practice.",
+    "posts_view_all": "All posts"
+  },
   "Apps": {
-    "title": "Apps & Tools",
-    "subtitle": "Small utilities I built for fun and profit.",
-    "subtitle_page": "A collection of small utilities, experiments, and tools I've built.",
-    "view_all": "View All Apps",
+    "title": "Products & Work",
+    "subtitle": "Products I build — give them a try.",
+    "subtitle_page": "Products, apps, and work built by Meathill LLC.",
+    "home_title": "Products",
+    "home_subtitle": "Products I build — give them a try.",
+    "featured_label": "Featured products",
+    "all_label": "All products",
+    "filter_all": "All",
+    "view_all": "View all products",
+    "visit": "Visit",
     "open_app": "Open App",
-    "coming_soon": "More apps coming soon...",
-    "nav_label": "Apps"
+    "coming_soon": "More products coming soon...",
+    "nav_label": "Products"
+  },
+  "Solutions": {
+    "title": "Solutions",
+    "subtitle": "19 years of full-stack experience, aimed at your hardest engineering problems.",
+    "home_title": "What I can solve for you",
+    "home_subtitle": "The three things people most often come to me for.",
+    "view_all": "View all solutions",
+    "learn_more": "Learn more",
+    "nav_label": "Solutions"
+  },
+  "SolutionDetail": {
+    "home": "Home",
+    "back_to_list": "All solutions",
+    "problem_label": "Your problem",
+    "outcomes_label": "What I deliver",
+    "related_posts": "Related posts",
+    "cta_title": "Have a similar need?",
+    "cta_desc": "Tell me about your project and I'll come back with a clear plan and quote.",
+    "cta_button": "Get in touch",
+    "not_found_title": "Solution Not Found",
+    "not_found_desc": "The solution you are looking for does not exist or has been moved."
+  },
+  "Tools": {
+    "title": "Online Tools",
+    "subtitle": "Browser-native utilities — local processing, no upload.",
+    "view_all": "View all tools",
+    "nav_label": "Tools"
+  },
+  "Contact": {
+    "title": "Let's talk about your project",
+    "desc": "Whether it's a Cloudflare migration, an AI billing system, or a cross-platform app — tell me what you need and I'll come back with a clear plan and quote.",
+    "email_button": "Email me",
+    "github_button": "View GitHub"
   },
   "Header": {
     "about": "About",
@@ -19,7 +83,7 @@
     "toggle_menu": "Toggle menu"
   },
   "Footer": {
-    "brand_desc": "19+ years of full-stack dev experience. Passionate about building useful products and sharing knowledge.",
+    "brand_desc": "Meathill LLC — a one-person studio with 19+ years of full-stack experience, delivering Cloudflare, AI, and cross-platform projects remotely.",
     "quick_links": "Quick Links",
     "archives": "Archives",
     "apps": "Apps",

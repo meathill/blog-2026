@@ -66,6 +66,8 @@ export const apps = sqliteTable('apps', {
   status: text('status', { enum: ['published', 'draft', 'archived'] })
     .notNull()
     .default('draft'),
+  featured: integer('featured', { mode: 'boolean' }).notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
   publishedAt: integer('published_at', { mode: 'timestamp' }),

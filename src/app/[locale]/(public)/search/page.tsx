@@ -16,7 +16,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     const url = `${canonicalUrl}?q=${encodeURIComponent(q)}`;
     return {
       title: `搜索: ${q}`,
-      description: `山维空间搜索结果 - ${q}`,
+      description: `Meathill LLC搜索结果 - ${q}`,
       robots: { index: false, follow: true },
       alternates: {
         canonical: url,
@@ -27,7 +27,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       },
       openGraph: {
         title: `搜索: ${q}`,
-        description: `山维空间搜索结果 - ${q}`,
+        description: `Meathill LLC搜索结果 - ${q}`,
         url,
       },
     };
@@ -35,7 +35,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
   return {
     title: '搜索文章',
-    description: '在山维空间搜索技术文章和内容',
+    description: '在Meathill LLC搜索技术文章和内容',
     robots: { index: false, follow: true },
     alternates: {
       canonical: canonicalUrl,
@@ -46,7 +46,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     },
     openGraph: {
       title: '搜索文章',
-      description: '在山维空间搜索技术文章和内容',
+      description: '在Meathill LLC搜索技术文章和内容',
       url: canonicalUrl,
     },
   };

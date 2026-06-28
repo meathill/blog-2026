@@ -1,12 +1,76 @@
 {
+  "Home": {
+    "hero_badge": "全栈工程 · 远程交付 · 一人公司",
+    "hero_title_lead": "Meathill LLC",
+    "hero_title_main": "把想法变成能上线、能赚钱的产品",
+    "hero_subtitle": "19 年全栈经验，专注 <em>Cloudflare 全栈架构</em>、<em>AI 应用与计费</em> 与 <em>跨端开发</em>。远程交付，按需报价。",
+    "hero_cta_primary": "聊聊合作",
+    "hero_cta_secondary": "查看方案",
+    "hero_stat_experience": "年全栈经验",
+    "hero_stat_projects": "上线项目",
+    "hero_stat_remote": "远程交付",
+    "hero_scroll": "向下滚动",
+    "value_title": "为什么选择 Meathill LLC",
+    "value_subtitle": "一个人，对你的项目全程负责。",
+    "value_solo_title": "一人公司，直接对接",
+    "value_solo_desc": "没有中间层和销售话术，从沟通到交付都是动手的人。",
+    "value_remote_title": "远程协作",
+    "value_remote_desc": "习惯异步沟通与跨时区协作，按里程碑推进。",
+    "value_experience_title": "19 年全栈经验",
+    "value_experience_desc": "从前端到基础设施，独立扛下完整产品。",
+    "value_pricing_title": "按需报价",
+    "value_pricing_desc": "按项目范围估算，清晰透明，不绑长约。",
+    "posts_title": "技术洞察",
+    "posts_subtitle": "踩坑、架构与实践笔记。",
+    "posts_view_all": "全部文章"
+  },
   "Apps": {
-    "title": "应用与工具",
-    "subtitle": "为了乐趣和便利开发的小工具。",
-    "subtitle_page": "我构建的小工具、实验和应用集合。",
-    "view_all": "查看所有应用",
+    "title": "产品与作品",
+    "subtitle": "我做的产品，欢迎试用。",
+    "subtitle_page": "Meathill LLC 打造的产品、应用与作品。",
+    "home_title": "产品",
+    "home_subtitle": "我做的产品，欢迎试用。",
+    "featured_label": "重点产品",
+    "all_label": "全部产品",
+    "filter_all": "全部",
+    "view_all": "查看全部产品",
+    "visit": "访问",
     "open_app": "打开应用",
-    "coming_soon": "更多应用即将推出...",
-    "nav_label": "应用"
+    "coming_soon": "更多产品即将推出...",
+    "nav_label": "产品"
+  },
+  "Solutions": {
+    "title": "解决方案",
+    "subtitle": "用 19 年全栈经验，解决最棘手的工程问题。",
+    "home_title": "我能帮你解决什么",
+    "home_subtitle": "三个最常被找上门的方向。",
+    "view_all": "查看全部方案",
+    "learn_more": "了解更多",
+    "nav_label": "方案"
+  },
+  "SolutionDetail": {
+    "home": "首页",
+    "back_to_list": "全部方案",
+    "problem_label": "你的问题",
+    "outcomes_label": "我能交付",
+    "related_posts": "相关文章",
+    "cta_title": "有类似的需求？",
+    "cta_desc": "聊聊你的项目，我会给出清晰的方案和报价。",
+    "cta_button": "联系我",
+    "not_found_title": "方案未找到",
+    "not_found_desc": "无法找到该方案，可能已被删除或移动。"
+  },
+  "Tools": {
+    "title": "在线工具",
+    "subtitle": "浏览器里直接用的小工具，本地处理、无需上传。",
+    "view_all": "查看全部工具",
+    "nav_label": "工具"
+  },
+  "Contact": {
+    "title": "聊聊你的项目",
+    "desc": "无论是 Cloudflare 迁移、AI 计费系统还是跨端应用，告诉我你的需求，我会给出清晰的方案和报价。",
+    "email_button": "发邮件聊聊",
+    "github_button": "查看 GitHub"
   },
   "Header": {
     "about": "关于我",
@@ -19,7 +83,7 @@
     "toggle_menu": "菜单"
   },
   "Footer": {
-    "brand_desc": "19年+ 全栈开发经验，热衷于构建有用的产品和分享知识。",
+    "brand_desc": "Meathill LLC —— 19 年+ 全栈开发经验的一人公司，远程交付 Cloudflare 全栈、AI 应用与跨端项目。",
     "quick_links": "快速链接",
     "archives": "文章归档",
     "apps": "Apps",

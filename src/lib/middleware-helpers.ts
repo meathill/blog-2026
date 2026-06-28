@@ -4,6 +4,7 @@ export const TOP_LEVEL_ROUTES = [
   'about',
   'app',
   'skills',
+  'solutions',
   'posts',
   'category',
   'tag',

@@ -1,7 +1,10 @@
 import Hero from '@/components/home/Hero';
+import ValueStrip from '@/components/home/ValueStrip';
+import Products from '@/components/home/Products';
+import Solutions from '@/components/home/Solutions';
+import Tools from '@/components/home/Tools';
 import RecentPosts from '@/components/home/RecentPosts';
-import TagCloud from '@/components/home/TagCloud';
-import FeaturedApps from '@/components/home/FeaturedApps';
+import ContactCTA from '@/components/home/ContactCTA';
 
 export const revalidate = 86400;
 
@@ -9,9 +12,12 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <FeaturedApps />
+      <ValueStrip />
+      <Products />
+      <Solutions />
+      <Tools />
       <RecentPosts />
-      <TagCloud />
+      <ContactCTA />
     </>
   );
 }

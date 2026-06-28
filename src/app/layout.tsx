@@ -4,12 +4,12 @@ import ThirdPartyScripts from '@/components/ThirdPartyScripts';
 
 export const metadata: Metadata = {
   title: {
-    default: '山维空间 - Meathill 的技术博客',
-    template: '%s | 山维空间',
+    default: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
+    template: '%s | Meathill LLC',
   },
   description:
-    '19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识。专注于 Vue.js、React、Node.js、TypeScript 等现代前端技术。',
-  keywords: ['前端开发', '全栈开发', 'Vue.js', 'React', 'Node.js', 'TypeScript', '技术博客'],
+    'Meathill LLC：19 年+ 全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈架构与迁移、AI 应用与计费系统、React Native 跨端开发。',
+  keywords: ['Meathill LLC', '全栈开发', 'Cloudflare', 'Next.js', 'AI 应用', '计费系统', 'React Native', '远程开发'],
   authors: [{ name: 'Meathill', url: 'https://meathill.com' }],
   creator: 'Meathill',
   metadataBase: new URL('https://meathill.com'),
@@ -17,23 +17,23 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'zh_CN',
     url: 'https://meathill.com',
-    siteName: '山维空间',
-    title: '山维空间 - Meathill 的技术博客',
-    description: '19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识。',
+    siteName: 'Meathill LLC',
+    title: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
+    description: '19 年+ 全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: '山维空间 - Meathill 的技术博客',
+        alt: 'Meathill LLC',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     creator: '@meathill1',
-    title: '山维空间 - Meathill 的技术博客',
-    description: '19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识。',
+    title: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
+    description: '19 年+ 全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
     images: ['/og-image.png'],
   },
   robots: {

@@ -68,6 +68,17 @@
 - 基础 UI 封装（`src/components/ui/*`）视为设计系统层，非必要不频繁改动
 - 大改动前先补测试，再落代码
 
+## 数据库迁移（D1 + Drizzle）
+
+- **迁移以 `migrations/*.sql` 文件 + wrangler 为准，不是 drizzle journal**。历史上 journal
+  （`migrations/meta/_journal.json`）只更新到 `0004`，但 `0005`/`0006` 等文件已通过
+  `wrangler d1 migrations apply` 应用。因此**不要跑 `drizzle-kit generate`**（会按 0004 快照重新 diff，
+  生成重复建表语句导致 apply 失败）。新增列时**手写下一个 `NNNN_xxx.sql`**（ALTER TABLE …，
+  用 `--> statement-breakpoint` 分隔），再 `pnpm db:migrate:local` / `db:migrate:prod` 应用。
+- `apps.featured`（boolean/integer）+ `apps.sort_order`（integer）于 `0006_app_featured.sql` 加入，
+  用于首页「重点产品」：`getCachedFeaturedApps` 取 `featured=1` 按 `sort_order` 排序（缓存 15min，
+  发布后用 `revalidateAfterAppMutation` 失效）。后台 `/admin/apps` 可勾选 Featured + 设排序。
+
 ## 已知限制与解法
 
 ### 动态 OG 图（next/og + Cloudflare IMAGES binding）

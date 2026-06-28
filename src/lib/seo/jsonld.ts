@@ -1,6 +1,6 @@
 import { SITE_URL } from '@/lib/constants';
 
-const SITE_NAME = '山维空间';
+const SITE_NAME = 'Meathill LLC';
 const AUTHOR_NAME = 'meathill';
 
 export interface FaqPair {

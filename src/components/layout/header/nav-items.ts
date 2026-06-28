@@ -4,6 +4,8 @@ interface HeaderNavLabels {
   about: string;
   apps: string;
   skills: string;
+  solutions: string;
+  tools: string;
   tech: string;
   works: string;
   resources: string;
@@ -12,7 +14,9 @@ interface HeaderNavLabels {
 export function getHeaderNavItems(labels: HeaderNavLabels): NavItem[] {
   return [
     { href: '/about', label: labels.about },
+    { href: '/solutions', label: labels.solutions },
     { href: '/app', label: labels.apps },
+    { href: 'https://tools.meathill.com', label: labels.tools, external: true },
     { href: '/skills', label: labels.skills },
     { href: 'https://mizufinancial.com/', label: 'Mizu Financial', external: true },
     {

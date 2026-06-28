@@ -82,6 +82,20 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 
+  it('should NOT redirect /solutions (top-level route, not a legacy category)', async () => {
+    const req = new NextRequest(new URL('/solutions', BASE_URL));
+    const res = await middleware(req);
+    // 不应被当成 legacy 分类重定向到 /category/solutions
+    expect(res?.headers.get('Location')).not.toBe(`${BASE_URL}/category/solutions`);
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
+
+  it('should NOT redirect /solutions/:slug detail paths', async () => {
+    const req = new NextRequest(new URL('/solutions/cloudflare-fullstack', BASE_URL));
+    await middleware(req);
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
+
   it('should redirect /tags/xxx to /tag/xxx', async () => {
     const req = new NextRequest(new URL('/tags/memory', BASE_URL));
     const res = await middleware(req);

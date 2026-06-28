@@ -4,12 +4,14 @@ import {
   GithubIcon,
   YoutubeIcon,
   TwitterIcon,
+  MailIcon,
   MapPinIcon,
   CalendarIcon,
   CodeIcon,
   DumbbellIcon,
   PlaneIcon,
 } from 'lucide-react';
+import { Link } from '@/i18n/routing';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getAboutContent } from '@/actions/about';
 import { SITE_URL } from '@/lib/constants';
@@ -20,8 +22,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const canonicalUrl = `${SITE_URL}${locale === 'en' ? '/en' : ''}/about`;
 
   return {
-    title: '关于我',
-    description: 'Meathill - 19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识',
+    title: '关于我 · Meathill LLC',
+    description:
+      'Meathill LLC 创始人 — 19 年+ 全栈开发经验，一人公司、远程交付，专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
     alternates: {
       canonical: canonicalUrl,
       languages: {
@@ -30,8 +33,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
     },
     openGraph: {
-      title: '关于我',
-      description: 'Meathill - 19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识',
+      title: '关于我 · Meathill LLC',
+      description: 'Meathill LLC 创始人 — 19 年+ 全栈开发经验，一人公司、远程交付。',
       url: canonicalUrl,
     },
   };
@@ -41,20 +44,25 @@ const socialLinks = [
   { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon, username: '@meathill' },
   { href: 'https://youtube.com/@meathill', label: 'YouTube', icon: YoutubeIcon, username: '@meathill' },
   { href: 'https://x.com/meathill1', label: 'X (Twitter)', icon: TwitterIcon, username: '@meathill1' },
+  { href: 'mailto:meathill@gmail.com', label: 'Email', icon: MailIcon, username: 'meathill@gmail.com' },
 ];
 
 const skills = [
-  { category: '前端', items: ['Vue.js', 'React', 'Next.js', 'TypeScript', 'TailwindCSS'] },
-  { category: '后端', items: ['Node.js', 'Python', 'PHP', 'MySQL', 'TiDB'] },
+  { category: '前端', items: ['Vue.js', 'React', 'Next.js', 'TypeScript', 'Tailwind CSS'] },
+  { category: '后端 & 数据', items: ['Node.js', 'Python', 'PHP', 'MySQL', 'D1 / TiDB'] },
+  { category: '云 & 基建', items: ['Cloudflare Workers', 'R2', 'Hyperdrive', 'Docker'] },
+  { category: 'AI & 计费', items: ['OpenAI', 'Claude', 'Stripe', 'Supabase'] },
   { category: '移动端', items: ['React Native', 'Expo'] },
-  { category: 'DevOps', items: ['Cloudflare', 'Docker', 'GitHub Actions'] },
 ];
 
+// TODO(用户核对)：以下两个新增里程碑的年份请按实际情况修正
 const timeline = [
   { year: '2006', event: '开始 Web 开发之旅' },
   { year: '2012', event: '转型全栈开发' },
   { year: '2015', event: '开始技术自媒体' },
   { year: '2017', event: '专注远程工作' },
+  { year: '2023', event: '成立 Meathill LLC，转向独立产品与咨询' },
+  { year: '2025', event: '陆续上线 dyqr、Mui Router、Mui CV 等产品' },
 ];
 
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -78,8 +86,13 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             <span className="text-gradient">Meathill</span>
           </h1>
 
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--surface-border)] bg-[var(--surface)] px-4 py-1.5 text-sm text-[var(--text-secondary)]">
+            Meathill LLC · 一人公司 · 远程交付
+          </div>
+
           <p className="text-xl text-[var(--text-secondary)] mb-6 max-w-2xl mx-auto">
-            19年+ 全栈开发经验，热衷于构建有用的产品和分享技术知识
+            Meathill LLC 创始人，19 年+ 全栈开发经验。专注 Cloudflare 全栈架构、AI
+            应用与计费、跨端开发，独立交付完整产品。
           </p>
 
           {/* Quick Info */}
@@ -123,7 +136,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             dangerouslySetInnerHTML={{
               __html: aboutContent?.content
                 ? marked(aboutContent.content)
-                : `<p>大家好，我是肉山（Meathill），一名拥有 19 年以上经验的全栈开发者。 目前主要从事 Web 全栈开发，专注于 Vue.js、React、Node.js 等现代技术栈。</p>`,
+                : `<p>大家好，我是肉山（Meathill），Meathill LLC 创始人，拥有 19 年以上全栈开发经验。我以一人公司的方式远程交付项目，专注 Cloudflare 全栈架构、AI 应用与计费系统、以及 React Native 跨端开发——从沟通到上线，对你的产品全程负责。</p>`,
             }}
           />
         </section>
@@ -224,21 +237,23 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <a
-              href="https://github.com/sponsors/meathill"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="mailto:meathill@gmail.com?subject=%5BMeathill%20LLC%5D%20%E5%90%88%E4%BD%9C%E5%92%A8%E8%AF%A2"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
             >
-              ❤️ 赞助我
+              ✉️ 聊聊合作
             </a>
-            <a
-              href="https://blog.meathill.com"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/solutions"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all"
             >
-              📝 阅读博客
-            </a>
+              🧩 查看方案
+            </Link>
+            <Link
+              href="/app"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all"
+            >
+              🚀 我的产品
+            </Link>
           </div>
         </section>
 

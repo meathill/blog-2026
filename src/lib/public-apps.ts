@@ -1,9 +1,10 @@
-import { apps, appTags, appTranslations, tags } from '@/db/schema';
+import { appImages, apps, appTags, appTranslations, tags } from '@/db/schema';
 import { getDb } from '@/lib/db';
 import { unstable_cache } from 'next/cache';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 
 const FEATURED_APPS_CACHE_SECONDS = 900;
+const FEATURED_APPS_LIMIT = 6;
 
 export interface PublicAppTag {
   id: string;
@@ -21,6 +22,8 @@ export interface PublicAppCardData {
   url: string | null;
   repoUrl: string | null;
   status: 'published' | 'draft' | 'archived';
+  featured: boolean;
+  coverImage: string | null;
 }
 
 function resolvePublicLocale(localeInput: string) {
@@ -69,6 +72,28 @@ export async function getPublicAppTags(appId: string) {
   return tagMap.get(appId) ?? [];
 }
 
+/** 取每个 app 的封面图（type='cover'，按 sortOrder 取第一张） */
+export async function getAppCoverMap(appIds: string[]) {
+  if (appIds.length === 0) {
+    return new Map<string, string>();
+  }
+
+  const db = await getDb();
+  const rows = await db
+    .select({ appId: appImages.appId, url: appImages.url })
+    .from(appImages)
+    .where(and(inArray(appImages.appId, appIds), eq(appImages.type, 'cover')))
+    .orderBy(asc(appImages.sortOrder));
+
+  const coverMap = new Map<string, string>();
+  for (const row of rows) {
+    if (!coverMap.has(row.appId)) {
+      coverMap.set(row.appId, row.url);
+    }
+  }
+  return coverMap;
+}
+
 export async function getCachedFeaturedApps(localeInput: string) {
   const locale = resolvePublicLocale(localeInput);
 
@@ -79,11 +104,13 @@ export async function getCachedFeaturedApps(localeInput: string) {
         .select()
         .from(apps)
         .leftJoin(appTranslations, and(eq(appTranslations.appId, apps.id), eq(appTranslations.locale, locale)))
-        .where(eq(apps.status, 'published'))
-        .orderBy(desc(apps.updatedAt))
-        .limit(3);
+        .where(and(eq(apps.status, 'published'), eq(apps.featured, true)))
+        .orderBy(asc(apps.sortOrder), desc(apps.updatedAt))
+        .limit(FEATURED_APPS_LIMIT);
 
-      const tagMap = await getPublicAppTagsMap(rows.map(({ apps: app }) => app.id));
+      const appIds = rows.map(({ apps: app }) => app.id);
+      const tagMap = await getPublicAppTagsMap(appIds);
+      const coverMap = await getAppCoverMap(appIds);
 
       return rows.map(({ apps: app, app_translations: translation }) => ({
         app: {
@@ -91,6 +118,7 @@ export async function getCachedFeaturedApps(localeInput: string) {
           name: translation?.name || app.name,
           description: translation?.description || app.description,
           content: translation?.content || app.content,
+          coverImage: coverMap.get(app.id) ?? null,
         } satisfies PublicAppCardData,
         tags: tagMap.get(app.id) ?? [],
       }));

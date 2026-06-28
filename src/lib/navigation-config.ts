@@ -5,6 +5,8 @@ interface HeaderNavLabels {
   about: string;
   apps: string;
   skills: string;
+  solutions: string;
+  tools: string;
   tech: string;
   works: string;
   resources: string;
@@ -28,16 +30,20 @@ export interface NavigationConfigBySection {
 const DEFAULT_LABELS_BY_LOCALE: Record<string, HeaderNavLabels> = {
   zh: {
     about: '关于',
-    apps: '应用',
+    apps: '产品',
     skills: 'Skills',
+    solutions: '方案',
+    tools: '工具',
     tech: '技术',
     works: '作品',
     resources: '资源',
   },
   en: {
     about: 'About',
-    apps: 'Apps',
+    apps: 'Products',
     skills: 'Skills',
+    solutions: 'Solutions',
+    tools: 'Tools',
     tech: 'Tech',
     works: 'Works',
     resources: 'Resources',

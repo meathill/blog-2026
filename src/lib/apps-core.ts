@@ -19,6 +19,8 @@ export interface AppRow {
   url: string | null;
   repoUrl: string | null;
   status: AppStatus;
+  featured: boolean;
+  sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
@@ -66,6 +68,8 @@ export interface CreateAppInput {
   repoUrl?: string | null;
   slug?: string;
   status?: AppStatus;
+  featured?: boolean;
+  sortOrder?: number;
   tagIds?: string[];
   translations?: Array<{
     locale: AppLocale;
@@ -90,6 +94,8 @@ export interface UpdateAppPatch {
   repoUrl?: string | null;
   slug?: string;
   status?: AppStatus;
+  featured?: boolean;
+  sortOrder?: number;
 }
 
 const APP_REVALIDATE_PATHS = ['/admin', '/app', '/en/app', '/', '/en'];
@@ -215,6 +221,8 @@ export async function createAppCore(input: CreateAppInput): Promise<{ id: string
     url: input.url ?? null,
     repoUrl: input.repoUrl ?? null,
     status,
+    featured: input.featured ?? false,
+    sortOrder: input.sortOrder ?? 0,
     createdAt: now,
     updatedAt: now,
     publishedAt: status === 'published' ? now : null,
@@ -257,6 +265,8 @@ export async function updateAppCore(id: string, patch: UpdateAppPatch): Promise<
   if (patch.icon !== undefined) set.icon = patch.icon;
   if (patch.url !== undefined) set.url = patch.url;
   if (patch.repoUrl !== undefined) set.repoUrl = patch.repoUrl;
+  if (patch.featured !== undefined) set.featured = patch.featured;
+  if (patch.sortOrder !== undefined) set.sortOrder = patch.sortOrder;
   if (nextSlug !== prev.slug) set.slug = nextSlug;
   if (patch.status !== undefined) {
     set.status = patch.status;
