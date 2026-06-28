@@ -27,6 +27,34 @@ export function shouldShowAds(pathname: string): boolean {
   return /^\/(posts|category|tag|search)(\/|$)/.test(path);
 }
 
+const HIDE_ADS_STYLE_ID = 'mh-hide-ads';
+// Adsense（含 auto ads / 锚定 / 插页）注入的容器选择器
+const ADS_ELEMENT_SELECTOR =
+  'ins.adsbygoogle,.adsbygoogle,.google-auto-placed,ins.adsbygoogle[data-anchor-status],iframe[id^="aswift_"],div[id^="google_ads_iframe"]';
+
+/**
+ * 在不投放广告的页面隐藏 Adsense 注入的元素。
+ * 用可切换的 <style> 而非一次性 querySelectorAll：SPA 切换后 auto ads 可能异步注入，
+ * CSS 规则能覆盖「切换之后才出现」的广告容器；回到博客页时移除规则即恢复展示。
+ */
+function setAdsHidden(hidden: boolean): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  const existing = document.getElementById(HIDE_ADS_STYLE_ID);
+  if (!hidden) {
+    existing?.remove();
+    return;
+  }
+  if (existing) {
+    return;
+  }
+  const style = document.createElement('style');
+  style.id = HIDE_ADS_STYLE_ID;
+  style.textContent = `${ADS_ELEMENT_SELECTOR}{display:none !important;}`;
+  document.head.appendChild(style);
+}
+
 function getAdsenseScriptSrc(): string | null {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
   if (!clientId) {
@@ -93,6 +121,11 @@ export default function ThirdPartyScripts() {
       clearTimeoutTask();
     };
   }, [isHomePage, shouldSkip]);
+
+  // 路由切换时同步广告可见性：非博客页隐藏已注入/将注入的 <ins> 等广告容器
+  useEffect(() => {
+    setAdsHidden(!adsEnabled);
+  }, [adsEnabled]);
 
   if (shouldSkip) {
     return null;

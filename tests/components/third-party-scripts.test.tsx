@@ -156,4 +156,19 @@ describe('ThirdPartyScripts', () => {
     expect(document.querySelector('script[src*="googletagmanager.com"]')).toBeInTheDocument();
     expect(document.querySelector('script[src*="pagead2.googlesyndication.com"]')).toBeNull();
   });
+
+  it('非广告页应注入隐藏广告的样式（覆盖 SPA 切换后异步注入的 <ins>）', () => {
+    currentPathname = '/';
+    render(<ThirdPartyScripts />);
+    const style = document.getElementById('mh-hide-ads');
+    expect(style).toBeInTheDocument();
+    expect(style?.textContent).toContain('ins.adsbygoogle');
+    expect(style?.textContent).toContain('display:none');
+  });
+
+  it('博客页不应隐藏广告（无隐藏样式）', () => {
+    currentPathname = '/en/posts/css/example';
+    render(<ThirdPartyScripts />);
+    expect(document.getElementById('mh-hide-ads')).toBeNull();
+  });
 });
