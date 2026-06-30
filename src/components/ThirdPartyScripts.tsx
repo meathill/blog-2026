@@ -28,14 +28,25 @@ export function shouldShowAds(pathname: string): boolean {
 }
 
 const HIDE_ADS_STYLE_ID = 'mh-hide-ads';
-// Adsense（含 auto ads / 锚定 / 插页）注入的容器选择器
-const ADS_ELEMENT_SELECTOR =
-  'ins.adsbygoogle,.adsbygoogle,.google-auto-placed,ins.adsbygoogle[data-anchor-status],iframe[id^="aswift_"],div[id^="google_ads_iframe"]';
+// Adsense（含 auto ads / 锚定 anchor / 插页 vignette）注入的容器选择器
+const ADS_ELEMENT_SELECTOR = [
+  'ins.adsbygoogle',
+  '.adsbygoogle',
+  '.google-auto-placed',
+  '.adsbygoogle-noablate',
+  'ins.adsbygoogle[data-anchor-status]',
+  'iframe[id^="aswift_"]',
+  'iframe[id^="google_ads_iframe"]',
+  'iframe[src*="googlesyndication"]',
+  'iframe[src*="doubleclick"]',
+  '[id*="google_vignette"]',
+  '[id^="google_anchor"]',
+  'ins[data-vignette-loaded]',
+].join(',');
 
 /**
- * 在不投放广告的页面隐藏 Adsense 注入的元素。
- * 用可切换的 <style> 而非一次性 querySelectorAll：SPA 切换后 auto ads 可能异步注入，
- * CSS 规则能覆盖「切换之后才出现」的广告容器；回到博客页时移除规则即恢复展示。
+ * 在不投放广告的页面隐藏 Adsense 注入的元素（CSS 兜底）。
+ * 回到博客页时移除规则即恢复展示。
  */
 function setAdsHidden(hidden: boolean): void {
   if (typeof document === 'undefined') {
@@ -53,6 +64,21 @@ function setAdsHidden(hidden: boolean): void {
   style.id = HIDE_ADS_STYLE_ID;
   style.textContent = `${ADS_ELEMENT_SELECTOR}{display:none !important;}`;
   document.head.appendChild(style);
+}
+
+/**
+ * 主动移除已注入的 Adsense 广告节点。
+ * 关键：adsbygoogle.js 一旦加载就常驻，会在 SPA 切换后继续往当前页注入广告框架，
+ * 长时间不动还会弹出 vignette/anchor 覆盖层。单纯 CSS 隐藏挡不住「切换之后才注入」的节点，
+ * 因此在非广告页用 MutationObserver 监听，节点一出现就删掉。返回删除的节点数（便于测试）。
+ */
+export function removeInjectedAds(root: ParentNode = document): number {
+  let removed = 0;
+  for (const el of root.querySelectorAll(ADS_ELEMENT_SELECTOR)) {
+    el.remove();
+    removed += 1;
+  }
+  return removed;
 }
 
 function getAdsenseScriptSrc(): string | null {
@@ -122,9 +148,24 @@ export default function ThirdPartyScripts() {
     };
   }, [isHomePage, shouldSkip]);
 
-  // 路由切换时同步广告可见性：非博客页隐藏已注入/将注入的 <ins> 等广告容器
+  // 路由切换时同步广告可见性。
+  // 非广告页：CSS 兜底隐藏 + MutationObserver 持续移除 adsbygoogle 注入的框架/插页/锚定层；
+  // 广告页：解除隐藏、停止移除，让 auto ads 正常投放。
   useEffect(() => {
-    setAdsHidden(!adsEnabled);
+    if (typeof document === 'undefined') {
+      return;
+    }
+    if (adsEnabled) {
+      setAdsHidden(false);
+      return;
+    }
+    setAdsHidden(true);
+    removeInjectedAds();
+    const observer = new MutationObserver(() => {
+      removeInjectedAds();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [adsEnabled]);
 
   if (shouldSkip) {

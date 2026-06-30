@@ -28,6 +28,7 @@ vi.mock('next/script', () => ({
 
 import ThirdPartyScripts, {
   isHomePagePath,
+  removeInjectedAds,
   shouldShowAds,
   shouldSkipThirdPartyScripts,
 } from '@/components/ThirdPartyScripts';
@@ -170,5 +171,32 @@ describe('ThirdPartyScripts', () => {
     currentPathname = '/en/posts/css/example';
     render(<ThirdPartyScripts />);
     expect(document.getElementById('mh-hide-ads')).toBeNull();
+  });
+
+  it('removeInjectedAds 应移除 Adsense 注入的节点，保留普通内容', () => {
+    document.body.innerHTML =
+      '<ins class="adsbygoogle"></ins><div class="google-auto-placed"></div><iframe id="aswift_1"></iframe><p id="keep">hi</p>';
+    const removed = removeInjectedAds(document);
+    expect(removed).toBe(3);
+    expect(document.querySelector('ins.adsbygoogle')).toBeNull();
+    expect(document.querySelector('.google-auto-placed')).toBeNull();
+    expect(document.querySelector('iframe[id^="aswift_"]')).toBeNull();
+    expect(document.getElementById('keep')).toBeInTheDocument();
+  });
+
+  it('非广告页应自动移除「切换之后才注入」的 Adsense 节点（observer）', async () => {
+    currentPathname = '/';
+    render(<ThirdPartyScripts />);
+
+    await act(async () => {
+      const ins = document.createElement('ins');
+      ins.className = 'adsbygoogle';
+      document.body.appendChild(ins);
+      // 让 MutationObserver 的微任务回调有机会执行
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(document.querySelector('ins.adsbygoogle')).toBeNull();
   });
 });
