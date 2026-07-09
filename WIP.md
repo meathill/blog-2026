@@ -64,26 +64,9 @@
 - [ ] 观察:下月 run-rate 预计 55-65M RU(超 50M 免费额度 $1-3);爆炸前是 250M+
 - [ ] 可选:恢复 wp-cron(服务器 system cron 打 127.0.0.1:8080/wp-cron.php),定时发布依赖它
 
-## Issue #4 SEO（2026-07-09 续）
+## Issue #4 SEO — **已关闭**（2026-07-09）
 
-### 本轮代码（待部署）
-- [x] `buildPostDescription` 优先 excerpt（修 CTR 片段被正文顶掉）
-- [x] attachment → 301 父文；Caddy/nginx/htaccess 补 `*.html/attachment`
-- [x] `getPostPath` + PostCard/归档/分类/标签列表规范内链
-- [x] 选题日历 `docs/blog-topics-2026-q3.md`；OG 文 snippet 入 `scripts/seo/manifest.json`
-
-### 已执行（2026-07-09）
-- [x] commit+push `aa77784`（自动部署）
-- [x] 服务器 Caddy：attachment 规则已上线（bak `Caddyfile.bak-issue4-20260709145246`）
-  - origin 实测：wp-json 200；sitemap 410；`*.html/attachment/*` → 301 父文
-- [x] 草稿：`docs/blog-draft-tidb-ru-optimization.md`（FAQ/互链补齐）；`docs/blog-draft-og-image-2026-refresh.md`
-
-### 仍需手动 / 跟进
-- [ ] **GSC 历史 sitemap**：Search Console **无删除 API**，只能 UI 点「移除」；若 UI 也灰掉/不可用，只能靠源站 410 + 时间自然淡出（已记录，不再当作代码阻塞）
-- [ ] 第 1 周发文：TiDB 配图发布；OG 文 apply title/excerpt + 粘贴 2026 增补节
-- [ ] 可选:Jetpack 关 XML sitemaps
-
-
-### 待验证（部署后）
-- [ ] 技术文 meta description = SEO 摘要；attachment 301；sitemap 0 error
-- [ ] 14–28 日窗：Next.js Workers / Hyperdrive CTR；OG 文 CTR 脱离 <1%
+- [x] 代码 + 部署 + Caddy attachment
+- [x] MCP 草稿箱：TiDB `44fad72e-fd66-4967-a53d-e25cd6a6237f`；OG `8b2a5c04-a5f3-48ad-ac36-847903e1a85d`
+- [x] GitHub issue #4 closed
+- 内容节奏见 `docs/blog-topics-2026-q3.md`（发文/配图在日历推进）
