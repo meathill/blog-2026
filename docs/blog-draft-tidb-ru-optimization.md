@@ -158,9 +158,40 @@ RU:还是 20。演示数据也不是它。
 
 如果 PingCAP 那边有了回音,我会回来补一节后记。
 
+## 常见问题（FAQ）
+
+### 为什么 WordPress 远程库一上 serverless 就爆账单？
+
+因为 WP 默认没有持久化对象缓存：每个请求都会重读 `wp_options` autoload、taxonomy、postmeta。数据库在本机时这些读很便宜；换成按 RU 计费的远程库，冗余读就是真金白银。上 APCu（或 Redis）对象缓存，通常比继续拧边缘 TTL 更有效。
+
+### 边缘缓存 wp-json 为什么压不掉基线？
+
+缓存只吸收**重复**。文章 slug、标签页、sitemap 分页是长尾唯一 URL，TTL 窗口内几乎等不来第二次命中。边缘缓存能削尖刺，但基线要靠**单次请求成本**（对象缓存、少打 PHP、挡扫描器）。
+
+### ~20 RU/s 的「地板」是不是 TiDB 对所有集群都收？
+
+不一定。跨集群对照后：别的集群可以到 0，只有个别集群常年顶着。删 TiFlash、删演示库、停 PHP 静默实验都消不掉时，更可能是**该集群内部后台开销**，需要厂商侧解释或考虑迁库。
+
+### 还有什么终极手段？
+
+把小库迁回本机 MariaDB/MySQL，RU 计费单位直接消失。代价是自己管备份与高可用；库很小（数 MB～几十 MB）时迁移成本往往可接受。
+
+## 延伸阅读
+
+- [2026 最佳实践：在 Cloudflare Workers 上部署 Next.js](/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026)
+- [Workers + Supabase + Hyperdrive 最佳实践](/posts/cloudflare-worker/best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker)
+- [用 Cloudflare R2 上传文件](/posts/infra/upload-file-via-cloudflare-r2)
+- 对象缓存 drop-in（仓库）：`scripts/wp/object-cache.php`
+- 方案页：[Cloudflare 全栈架构与迁移](/solutions/cloudflare-fullstack)
+
+## 直播回放
+
+（发布后填：B 站 / YouTube 链接。建议直播标题：TiDB 账单爆炸排查复盘。）
+
 ---
 
 > 草稿备注(发布前删):
 > - 所有数字来自 2026-06-11/12 的实测,截图在 TiDB 控制台和本仓库 WIP/DEV_NOTE 有据可查
-> - 可以考虑在「第三层」后面贴 object-cache.php 的仓库链接(scripts/wp/object-cache.php)
-> - 如果 PingCAP 工单有结果,可在文末补一节「后记」
+> - 发布时用文首 title/excerpt；slug `tidb-ru-bill-explosion-investigation`，分类 tech
+> - 配图：RU 曲线、SQL Statements、静默窗口、跨集群对照
+> - 若 PingCAP 工单有结果,补「后记」

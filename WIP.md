@@ -72,11 +72,17 @@
 - [x] `getPostPath` + PostCard/归档/分类/标签列表规范内链
 - [x] 选题日历 `docs/blog-topics-2026-q3.md`；OG 文 snippet 入 `scripts/seo/manifest.json`
 
-### 仍需用户手动
-- [ ] **GSC**:删 6 份历史 sitemap；重提 `https://meathill.com/sitemap.xml`
-- [ ] 服务器：把更新后的 Caddy attachment 规则同步到 origin（`systemctl restart caddy`）
+### 已执行（2026-07-09）
+- [x] commit+push `aa77784`（自动部署）
+- [x] 服务器 Caddy：attachment 规则已上线（bak `Caddyfile.bak-issue4-20260709145246`）
+  - origin 实测：wp-json 200；sitemap 410；`*.html/attachment/*` → 301 父文
+- [x] 草稿：`docs/blog-draft-tidb-ru-optimization.md`（FAQ/互链补齐）；`docs/blog-draft-og-image-2026-refresh.md`
+
+### 仍需手动 / 跟进
+- [ ] **GSC 历史 sitemap**：Search Console **无删除 API**，只能 UI 点「移除」；若 UI 也灰掉/不可用，只能靠源站 410 + 时间自然淡出（已记录，不再当作代码阻塞）
+- [ ] 第 1 周发文：TiDB 配图发布；OG 文 apply title/excerpt + 粘贴 2026 增补节
 - [ ] 可选:Jetpack 关 XML sitemaps
-- [ ] 第 1 周发文：TiDB 草稿配图 + OG 文 `seo` apply（见选题日历）
+
 
 ### 待验证（部署后）
 - [ ] 技术文 meta description = SEO 摘要；attachment 301；sitemap 0 error

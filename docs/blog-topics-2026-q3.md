@@ -20,8 +20,8 @@ Issue #4 内容轨。数据依据：GSC（2026-04～07）+ Bing 评论快照（2
 
 | 槽 | 题目 | 主词 | 文源 | 直播 | 状态 |
 |----|------|------|------|------|------|
-| A | TiDB 账单爆炸之后 | TiDB RU、serverless 账单、WP 对象缓存 | `docs/blog-draft-tidb-ru-optimization.md` | 复盘 RU 曲线 / APCu | draft |
-| B | OG 图在 CF Workers + 2026 预热 | nextjs og cloudflare | 现文 + `scripts/seo/manifest.json` OG 条 | 短录屏：snippet + 预热 | planned（snippet 已入 manifest） |
+| A | TiDB 账单爆炸之后 | TiDB RU、serverless 账单、WP 对象缓存 | `docs/blog-draft-tidb-ru-optimization.md` | 复盘 RU 曲线 / APCu | draft（FAQ/互链已齐，待配图发布） |
+| B | OG 图在 CF Workers + 2026 预热 | nextjs og cloudflare | `docs/blog-draft-og-image-2026-refresh.md` + manifest | 短录屏：snippet + 预热 | draft（snippet 已入 manifest） |
 
 并行：SEO 技术债 A1–A3 代码收口（description / attachment 301 / 规范内链）。
 
