@@ -99,8 +99,14 @@ GSC 侧（部署后几天）：
   - **Cloudflare 边缘已有 blog→meathill 跳转**：边缘 `/sitemap.xml`、`.html`、`/` 均已 301 到 meathill；origin 规则为冗余保险。旧 sitemap 在边缘以 301 退役（GSC 仍需手动删条目，见第一节）。
 
 仍需手动：
-- **C1（GSC）**：删 6 份历史 sitemap 条目（只能在 Search Console UI，API 不支持删除）。
-- 可选：Cloudflare 控制台清一次缓存，让边缘跳转尽快生效；wp-admin → Jetpack → Traffic 关掉 "Generate XML sitemaps"（origin 已 410，非必须）。
+- **C1（GSC）**：删 6 份历史 sitemap 条目——**仅 Search Console UI 可能可点「移除」**；API 不支持删除。若 UI 也无入口/灰掉，只能依赖源站 410 + 时间自然淡出，不必再当阻塞项。
+- 可选：Cloudflare 控制台清一次缓存；wp-admin → Jetpack → Traffic 关掉 "Generate XML sitemaps"（origin 已 410，非必须）。
+
+## 执行记录（2026-07-09）
+
+- 仓库：`aa77784` description/attachment/getPostPath；`e117a91` 第 1 周草稿。
+- 服务器 `meathill@34.177.119.169`：已覆盖 `/etc/caddy/Caddyfile`（备份 `Caddyfile.bak-issue4-20260709145246`），`systemctl restart caddy`。
+  - origin 实测：`/wp-json` 200；`/sitemap.xml` 410；`/tech/...html/attachment/...` → `301 Location: https://meathill.com/posts/tech/...`（父文，非首页）。
 
 ## 四、验收指标（部署 + 清理后，延后测量）
 - Top 技术文（Next.js/CF Worker、Hyperdrive、Vercel-vs-CF、R2 等）在之后 28 天窗口回到 **4%+ CTR**（主要由 `scripts/seo/` 文案更新驱动）。
