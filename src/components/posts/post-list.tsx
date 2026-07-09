@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { PostSummaryItem } from '@/components/posts/post-summary-item';
 import { calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
+import { getPostPath } from '@/lib/post-utils';
 
 export function PostList({
   posts,
@@ -33,8 +34,11 @@ export function PostList({
 
   const years = Object.keys(postsByYear).sort((a, b) => Number(b) - Number(a));
 
-  // 创建分类 ID 到名称的映射
+  // 创建分类 ID 到名称 / slug 的映射
   const categoryMap = new Map(categories.map((cat: any) => [cat.id, cat.name]));
+  const categorySlugById = new Map<number, string>(
+    categories.map((cat: any) => [cat.id, decodeURIComponent(cat.slug)]),
+  );
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -74,7 +78,7 @@ export function PostList({
                   return (
                     <PostSummaryItem
                       key={post.id}
-                      href={`/posts/${post.slug}`}
+                      href={getPostPath(post, categorySlugById)}
                       title={title}
                       dateText={date.slice(5)}
                       readingTimeText={`${readingTime}分钟`}

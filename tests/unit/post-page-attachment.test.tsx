@@ -1,32 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import PostPage, { generateMetadata } from '../../src/app/[locale]/(public)/posts/[...slug]/page';
 import * as wordpress from '../../src/lib/wordpress';
-import * as navigation from 'next/navigation';
 
-// Mock dependencies
 vi.mock('../../src/lib/wordpress', () => ({
   getPost: vi.fn(),
   getCategories: vi.fn(),
-  getMediaBySlug: vi.fn(),
-  stripHtml: vi.fn((str) => str),
-  formatDate: vi.fn((date) => date),
+  stripHtml: vi.fn((str: string) => str),
+  buildPostDescription: vi.fn(() => 'desc'),
 }));
 
 vi.mock('../../src/views/PostView', () => ({
   default: () => <div data-testid="post-view">Post View</div>,
 }));
 
-vi.mock('../../src/views/AttachmentView', () => ({
-  default: ({ media, parentPostSlug }: any) => (
-    <div data-testid="attachment-view" data-parent={parentPostSlug}>
-      Attachment: {media.title.rendered}
-    </div>
-  ),
-}));
-
 vi.mock('next/navigation', () => ({
   notFound: vi.fn(),
-  redirect: vi.fn(),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  }),
 }));
 
 vi.mock('../../src/i18n/routing', () => ({
@@ -38,90 +29,59 @@ vi.mock('../../src/i18n/routing', () => ({
 describe('PostPage Attachment Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://meathill.com';
   });
 
-  it('should render AttachmentView when URL follows attachment pattern and media exists', async () => {
-    // Setup
-    const parentSlug = 'my-post';
-    const attachmentSlug = 'img_0509';
-    const mockMedia = {
-      id: 101,
-      title: { rendered: 'My Image' },
-      media_type: 'image',
-      source_url: 'http://example.com/img.jpg',
-    };
-
-    (wordpress.getMediaBySlug as any).mockResolvedValue(mockMedia);
-
-    const params = Promise.resolve({
-      locale: 'zh',
-      slug: [parentSlug, 'attachment', attachmentSlug],
-    });
-
-    // Execute
-    const result = await PostPage({ params });
-
-    // Verify
-    expect(wordpress.getMediaBySlug).toHaveBeenCalledWith(attachmentSlug);
-    expect(wordpress.getPost).not.toHaveBeenCalled(); // Should not fetch post
-    expect(result).toBeDefined();
-  });
-
-  it('should fall back to getPost if media not found', async () => {
-    // Setup
-    const parentSlug = 'my-post';
-    const attachmentSlug = 'unknown-img';
-
-    (wordpress.getMediaBySlug as any).mockResolvedValue(null);
-    (wordpress.getPost as any).mockResolvedValue({
+  it('attachment URL 应 301 到父文规范路径', async () => {
+    (wordpress.getPost as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 1,
+      slug: 'my-post',
       title: { rendered: 'Post' },
-      categories: [],
+      categories: [10],
       date: '2023-01-01',
     });
+    (wordpress.getCategories as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 10, slug: 'tech', name: 'Tech', count: 1 },
+    ]);
 
     const params = Promise.resolve({
       locale: 'zh',
-      slug: [parentSlug, 'attachment', attachmentSlug],
+      slug: ['my-post', 'attachment', 'img_0509'],
     });
 
-    // Execute
-    await PostPage({ params });
-
-    // Verify
-    expect(wordpress.getMediaBySlug).toHaveBeenCalledWith(attachmentSlug);
-    // Should fall back to getPost with the last segment 'unknown-img'
-    expect(wordpress.getPost).toHaveBeenCalledWith(attachmentSlug);
+    await expect(PostPage({ params })).rejects.toThrow('REDIRECT:/posts/tech/my-post');
+    expect(wordpress.getPost).toHaveBeenCalledWith('my-post');
   });
 
-  it('generateMetadata should return alternates with canonical for attachment', async () => {
-    // Setup
-    const parentSlug = 'my-post';
-    const attachmentSlug = 'img_0509';
-    const mockMedia = {
-      id: 101,
-      title: { rendered: 'My Image' },
-      description: { rendered: 'My Image Desc' },
-      media_type: 'image',
-      source_url: 'http://example.com/img.jpg',
-    };
-
-    (wordpress.getMediaBySlug as any).mockResolvedValue(mockMedia);
-
+  it('带分类的 attachment URL 应 301 到父路径（去掉 attachment 段）', async () => {
     const params = Promise.resolve({
       locale: 'zh',
-      slug: [parentSlug, 'attachment', attachmentSlug],
+      slug: ['tech', 'my-post', 'attachment', 'img_0509'],
     });
 
-    // Execute
+    await expect(PostPage({ params })).rejects.toThrow('REDIRECT:/posts/tech/my-post');
+    expect(wordpress.getPost).not.toHaveBeenCalled();
+  });
+
+  it('en locale 的 attachment 应带 /en 前缀', async () => {
+    const params = Promise.resolve({
+      locale: 'en',
+      slug: ['tech', 'my-post', 'attachment', 'img_0509'],
+    });
+
+    await expect(PostPage({ params })).rejects.toThrow('REDIRECT:/en/posts/tech/my-post');
+  });
+
+  it('generateMetadata 对 attachment 使用父文 canonical + noindex', async () => {
+    const params = Promise.resolve({
+      locale: 'zh',
+      slug: ['tech', 'my-post', 'attachment', 'img_0509'],
+    });
+
     const meta = await generateMetadata({ params });
 
-    // Verify
-    const expectedCanonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/posts/${parentSlug}/attachment/${attachmentSlug}`;
-    expect(meta.alternates?.canonical).toBe(expectedCanonicalUrl);
-    expect(meta.alternates?.languages?.zh).toBe(expectedCanonicalUrl);
-    expect(meta.alternates?.languages?.en).toBe(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/en/posts/${parentSlug}/attachment/${attachmentSlug}`,
-    );
+    expect(meta.robots).toEqual({ index: false, follow: true });
+    expect(meta.alternates?.canonical).toBe('https://meathill.com/posts/tech/my-post');
+    expect(meta.alternates?.languages?.en).toBe('https://meathill.com/en/posts/tech/my-post');
   });
 });

@@ -1,5 +1,8 @@
 # 博文草稿:TiDB 账单爆炸之后
 
+> 排期：**2026-07-14 周 · 文 A**（见 `docs/blog-topics-2026-q3.md`）  
+> 直播挂钩：周中复盘 RU 曲线 / APCu 前后 SQL；成片可走 livestream-to-podcast。
+>
 > 元数据建议(发布时用):
 > - **标题**:TiDB 账单爆炸之后:一次跌宕起伏的降本排查,从 Cloudflare 边缘一路查到数据库计费内核
 > - **slug**:`tidb-ru-bill-explosion-investigation`
@@ -7,6 +10,7 @@
 > - **标签**:TiDB, Cloudflare, WordPress, Headless CMS, 降本, APCu, Serverless
 > - **摘要**:博客的 TiDB 账单逼近限额,RU 基线常年 110+。我用两天逐层排查:边缘缓存、漏洞扫描器、WordPress 对象缓存、连接税、TiFlash 副本、演示数据……一个接一个假设被数据打脸,包括我自己一度笃信的「平台地板」结论被一句反问推翻。把能控制的部分从 110 压到接近 0 之后,剩下的真相是:有些账,不在你这一侧。附全部实测数据与方法论。
 > - 配图位置用 `[图:...]` 标出,发布前替换成截图。
+> - 文末加：延伸阅读（Workers / Hyperdrive / R2 规范路径）+ 直播回放占位 + GitHub/方案页。
 
 ---
 

@@ -53,9 +53,10 @@ wp plugin deactivate <sitemap-plugin-slug>
 规则要点（两版一致）：
 1. **先**放行 API/后台/媒体（命中即停，不重定向）。
 2. `*sitemap*.xml`、`news-sitemap.xml` → **410**。
-3. `/<slug>.html` → `https://meathill.com/posts/<slug>`（Next.js 的 `posts/[...slug]` 会再 301 补全分类路径）。
-4. `/category/*`→meathill `/category/*`；`/tag/*`→`/tag/*`；`/author/*`→`/posts/author/*`。
-5. 其余公开路径 → `https://meathill.com/`（兜底，避免 301 指向 404）。
+3. `/<path>.html/attachment/*` → `https://meathill.com/posts/<path>`（须排在普通 `.html` 规则之前；否则会落到首页兜底）。
+4. `/<slug>.html` → `https://meathill.com/posts/<slug>`（Next.js 的 `posts/[...slug]` 会再 301 补全分类路径）。
+5. `/category/*`→meathill `/category/*`；`/tag/*`→`/tag/*`；`/author/*`→`/posts/author/*`。
+6. 其余公开路径 → `https://meathill.com/`（兜底，避免 301 指向 404）。
 
 > 应用前务必把片段里“保留块”改成与你现有 server 配置一致（fastcgi/proxy 到 PHP-FPM 的写法），并先在测试环境验证。
 
@@ -75,6 +76,9 @@ curl -sI https://blog.meathill.com/some-old-post.html | grep -i location
 # 3) 旧 sitemap → 410
 curl -sI https://blog.meathill.com/sitemap.xml | head -1
 curl -sI https://blog.meathill.com/news-sitemap.xml | head -1
+
+# 4) 旧 attachment → 301 到父文（不是首页）
+curl -sI https://blog.meathill.com/tech/some-post.html/attachment/image-1 | grep -i location
 ```
 
 GSC 侧（部署后几天）：

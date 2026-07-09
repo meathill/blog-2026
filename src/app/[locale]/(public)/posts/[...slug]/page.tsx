@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { getPost, stripHtml, getCategories, getMediaBySlug, buildPostDescription } from '@/lib/wordpress';
+import { getPost, stripHtml, getCategories, buildPostDescription } from '@/lib/wordpress';
 import PostView from '@/views/PostView';
-import AttachmentView from '@/views/AttachmentView';
 import { routing } from '@/i18n/routing';
 import '@/app/post-content.css';
 
@@ -12,44 +11,34 @@ interface PostPageProps {
   params: Promise<{ slug: string[]; locale: string }>;
 }
 
+/** 去掉路径末段可能残留的 `.html`，供 attachment 父文重定向使用。 */
+function cleanParentPathSegments(segments: string[]): string[] {
+  return segments.map((segment, index) => {
+    if (index === segments.length - 1 && segment.endsWith('.html')) {
+      return segment.replace(/\.html$/, '');
+    }
+    return segment;
+  });
+}
+
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug, locale } = await params;
 
-  // Check for attachment pattern: .../attachment/[slug]
+  // attachment 页会 301 到父文；metadata 只保留 noindex + 父文 canonical，避免自指
   if (slug.length >= 2 && slug[slug.length - 2] === 'attachment') {
-    const attachmentSlug = slug[slug.length - 1];
-    const media = await getMediaBySlug(attachmentSlug);
-
-    if (media) {
-      const title = stripHtml(media.title.rendered);
-      const description = media.description?.rendered
-        ? stripHtml(media.description.rendered).slice(0, 160)
-        : `Attachment: ${title}`;
-
-      const attachmentBasePath = `/posts/${slug.join('/')}`;
-      const attachmentZhUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${attachmentBasePath}`;
-      const attachmentEnUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/en${attachmentBasePath}`;
-      const canonicalUrl = locale === routing.defaultLocale ? attachmentZhUrl : attachmentEnUrl;
-
-      return {
-        title,
-        description,
-        robots: { index: false, follow: true },
-        alternates: {
-          canonical: canonicalUrl,
-          languages: {
-            zh: attachmentZhUrl,
-            en: attachmentEnUrl,
-          },
-        },
-        openGraph: {
-          title,
-          description,
-          type: 'website',
-          images: [media.source_url],
-        },
-      };
-    }
+    const parentSegments = cleanParentPathSegments(slug.slice(0, slug.length - 2));
+    const parentPath = parentSegments.length > 0 ? `/posts/${parentSegments.join('/')}` : '/posts';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://meathill.com';
+    const zhUrl = `${siteUrl}${parentPath}`;
+    const enUrl = `${siteUrl}/en${parentPath}`;
+    return {
+      title: '附件已迁移',
+      robots: { index: false, follow: true },
+      alternates: {
+        canonical: locale === routing.defaultLocale ? zhUrl : enUrl,
+        languages: { zh: zhUrl, en: enUrl },
+      },
+    };
   }
 
   const postSlug = slug[slug.length - 1];
@@ -120,20 +109,32 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug, locale } = await params;
+  const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
 
-  // Check for attachment pattern: .../attachment/[slug]
+  // 低价值 attachment URL → 301 到父文（issue #4：避免 self-canonical 继续喂给索引）
   if (slug.length >= 2 && slug[slug.length - 2] === 'attachment') {
-    const attachmentSlug = slug[slug.length - 1];
-    const media = await getMediaBySlug(attachmentSlug);
-
-    if (media) {
-      const parentPathSegments = slug.slice(0, slug.length - 2);
-      let parentPostSlug = parentPathSegments.join('/');
-      if (parentPostSlug.endsWith('.html')) {
-        parentPostSlug = parentPostSlug.replace('.html', '');
-      }
-      return <AttachmentView media={media} parentPostSlug={parentPostSlug} />;
+    const parentSegments = cleanParentPathSegments(slug.slice(0, slug.length - 2));
+    if (parentSegments.length === 0) {
+      redirect(`${prefix}/posts`);
     }
+
+    // 仅 post slug 时尝试解析主分类，跳到规范路径
+    if (parentSegments.length === 1) {
+      const parentPost = await getPost(parentSegments[0]);
+      if (parentPost) {
+        let primaryCategorySlug = 'uncategorized';
+        if (parentPost.categories?.length) {
+          const allCategories = await getCategories();
+          const cat = allCategories.find((c) => c.id === parentPost.categories[0]);
+          if (cat) {
+            primaryCategorySlug = decodeURIComponent(cat.slug);
+          }
+        }
+        redirect(`${prefix}/posts/${primaryCategorySlug}/${parentPost.slug}`);
+      }
+    }
+
+    redirect(`${prefix}/posts/${parentSegments.join('/')}`);
   }
 
   const lastSegment = slug[slug.length - 1];

@@ -246,16 +246,17 @@ export function stripHtml(html: string): string {
     .trim();
 }
 
-// SEO/OG 描述目标长度：110–160 字符（OG/Twitter 卡片普遍最佳区间）。
-// excerpt 太短时用 content 兜底凑到合理长度。
+// SEO/OG 描述目标长度：最多 160 字符（OG/Twitter 卡片常见上限）。
+// 有非空 excerpt 时始终优先使用（中文 90 字摘要已足够）；仅极短/空时才用正文兜底。
+// 见 issue #4：旧逻辑要求 ≥110 导致 SEO 摘要被正文开头顶掉、CTR 受损。
 export function buildPostDescription(post: WPPost): string {
-  const TARGET_MIN = 110;
   const TARGET_MAX = 160;
-  const excerpt = stripHtml(post.excerpt.rendered);
-  if (excerpt.length >= TARGET_MIN) {
+  const EXCERPT_MIN_USABLE = 20;
+  const excerpt = stripHtml(post.excerpt?.rendered ?? '');
+  if (excerpt.length >= EXCERPT_MIN_USABLE) {
     return excerpt.slice(0, TARGET_MAX);
   }
-  const body = stripHtml(post.content.rendered);
+  const body = stripHtml(post.content?.rendered ?? '');
   return body.slice(0, TARGET_MAX) || excerpt;
 }
 

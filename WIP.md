@@ -64,13 +64,20 @@
 - [ ] 观察:下月 run-rate 预计 55-65M RU(超 50M 免费额度 $1-3);爆炸前是 250M+
 - [ ] 可选:恢复 wp-cron(服务器 system cron 打 127.0.0.1:8080/wp-cron.php),定时发布依赖它
 
-## 遗留:Issue #4 SEO(代码与服务器侧已完成)
+## Issue #4 SEO（2026-07-09 续）
 
-仍需用户手动:
-- [ ] **GSC**:删 6 份历史 sitemap 条目(Search Console UI;API 不支持删除);重新提交活跃 sitemap
-- [ ] 可选:Jetpack 关掉 XML sitemaps(origin 已 410,非必须)
+### 本轮代码（待部署）
+- [x] `buildPostDescription` 优先 excerpt（修 CTR 片段被正文顶掉）
+- [x] attachment → 301 父文；Caddy/nginx/htaccess 补 `*.html/attachment`
+- [x] `getPostPath` + PostCard/归档/分类/标签列表规范内链
+- [x] 选题日历 `docs/blog-topics-2026-q3.md`；OG 文 snippet 入 `scripts/seo/manifest.json`
 
-待验证:
-- [ ] 端到端:Rich Results Test 校验 BlogPosting/Breadcrumb/(FAQ);tag/search 有 noindex;`/sitemap.xml` 不含 `/tag/`
-- [ ] 部署后 GSC:活跃 sitemap 0 error 且被抓取;blog.* 重复 URL 递减
-- [ ] 指标(28 天窗口,至 2026-07-03):Top 技术文回到 4%+ CTR
+### 仍需用户手动
+- [ ] **GSC**:删 6 份历史 sitemap；重提 `https://meathill.com/sitemap.xml`
+- [ ] 服务器：把更新后的 Caddy attachment 规则同步到 origin（`systemctl restart caddy`）
+- [ ] 可选:Jetpack 关 XML sitemaps
+- [ ] 第 1 周发文：TiDB 草稿配图 + OG 文 `seo` apply（见选题日历）
+
+### 待验证（部署后）
+- [ ] 技术文 meta description = SEO 摘要；attachment 301；sitemap 0 error
+- [ ] 14–28 日窗：Next.js Workers / Hyperdrive CTR；OG 文 CTR 脱离 <1%

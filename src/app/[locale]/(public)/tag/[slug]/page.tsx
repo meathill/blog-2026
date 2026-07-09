@@ -6,6 +6,7 @@ import { Pagination } from '@/components/Pagination';
 import { PostListItem } from '@/components/posts/post-list-item';
 import { getTagBySlug, getPostsByTag, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { resolveBySlugWithNormalizedFallback } from '@/lib/tag-slug';
+import { getPostPath } from '@/lib/post-utils';
 import { SITE_URL } from '@/lib/constants';
 
 interface TagPageProps {
@@ -83,7 +84,7 @@ export default async function TagPage({ params }: TagPageProps) {
             return (
               <PostListItem
                 key={post.id}
-                href={`/posts/${post.slug}`}
+                href={getPostPath(post)}
                 title={title}
                 dateText={dateFormatted}
                 readingTimeText={`${readingTime} 分钟`}

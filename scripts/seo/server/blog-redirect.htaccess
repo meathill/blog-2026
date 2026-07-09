@@ -19,7 +19,10 @@
   RewriteRule sitemap.*\.xml$  - [G,L]
   RewriteRule ^news-sitemap\.xml$ - [G,L]
 
-  # ---- 3) .html 文章 -> meathill 规范页 ----
+  # ---- 3a) 旧附件页（须先于 .html$）----
+  RewriteRule ^(.+)\.html/attachment https://meathill.com/posts/$1 [R=301,L]
+
+  # ---- 3b) .html 文章 -> meathill 规范页 ----
   RewriteRule ^(.+)\.html$ https://meathill.com/posts/$1 [R=301,L]
 
   # ---- 4) 分类 / 标签 / 作者 ----

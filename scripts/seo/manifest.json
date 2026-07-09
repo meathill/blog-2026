@@ -70,10 +70,7 @@
           "a": "若主要诉求是降低带宽成本、用 Workers/R2/D1 等一体化生态，迁移收益明显；若重度依赖 Vercel 专有特性或团队流程，则需权衡迁移成本。"
         }
       ],
-      "related": [
-        "migrate-next-js-from-vercel-to-cloudflare",
-        "best-practice-for-nextjs-on-cloudflare-worker-2026"
-      ]
+      "related": ["migrate-next-js-from-vercel-to-cloudflare", "best-practice-for-nextjs-on-cloudflare-worker-2026"]
     },
     "upload-file-via-cloudflare-r2": {
       "category": "infra",
@@ -146,6 +143,27 @@
         "best-practice-for-nextjs-on-cloudflare-worker-2026",
         "best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker"
       ]
+    },
+    "nextjs-cloudflare-workers-og-image": {
+      "category": "cloudflare",
+      "linkLabel": "Next.js + Cloudflare Workers 生成 OG 图",
+      "title": "Next.js 在 Cloudflare Workers 上生成 OG 图：Satori、缓存与 2026 预热实践",
+      "excerpt": "在 Cloudflare Workers 上为 Next.js 生成 Open Graph 图片：Satori/resvg 限制、冷启动与 CPU 时间、R2/CDN 缓存与发布时预热，附可复制的 route 结构与避坑清单（2026）。",
+      "faq": [
+        {
+          "q": "Workers 上能跑 next/og 吗？",
+          "a": "多数场景用 Satori + resvg-wasm（或等价栈）在 Route Handler 里出图；需注意包体积、字体加载与 Workers CPU 时间限制，重图建议缓存到 R2/CDN。"
+        },
+        {
+          "q": "OG 图为什么又慢又贵？",
+          "a": "每次分享抓取都现场渲染会吃满 CPU 时间并拖高延迟；应用边缘缓存或 R2 持久化，并在发文时预热热门 slug。"
+        },
+        {
+          "q": "如何验证 OG 标签是否正确？",
+          "a": "用 tools.meathill.com 的 OG 校验工具或社交平台 debugger 检查 og:image 尺寸、可访问性与缓存头。"
+        }
+      ],
+      "related": ["best-practice-for-nextjs-on-cloudflare-worker-2026", "upload-file-via-cloudflare-r2"]
     }
   }
 }

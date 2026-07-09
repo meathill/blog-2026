@@ -74,7 +74,14 @@
 		file_server
 	}
 
-	# 4) .html 文章（虚拟永久链接）-> meathill 规范页（Next.js 再 301 补全分类）
+	# 4a) 旧 WP 附件页：/path/post.html/attachment/xxx -> 父文（勿落到首页兜底）
+	#     `.html$` 匹配不到中间带 /attachment 的路径，必须单独处理（issue #4）
+	@attachment path_regexp attachment ^/(.+)\.html/attachment(/.*)?$
+	handle @attachment {
+		redir https://meathill.com/posts/{re.attachment.1} 301
+	}
+
+	# 4b) .html 文章（虚拟永久链接）-> meathill 规范页（Next.js 再 301 补全分类）
 	@html path_regexp html ^/(.+)\.html$
 	handle @html {
 		redir https://meathill.com/posts/{re.html.1} 301

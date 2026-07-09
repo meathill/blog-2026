@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { extractTOC, hasCodeBlocks, extractFaq, selectRelatedPosts } from '../../src/lib/post-utils';
+import {
+  extractTOC,
+  hasCodeBlocks,
+  extractFaq,
+  selectRelatedPosts,
+  getPostPath,
+  getPrimaryCategorySlug,
+} from '../../src/lib/post-utils';
 
 describe('post-utils', () => {
   describe('extractTOC', () => {
@@ -152,6 +159,30 @@ describe('post-utils', () => {
         { slug: 'b', tags: [8] },
       ];
       expect(selectRelatedPosts(noTagCurrent, candidates, 3).map((p) => p.slug)).toEqual(['a', 'b']);
+    });
+  });
+
+  describe('getPostPath / getPrimaryCategorySlug', () => {
+    it('优先用 _embedded 主分类拼规范路径', () => {
+      const post = {
+        slug: 'hello-world',
+        categories: [2],
+        _embedded: {
+          'wp:term': [[{ id: 2, name: 'Next.js', slug: 'next-js' }]],
+        },
+      };
+      expect(getPrimaryCategorySlug(post)).toBe('next-js');
+      expect(getPostPath(post)).toBe('/posts/next-js/hello-world');
+    });
+
+    it('无 embed 时用 categorySlugById 兜底', () => {
+      const post = { slug: 'hello-world', categories: [5] };
+      const map = new Map<number, string>([[5, 'cloudflare-worker']]);
+      expect(getPostPath(post, map)).toBe('/posts/cloudflare-worker/hello-world');
+    });
+
+    it('都没有时回落 uncategorized', () => {
+      expect(getPostPath({ slug: 'orphan' })).toBe('/posts/uncategorized/orphan');
     });
   });
 });

@@ -22,6 +22,22 @@ interface State {
 
 const INITIAL_STATE: State = { status: 'idle', results: [], total: 0 };
 
+/** 优先用索引里的规范 url，否则降级 /posts/{slug}（页内会 301 补全分类）。 */
+function getSearchResultHref(result: MuiSearchResult): string {
+  if (result.url) {
+    try {
+      const pathname = new URL(result.url, 'https://meathill.com').pathname;
+      const withoutLocale = pathname.replace(/^\/en(?=\/)/, '');
+      if (withoutLocale.includes('/posts/')) {
+        return withoutLocale;
+      }
+    } catch {
+      // ignore invalid url
+    }
+  }
+  return `/posts/${result.slug}`;
+}
+
 export function SearchResultsClient({ query, locale }: Props) {
   const [state, setState] = useState<State>(INITIAL_STATE);
 
@@ -132,7 +148,7 @@ function SearchResultItem({ query, result }: SearchResultItemProps) {
   return (
     <li>
       <Link
-        href={`/posts/${result.slug}`}
+        href={getSearchResultHref(result)}
         onClick={handleClick}
         className="group block rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] p-5 transition-all card-hover hover:border-[var(--accent)]/30"
       >

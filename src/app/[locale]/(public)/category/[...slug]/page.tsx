@@ -6,6 +6,7 @@ import { Pagination } from '@/components/Pagination';
 import { PostListItem } from '@/components/posts/post-list-item';
 import { getCategoryBySlug, getPostsByCategory, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { parseCategorySlug } from '@/lib/category-slug';
+import { getPostPath } from '@/lib/post-utils';
 import { SITE_URL } from '@/lib/constants';
 
 interface CategoryPageProps {
@@ -106,21 +107,25 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
         {/* Posts List */}
         <ul className="space-y-4">
-          {posts.map((post) => {
-            const title = stripHtml(post.title.rendered);
-            const readingTime = calculateReadingTime(post.content.rendered);
-            const dateFormatted = formatDate(post.date);
+          {(() => {
+            // 当前页已知分类 slug，作为 getPostPath 的兜底（embed 缺失时仍规范）
+            const categorySlugById = new Map<number, string>([[category.id, decodeURIComponent(category.slug)]]);
+            return posts.map((post) => {
+              const title = stripHtml(post.title.rendered);
+              const readingTime = calculateReadingTime(post.content.rendered);
+              const dateFormatted = formatDate(post.date);
 
-            return (
-              <PostListItem
-                key={post.id}
-                href={`/posts/${post.slug}`}
-                title={title}
-                dateText={dateFormatted}
-                readingTimeText={`${readingTime} 分钟`}
-              />
-            );
-          })}
+              return (
+                <PostListItem
+                  key={post.id}
+                  href={getPostPath(post, categorySlugById)}
+                  title={title}
+                  dateText={dateFormatted}
+                  readingTimeText={`${readingTime} 分钟`}
+                />
+              );
+            });
+          })()}
         </ul>
 
         {posts.length === 0 && <div className="text-center py-12 text-[var(--text-muted)]">该分类暂无文章</div>}

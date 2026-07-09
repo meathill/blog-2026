@@ -1,6 +1,48 @@
 import type { TocItem } from '@/components/posts/post-toc';
 import type { FaqPair } from '@/lib/seo/jsonld';
 
+/** 构建规范文章路径所需的最小 post 形状（避免 post-utils 依赖 wordpress 包）。 */
+export interface PostPathInput {
+  slug: string;
+  categories?: number[];
+  _embedded?: {
+    'wp:term'?: Array<Array<{ id: number; name: string; slug: string }>>;
+  };
+}
+
+/**
+ * 解析主分类 slug：优先 `_embedded['wp:term'][0]`（WP 惯例为 categories），
+ * 否则用 `categorySlugById` 对照 `categories[0]`，最后 `uncategorized`。
+ */
+export function getPrimaryCategorySlug(post: PostPathInput, categorySlugById?: Map<number, string>): string {
+  const primaryId = post.categories?.[0];
+  const embeddedCategories = post._embedded?.['wp:term']?.[0];
+
+  if (embeddedCategories?.length) {
+    if (primaryId != null) {
+      const matched = embeddedCategories.find((term) => term.id === primaryId);
+      if (matched?.slug) {
+        return decodeURIComponent(matched.slug);
+      }
+    }
+    if (embeddedCategories[0]?.slug) {
+      return decodeURIComponent(embeddedCategories[0].slug);
+    }
+  }
+
+  if (primaryId != null && categorySlugById?.has(primaryId)) {
+    return categorySlugById.get(primaryId)!;
+  }
+
+  return 'uncategorized';
+}
+
+/** 规范文章路径：`/posts/{category}/{slug}`，与 sitemap / 页内 canonical 一致。 */
+export function getPostPath(post: PostPathInput, categorySlugById?: Map<number, string>): string {
+  const categorySlug = getPrimaryCategorySlug(post, categorySlugById);
+  return `/posts/${categorySlug}/${post.slug}`;
+}
+
 /** 去标签 + 解码常见实体 + 收敛空白，供 FAQ 解析使用（保持 post-utils 无外部依赖、易测试）。 */
 function stripTags(html: string): string {
   return html
