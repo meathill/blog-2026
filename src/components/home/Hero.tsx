@@ -6,7 +6,7 @@ export default async function Hero() {
   const t = await getTranslations('Home');
 
   const stats = [
-    { value: '19+', label: t('hero_stat_experience') },
+    { value: '20+', label: t('hero_stat_experience') },
     { value: '30+', label: t('hero_stat_projects') },
     { value: '100%', label: t('hero_stat_remote') },
   ];

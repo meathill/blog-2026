@@ -3,7 +3,7 @@
     "hero_badge": "全栈工程 · 远程交付 · 一人公司",
     "hero_title_lead": "Meathill LLC",
     "hero_title_main": "把想法变成能上线、能赚钱的产品",
-    "hero_subtitle": "19 年全栈经验，专注 <em>Cloudflare 全栈架构</em>、<em>AI 应用与计费</em> 与 <em>跨端开发</em>。远程交付，按需报价。",
+    "hero_subtitle": "20+ 年全栈经验，专注 <em>Cloudflare 全栈架构</em>、<em>AI 应用与计费</em> 与 <em>跨端开发</em>。远程交付，按需报价。",
     "hero_cta_primary": "聊聊合作",
     "hero_cta_secondary": "查看方案",
     "hero_stat_experience": "年全栈经验",
@@ -16,7 +16,7 @@
     "value_solo_desc": "没有中间层和销售话术，从沟通到交付都是动手的人。",
     "value_remote_title": "远程协作",
     "value_remote_desc": "习惯异步沟通与跨时区协作，按里程碑推进。",
-    "value_experience_title": "19 年全栈经验",
+    "value_experience_title": "20+ 年全栈经验",
     "value_experience_desc": "从前端到基础设施，独立扛下完整产品。",
     "value_pricing_title": "按需报价",
     "value_pricing_desc": "按项目范围估算，清晰透明，不绑长约。",
@@ -41,7 +41,7 @@
   },
   "Solutions": {
     "title": "解决方案",
-    "subtitle": "用 19 年全栈经验，解决最棘手的工程问题。",
+    "subtitle": "用 20+ 年全栈经验，解决最棘手的工程问题。",
     "home_title": "我能帮你解决什么",
     "home_subtitle": "三个最常被找上门的方向。",
     "view_all": "查看全部方案",
@@ -83,7 +83,7 @@
     "toggle_menu": "菜单"
   },
   "Footer": {
-    "brand_desc": "Meathill LLC —— 19 年+ 全栈开发经验的一人公司，远程交付 Cloudflare 全栈、AI 应用与跨端项目。",
+    "brand_desc": "Meathill LLC —— 20+ 年全栈开发经验的一人公司，远程交付 Cloudflare 全栈、AI 应用与跨端项目。",
     "quick_links": "快速链接",
     "archives": "文章归档",
     "apps": "Apps",

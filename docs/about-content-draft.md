@@ -8,7 +8,7 @@
 ## 中文（locale: zh）
 
 ```markdown
-大家好，我是**肉山（Meathill）**，Meathill LLC 的创始人，一名拥有 **19 年+** 全栈开发经验的工程师。
+大家好，我是**肉山（Meathill）**，Meathill LLC 的创始人，一名拥有 **20+ 年** 全栈开发经验的工程师。
 
 我以「一人公司」的方式工作：从需求沟通、架构设计，到编码、上线、运维，全部亲自负责——没有中间层，也没有销售话术。我习惯远程协作与异步沟通，按里程碑推进，按项目范围报价。
 
@@ -28,7 +28,7 @@
 ## English（locale: en）
 
 ```markdown
-Hi, I'm **Meathill**, founder of Meathill LLC and a full-stack engineer with **19+ years** of experience.
+Hi, I'm **Meathill**, founder of Meathill LLC and a full-stack engineer with **20+ years** of experience.
 
 I run a one-person studio: from scoping and architecture to coding, shipping, and ops — I do it all myself. No middle layer, no sales pitch. I'm remote-first, comfortable with async work across timezones, and I price by project scope.
 

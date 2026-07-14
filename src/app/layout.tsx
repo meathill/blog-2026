@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: '%s | Meathill LLC',
   },
   description:
-    'Meathill LLC：19 年+ 全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈架构与迁移、AI 应用与计费系统、React Native 跨端开发。',
+    'Meathill LLC：20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈架构与迁移、AI 应用与计费系统、React Native 跨端开发。',
   keywords: ['Meathill LLC', '全栈开发', 'Cloudflare', 'Next.js', 'AI 应用', '计费系统', 'React Native', '远程开发'],
   authors: [{ name: 'Meathill', url: 'https://meathill.com' }],
   creator: 'Meathill',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     url: 'https://meathill.com',
     siteName: 'Meathill LLC',
     title: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
-    description: '19 年+ 全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
+    description: '20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
     images: [
       {
         url: '/og-image.png',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     creator: '@meathill1',
     title: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
-    description: '19 年+ 全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
+    description: '20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
     images: ['/og-image.png'],
   },
   robots: {

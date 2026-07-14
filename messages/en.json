@@ -3,7 +3,7 @@
     "hero_badge": "Full-stack engineering · Remote delivery · Solo studio",
     "hero_title_lead": "Meathill LLC",
     "hero_title_main": "Ideas turned into products that ship and earn",
-    "hero_subtitle": "19 years of full-stack experience, focused on <em>Cloudflare architecture</em>, <em>AI apps & billing</em>, and <em>cross-platform delivery</em>. Remote, priced to scope.",
+    "hero_subtitle": "20+ years of full-stack experience, focused on <em>Cloudflare architecture</em>, <em>AI apps & billing</em>, and <em>cross-platform delivery</em>. Remote, priced to scope.",
     "hero_cta_primary": "Let's talk",
     "hero_cta_secondary": "View solutions",
     "hero_stat_experience": "years full-stack",
@@ -16,7 +16,7 @@
     "value_solo_desc": "No middle layer or sales pitch — the person you talk to is the one who builds.",
     "value_remote_title": "Remote-first",
     "value_remote_desc": "At home with async communication and cross-timezone work, driven by milestones.",
-    "value_experience_title": "19 years full-stack",
+    "value_experience_title": "20+ years full-stack",
     "value_experience_desc": "From frontend to infrastructure, owning the whole product solo.",
     "value_pricing_title": "Priced to scope",
     "value_pricing_desc": "Estimated by project scope — clear, transparent, no long lock-in.",
@@ -41,7 +41,7 @@
   },
   "Solutions": {
     "title": "Solutions",
-    "subtitle": "19 years of full-stack experience, aimed at your hardest engineering problems.",
+    "subtitle": "20+ years of full-stack experience, aimed at your hardest engineering problems.",
     "home_title": "What I can solve for you",
     "home_subtitle": "The three things people most often come to me for.",
     "view_all": "View all solutions",
@@ -83,7 +83,7 @@
     "toggle_menu": "Toggle menu"
   },
   "Footer": {
-    "brand_desc": "Meathill LLC — a one-person studio with 19+ years of full-stack experience, delivering Cloudflare, AI, and cross-platform projects remotely.",
+    "brand_desc": "Meathill LLC — a one-person studio with 20+ years of full-stack experience, delivering Cloudflare, AI, and cross-platform projects remotely.",
     "quick_links": "Quick Links",
     "archives": "Archives",
     "apps": "Apps",

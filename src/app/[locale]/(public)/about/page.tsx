@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: '关于我 · Meathill LLC',
     description:
-      'Meathill LLC 创始人 — 19 年+ 全栈开发经验，一人公司、远程交付，专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
+      'Meathill LLC 创始人 — 20+ 年全栈开发经验，一人公司、远程交付，专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
     alternates: {
       canonical: canonicalUrl,
       languages: {
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     },
     openGraph: {
       title: '关于我 · Meathill LLC',
-      description: 'Meathill LLC 创始人 — 19 年+ 全栈开发经验，一人公司、远程交付。',
+      description: 'Meathill LLC 创始人 — 20+ 年全栈开发经验，一人公司、远程交付。',
       url: canonicalUrl,
     },
   };
@@ -91,7 +91,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           </div>
 
           <p className="text-xl text-[var(--text-secondary)] mb-6 max-w-2xl mx-auto">
-            Meathill LLC 创始人，19 年+ 全栈开发经验。专注 Cloudflare 全栈架构、AI
+            Meathill LLC 创始人，20+ 年全栈开发经验。专注 Cloudflare 全栈架构、AI
             应用与计费、跨端开发，独立交付完整产品。
           </p>
 
@@ -136,7 +136,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             dangerouslySetInnerHTML={{
               __html: aboutContent?.content
                 ? marked(aboutContent.content)
-                : `<p>大家好，我是肉山（Meathill），Meathill LLC 创始人，拥有 19 年以上全栈开发经验。我以一人公司的方式远程交付项目，专注 Cloudflare 全栈架构、AI 应用与计费系统、以及 React Native 跨端开发——从沟通到上线，对你的产品全程负责。</p>`,
+                : `<p>大家好，我是肉山（Meathill），Meathill LLC 创始人，拥有 20+ 年全栈开发经验。我以一人公司的方式远程交付项目，专注 Cloudflare 全栈架构、AI 应用与计费系统、以及 React Native 跨端开发——从沟通到上线，对你的产品全程负责。</p>`,
             }}
           />
         </section>
@@ -185,7 +185,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
               </div>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-gradient">172.5kg</div>
+                  <div className="text-2xl font-bold text-gradient">190kg</div>
                   <div className="text-xs text-[var(--text-muted)]">深蹲</div>
                 </div>
                 <div>
@@ -193,7 +193,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
                   <div className="text-xs text-[var(--text-muted)]">卧推</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-gradient">210kg</div>
+                  <div className="text-2xl font-bold text-gradient">220kg</div>
                   <div className="text-xs text-[var(--text-muted)]">硬拉</div>
                 </div>
               </div>
