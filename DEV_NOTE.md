@@ -209,6 +209,24 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   嫌疑)。备份 `wp-config.php.bak-pconn`;回滚 = 还原 + 重启 FPM。
   ⚠️ 排查时实测:服务器→TiDB RTT 仅 ~13ms(同在美西),单查询很便宜,贵在连接。
 
+**Application Passwords 401(2026-07-16,is_ssl() 反代坑):**
+- 症状:后台发布 / Notion 同步 WordPress 报 `WordPress Auth Failed: 401 rest_not_logged_in`,
+  `WP_APP_PASSWORD` 本身未改、未撤销。
+- 根因:`wp_is_application_passwords_supported() = is_ssl() || environment==='local'`。链路是
+  `Cloudflare(边缘 TLS)→ Tunnel → Caddy(auto_https off,纯 HTTP :8080)→ PHP-FPM`,Caddy 的
+  `php_fastcgi` 会按自己的连接状态派生 `HTTPS`/`X-Forwarded-Proto` 这两个 FastCGI 参数,
+  **`header_up` 改不动**(Caddy 对 `X-Forwarded-*` 有自己的覆盖逻辑,不管上游传了什么,PHP 收到的
+  永远是 http)。于是 `is_ssl()` 恒为 false,Application Passwords 被核心整体关掉,任何 Basic Auth
+  请求在校验凭证前就被拒——凭证本身完全没问题。
+- 修复:`php_fastcgi` 块里用 **`env HTTPS on` + `env HTTP_X_FORWARDED_PROTO https`** 直接覆盖
+  FastCGI 参数(见 `scripts/seo/server/blog-redirect.Caddyfile`);wp-config.php 层面加
+  X-Forwarded-Proto 判断没用(已删除,Caddy 直接给 HTTPS=on 更权威)。
+- ⚠️ 排查坑:这版 WP(6.9)里 `determine_current_user` 真正挂的是 `wp_validate_application_password`
+  (不是 `wp_authenticate_application_password`),它把内部具体的 `WP_Error`(如
+  `incorrect_password`)**全部吞掉**,统一对外报 `rest_not_logged_in`——"密码错" 和 "功能被关掉"
+  从外部完全看不出区别,拿错密码测试区分不出问题在哪层,得直接调用
+  `wp_authenticate_application_password()` 才能看到真实校验结果。
+
 **坑与约定：**
 - Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
   （脚本已封装，规则 ref：`blog2026_*`）。

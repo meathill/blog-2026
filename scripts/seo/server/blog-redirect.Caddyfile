@@ -6,6 +6,13 @@
 #   1c) feed 路径走 PHP：meathill.com 的 RSS 代理（/feed/、/tag/x/feed/）回源依赖，
 #       必须排在 @category/@tag/@author 重定向之前（handle 按出现顺序首个命中生效）。
 # ⚠️ 保留 /wp-json /wp-content 等，meathill.com 的 API/媒体依赖它们。
+# 2026-07-16（Application Passwords 401 修复）：两处 php_fastcgi 都加 env HTTPS on / env
+#   HTTP_X_FORWARDED_PROTO https——Caddy 本身 auto_https off + 纯 HTTP 监听，php_fastcgi 按自己的
+#   连接状态派生这两个 FastCGI 参数（header_up 试过，改不动，Caddy 对 X-Forwarded-* 有自己的覆盖逻辑，
+#   不管 Cloudflare Tunnel 传的是什么，PHP 收到的永远是 http），导致 is_ssl() 恒为 false，WordPress
+#   核心据此把 Application Passwords 整体关掉（发布用的 Basic Auth 一律 401 rest_not_logged_in）。
+#   用 env 直接覆盖 FastCGI 参数才生效；写死 https 是准确的：本监听只有本机 Cloudflare Tunnel 能连，
+#   且该域名边缘只服务 HTTPS。
 # 安装：备份原 Caddyfile -> caddy validate -> 覆盖 -> systemctl restart caddy -> 验证 /wp-json 仍 200。
 # ⚠️ 本机 Caddyfile 含 `admin off`，`caddy reload`/`systemctl reload` 不可用（无 admin API），
 #    必须用 `systemctl restart caddy`（ExecStart 直接读本文件）。回滚：cp 备份 + restart。
@@ -40,7 +47,10 @@
 	# 1b) PHP 保留：WP API / 后台 / cron / 验证目录（meathill.com 依赖，原样交给 PHP/文件服务）
 	@preserve path /wp-json* /wp-admin* /wp-login.php /wp-cron.php /xmlrpc.php /.well-known*
 	handle @preserve {
-		php_fastcgi unix//run/php/php8.5-fpm.sock
+		php_fastcgi unix//run/php/php8.5-fpm.sock {
+			env HTTPS on
+			env HTTP_X_FORWARDED_PROTO https
+		}
 		file_server
 	}
 
@@ -55,7 +65,10 @@
 	# 1c-2) 无斜杠 feed(/feed、/tag/x/feed、/comments/feed):WP 的规范形态,直接输出 RSS
 	@feed path_regexp feed ^/(.+/)?feed$
 	handle @feed {
-		php_fastcgi unix//run/php/php8.5-fpm.sock
+		php_fastcgi unix//run/php/php8.5-fpm.sock {
+			env HTTPS on
+			env HTTP_X_FORWARDED_PROTO https
+		}
 	}
 
 	# 2) 旧 sitemap（Jetpack 生成）-> 410，让 Google 彻底放弃
