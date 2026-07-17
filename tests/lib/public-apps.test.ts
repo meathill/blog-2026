@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apps } from '@/db/schema';
 
-const { mockDesc } = vi.hoisted(() => ({
+const { mockAsc, mockDesc } = vi.hoisted(() => ({
+  mockAsc: vi.fn((column: unknown) => ({ column, direction: 'asc' })),
   mockDesc: vi.fn((column: unknown) => ({ column, direction: 'desc' })),
 }));
 
@@ -21,6 +22,7 @@ vi.mock('drizzle-orm', async (importOriginal) => {
 
   return {
     ...actual,
+    asc: (column: unknown) => mockAsc(column),
     desc: (column: unknown) => mockDesc(column),
   };
 });
@@ -33,7 +35,7 @@ describe('public-apps', () => {
     mockUnstableCache.mockImplementation((fn: () => Promise<unknown>) => fn);
   });
 
-  it('getCachedFeaturedApps: 应注册 locale 缓存、合并翻译与 tags，并按更新时间倒序', async () => {
+  it('getCachedFeaturedApps: 应注册 locale 缓存、合并翻译与 tags/封面图，并按 sortOrder 升序、更新时间降序排序', async () => {
     const appRows = [
       {
         apps: {
@@ -82,8 +84,17 @@ describe('public-apps', () => {
     const tagInnerJoin = vi.fn().mockReturnValue({ where: tagWhere });
     const tagFrom = vi.fn().mockReturnValue({ innerJoin: tagInnerJoin });
 
+    const coverRows = [{ appId: 'app-1', url: 'https://i.meathill.com/app-1-cover.png' }];
+    const coverOrderBy = vi.fn().mockResolvedValue(coverRows);
+    const coverWhere = vi.fn().mockReturnValue({ orderBy: coverOrderBy });
+    const coverFrom = vi.fn().mockReturnValue({ where: coverWhere });
+
     const db = {
-      select: vi.fn().mockReturnValueOnce({ from: appFrom }).mockReturnValueOnce({ from: tagFrom }),
+      select: vi
+        .fn()
+        .mockReturnValueOnce({ from: appFrom })
+        .mockReturnValueOnce({ from: tagFrom })
+        .mockReturnValueOnce({ from: coverFrom }),
     };
     mockGetDb.mockResolvedValue(db);
 
@@ -96,6 +107,7 @@ describe('public-apps', () => {
           name: 'Localized Demo App',
           description: 'localized description',
           content: 'localized content',
+          coverImage: 'https://i.meathill.com/app-1-cover.png',
         }),
         tags: [{ id: 'tag-1', name: 'Productivity', slug: 'productivity' }],
       },
@@ -104,8 +116,12 @@ describe('public-apps', () => {
       revalidate: 900,
       tags: ['home:featured-apps:en'],
     });
+    expect(mockAsc).toHaveBeenCalledWith(apps.sortOrder);
     expect(mockDesc).toHaveBeenCalledWith(apps.updatedAt);
-    expect(appOrderBy).toHaveBeenCalledWith({ column: apps.updatedAt, direction: 'desc' });
+    expect(appOrderBy).toHaveBeenCalledWith(
+      { column: apps.sortOrder, direction: 'asc' },
+      { column: apps.updatedAt, direction: 'desc' },
+    );
     expect(getFeaturedAppsTag('en')).toBe('home:featured-apps:en');
   });
 });
