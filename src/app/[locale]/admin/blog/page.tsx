@@ -1,4 +1,4 @@
-import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, PenSquareIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, PenSquareIcon, SearchIcon } from 'lucide-react';
 import Link from 'next/link';
 import { deleteBlogPost, listBlogPosts } from '@/actions/blog';
 import { BlogStatusBadge, BlogWordPressSyncBadge } from '@/components/admin/BlogStatusBadge';
@@ -6,6 +6,7 @@ import DeleteBlogPostButton from '@/components/admin/DeleteBlogPostButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { routing } from '@/i18n/routing';
 
@@ -17,6 +18,7 @@ interface BlogAdminPageProps {
   }>;
   searchParams: Promise<{
     page?: string | string[];
+    q?: string | string[];
   }>;
 }
 
@@ -34,6 +36,13 @@ function parsePageParam(page: string | string[] | undefined): number {
   return parsedPage;
 }
 
+function parseSearchParam(search: string | string[] | undefined): string | undefined {
+  const rawSearch = Array.isArray(search) ? search[0] : search;
+  const trimmed = rawSearch?.trim();
+
+  return trimmed ? trimmed : undefined;
+}
+
 function getLocalePrefix(locale: string): string {
   if (locale === routing.defaultLocale) {
     return '';
@@ -42,13 +51,19 @@ function getLocalePrefix(locale: string): string {
   return `/${locale}`;
 }
 
-function buildPaginationHref(locale: string, page: number): string {
+function buildPaginationHref(locale: string, page: number, search?: string): string {
   const basePath = `${getLocalePrefix(locale)}/admin/blog`;
-  if (page <= 1) {
-    return basePath;
+  const params = new URLSearchParams();
+
+  if (page > 1) {
+    params.set('page', String(page));
+  }
+  if (search) {
+    params.set('q', search);
   }
 
-  return `${basePath}?page=${page}`;
+  const queryString = params.toString();
+  return queryString ? `${basePath}?${queryString}` : basePath;
 }
 
 function buildPublicPreviewHref(locale: string, slug: string): string {
@@ -79,13 +94,16 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
   const { locale } = await params;
   const query = await searchParams;
   const requestedPage = parsePageParam(query.page);
+  const search = parseSearchParam(query.q);
   const result = await listBlogPosts({
     page: requestedPage,
     pageSize: PAGE_SIZE,
+    search,
   });
 
-  const previousPageHref = buildPaginationHref(locale, result.page - 1);
-  const nextPageHref = buildPaginationHref(locale, result.page + 1);
+  const previousPageHref = buildPaginationHref(locale, result.page - 1, search);
+  const nextPageHref = buildPaginationHref(locale, result.page + 1, search);
+  const clearSearchHref = buildPaginationHref(locale, 1);
 
   return (
     <div className="space-y-6">
@@ -99,11 +117,42 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
         </Button>
       </div>
 
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <form method="GET" className="flex items-center gap-2">
+          <InputGroup className="w-full sm:w-72">
+            <InputGroupAddon>
+              <SearchIcon />
+            </InputGroupAddon>
+            <InputGroupInput type="search" name="q" placeholder="搜索标题 / Slug / 摘要" defaultValue={search ?? ''} />
+          </InputGroup>
+          <Button type="submit" variant="outline">
+            搜索
+          </Button>
+        </form>
+        {search && result.posts.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            找到 {result.total} 条与「{search}」相关的结果
+          </p>
+        )}
+      </div>
+
       {result.posts.length === 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>还没有本地文章</CardTitle>
-            <CardDescription>从右上角开始新建。第一次保存后就会生成可持续编辑的本地草稿。</CardDescription>
+            <CardTitle>{search ? `没有找到匹配「${search}」的文章` : '还没有本地文章'}</CardTitle>
+            <CardDescription>
+              {search ? (
+                <>
+                  试试其他关键词，或者{' '}
+                  <Link href={clearSearchHref} className="underline underline-offset-4 hover:text-foreground">
+                    清除搜索条件
+                  </Link>
+                  查看全部文章。
+                </>
+              ) : (
+                '从右上角开始新建。第一次保存后就会生成可持续编辑的本地草稿。'
+              )}
+            </CardDescription>
           </CardHeader>
         </Card>
       ) : (

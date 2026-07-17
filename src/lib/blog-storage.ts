@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, like, ne, or, sql, type SQL } from 'drizzle-orm';
 import { blogPosts } from '@/db/schema';
 import {
   type BlogPostListItem,
@@ -116,16 +116,22 @@ export async function getBlogPostRecord(id: string): Promise<BlogPostRecord | nu
   return mapBlogPostRecord(row);
 }
 
-export async function listBlogPostRecords(options?: { page?: number; pageSize?: number }): Promise<BlogPostListResult> {
+export async function listBlogPostRecords(options?: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}): Promise<BlogPostListResult> {
   const db = await getDb();
   const pageSize = normalizePageSize(options?.pageSize);
   const requestedPage = normalizePageNumber(options?.page);
+  const where = buildBlogSearchCondition(options?.search);
 
   const countRow = await db
     .select({
       count: sql<number>`count(*)`,
     })
     .from(blogPosts)
+    .where(where)
     .get();
 
   const total = Number(countRow?.count ?? 0);
@@ -136,6 +142,7 @@ export async function listBlogPostRecords(options?: { page?: number; pageSize?: 
   const rows = await db
     .select()
     .from(blogPosts)
+    .where(where)
     .orderBy(asc(sql<number>`case when ${blogPosts.status} = 'draft' then 0 else 1 end`), desc(blogPosts.updatedAt))
     .limit(pageSize)
     .offset(offset);
@@ -172,6 +179,16 @@ async function ensureBlogPostExists(id: string): Promise<void> {
   if (!post) {
     throw new Error('文章不存在。');
   }
+}
+
+function buildBlogSearchCondition(search: string | undefined): SQL | undefined {
+  const term = search?.trim();
+  if (!term) {
+    return undefined;
+  }
+
+  const pattern = `%${term}%`;
+  return or(like(blogPosts.title, pattern), like(blogPosts.slug, pattern), like(blogPosts.excerpt, pattern));
 }
 
 function normalizePageNumber(page: number | undefined): number {

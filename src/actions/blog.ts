@@ -20,7 +20,7 @@ import { syncBlogPostToWordPress } from '@/lib/blog-sync';
 import { purgeCloudflareCache } from '@/lib/cloudflare-purge';
 import { regeneratePostOg } from '@/lib/og/post-image';
 
-export async function listBlogPosts(options?: { page?: number; pageSize?: number }) {
+export async function listBlogPosts(options?: { page?: number; pageSize?: number; search?: string }) {
   await checkAuth();
   return listBlogPostRecords(options);
 }
