@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, like, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, like, ne, or, sql, type SQL } from 'drizzle-orm';
 import { blogPosts } from '@/db/schema';
 import {
   type BlogPostListItem,
@@ -164,6 +164,79 @@ export async function listBlogPostRecords(options?: {
   };
 }
 
+export interface ImportedBlogPostInput extends SaveBlogPostInput {
+  wpPostId: number;
+  wpSyncedAt: Date;
+  publishedAt: Date;
+}
+
+export async function createImportedBlogPostRecord(
+  input: ImportedBlogPostInput,
+): Promise<{ id: string; slug: string }> {
+  const db = await getDb();
+  const id = crypto.randomUUID();
+  const now = new Date();
+  const slug = await ensureUniqueBlogSlug(input.slug);
+
+  try {
+    await db.insert(blogPosts).values({
+      id,
+      title: input.title,
+      slug,
+      excerpt: input.excerpt,
+      status: input.status,
+      coverImage: input.coverImage,
+      categories: serializeBlogStringList(input.categories),
+      tags: serializeBlogStringList(input.tags),
+      blocksJson: input.blocksJson,
+      markdown: input.markdown,
+      html: input.html,
+      wpPostId: input.wpPostId,
+      wpSyncedAt: input.wpSyncedAt,
+      publishedAt: input.publishedAt,
+      createdAt: now,
+      updatedAt: input.wpSyncedAt,
+    });
+  } catch (error) {
+    // 并发导入同一篇 WordPress 文章时，两次调用都可能在对方提交前查不到已导入记录；
+    // 这里捕获 wp_post_id 唯一约束冲突，退化成幂等返回已存在的行，而不是把原始 SQL 错误抛给用户。
+    if (isUniqueConstraintError(error)) {
+      const existing = await getBlogPostIdByWpPostId(input.wpPostId);
+      if (existing) {
+        return existing;
+      }
+    }
+    throw error;
+  }
+
+  return { id, slug };
+}
+
+export async function getBlogPostIdByWpPostId(wpPostId: number): Promise<{ id: string; slug: string } | null> {
+  const db = await getDb();
+  const row = await db
+    .select({ id: blogPosts.id, slug: blogPosts.slug })
+    .from(blogPosts)
+    .where(eq(blogPosts.wpPostId, wpPostId))
+    .get();
+
+  return row ?? null;
+}
+
+export async function getExistingWpPostIds(wpPostIds: number[]): Promise<Set<number>> {
+  if (wpPostIds.length === 0) {
+    return new Set();
+  }
+
+  const db = await getDb();
+  const rows = await db
+    .select({ wpPostId: blogPosts.wpPostId })
+    .from(blogPosts)
+    .where(inArray(blogPosts.wpPostId, wpPostIds));
+
+  return new Set(rows.map((row) => row.wpPostId).filter((wpPostId): wpPostId is number => wpPostId !== null));
+}
+
 async function ensureBlogSlugAvailable(slug: string, excludeId?: string): Promise<void> {
   const db = await getDb();
   const whereClause = excludeId ? and(eq(blogPosts.slug, slug), ne(blogPosts.id, excludeId)) : eq(blogPosts.slug, slug);
@@ -179,6 +252,28 @@ async function ensureBlogPostExists(id: string): Promise<void> {
   if (!post) {
     throw new Error('文章不存在。');
   }
+}
+
+// 和 ensureBlogSlugAvailable（编辑器手动改 slug，冲突要抛错让人重新选）语义不同——
+// 导入没有人在手动选 slug，静默加后缀是更合理的行为，镜像 apps-core.ts 的 ensureUniqueSlug。
+async function ensureUniqueBlogSlug(rawSlug: string): Promise<string> {
+  const db = await getDb();
+  let candidate = rawSlug;
+  let suffix = 1;
+
+  while (true) {
+    const existing = await db.select({ id: blogPosts.id }).from(blogPosts).where(eq(blogPosts.slug, candidate)).get();
+    if (!existing) {
+      return candidate;
+    }
+
+    suffix += 1;
+    candidate = `${rawSlug}-${suffix}`;
+  }
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return error instanceof Error && /unique constraint/i.test(error.message);
 }
 
 function buildBlogSearchCondition(search: string | undefined): SQL | undefined {

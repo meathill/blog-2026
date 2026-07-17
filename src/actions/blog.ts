@@ -3,9 +3,11 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { getAuth } from '@/lib/auth';
 import { type BlogMetadataAiEnv, generateBlogMetadataSuggestion } from '@/lib/blog-ai';
 import { buildBlogContentSnapshot } from '@/lib/blog-content';
+import { importBlogPostFromWordPress } from '@/lib/blog-import';
 import { type BlogPostRecord, buildBlogSlug, normalizeBlogPostStatus, parseBlogStringListInput } from '@/lib/blog-post';
 import {
   createBlogPostRecord,
@@ -28,6 +30,15 @@ export async function listBlogPosts(options?: { page?: number; pageSize?: number
 export async function getBlogPost(id: string) {
   await checkAuth();
   return getBlogPostRecord(id);
+}
+
+export async function importAndEditWordPressPost(wpPostId: number): Promise<void> {
+  await checkAuth();
+
+  const { id } = await importBlogPostFromWordPress(wpPostId);
+
+  revalidatePath('/admin/blog');
+  redirect(`/admin/blog/${id}`);
 }
 
 export interface BlogEditorMutationResult {

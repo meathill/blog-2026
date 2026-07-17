@@ -1,16 +1,26 @@
-import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, PenSquareIcon, SearchIcon } from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ExternalLinkIcon,
+  GlobeIcon,
+  PenSquareIcon,
+  SearchIcon,
+} from 'lucide-react';
 import Link from 'next/link';
-import { deleteBlogPost, listBlogPosts } from '@/actions/blog';
+import { deleteBlogPost, importAndEditWordPressPost, listBlogPosts } from '@/actions/blog';
 import { BlogStatusBadge, BlogWordPressSyncBadge } from '@/components/admin/BlogStatusBadge';
 import DeleteBlogPostButton from '@/components/admin/DeleteBlogPostButton';
+import ImportWordPressPostButton from '@/components/admin/ImportWordPressPostButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { routing } from '@/i18n/routing';
+import { searchWordPressPostsNotInD1 } from '@/lib/blog-import';
 
 const PAGE_SIZE = 12;
+const WP_SEARCH_LIMIT = 5;
 
 interface BlogAdminPageProps {
   params: Promise<{
@@ -95,11 +105,14 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
   const query = await searchParams;
   const requestedPage = parsePageParam(query.page);
   const search = parseSearchParam(query.q);
-  const result = await listBlogPosts({
-    page: requestedPage,
-    pageSize: PAGE_SIZE,
-    search,
-  });
+  const [result, wpHits] = await Promise.all([
+    listBlogPosts({
+      page: requestedPage,
+      pageSize: PAGE_SIZE,
+      search,
+    }),
+    search ? searchWordPressPostsNotInD1(search, WP_SEARCH_LIMIT) : Promise.resolve([]),
+  ]);
 
   const previousPageHref = buildPaginationHref(locale, result.page - 1, search);
   const nextPageHref = buildPaginationHref(locale, result.page + 1, search);
@@ -275,6 +288,32 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
             下一页
             <ChevronRightIcon className="size-4" />
           </Link>
+        </div>
+      )}
+
+      {search && wpHits.length > 0 && (
+        <div className="space-y-3 rounded-xl border border-dashed border-border/80 bg-muted/30 p-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <GlobeIcon className="size-4" />在 WordPress 中找到但尚未导入本地的文章
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {wpHits.map((hit) => (
+              <Card key={hit.wpPostId} className="gap-3 py-4">
+                <CardHeader className="px-4">
+                  <Badge variant="outline" className="w-fit text-[10px]">
+                    WordPress
+                  </Badge>
+                  <CardTitle className="text-sm">{hit.title}</CardTitle>
+                  <CardDescription className="line-clamp-2 text-xs">{hit.excerpt}</CardDescription>
+                </CardHeader>
+                <CardContent className="px-4">
+                  <form action={importAndEditWordPressPost.bind(null, hit.wpPostId)}>
+                    <ImportWordPressPostButton />
+                  </form>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
     </div>

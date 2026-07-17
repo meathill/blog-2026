@@ -156,7 +156,7 @@ export const blogPosts = sqliteTable('blog_posts', {
   blocksJson: text('blocks_json').notNull(),
   markdown: text('markdown').notNull(),
   html: text('html').notNull(),
-  wpPostId: integer('wp_post_id'),
+  wpPostId: integer('wp_post_id').unique(),
   wpSyncedAt: integer('wp_synced_at', { mode: 'timestamp' }),
   publishedAt: integer('published_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),

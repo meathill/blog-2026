@@ -42,6 +42,10 @@
 - 动态 OG 图：`src/app/api/og/post/route.tsx`
 - 旧链接重定向：`src/middleware.ts`
 - 博客后台编辑器：`/admin/blog`，支持 AI 元数据生成。
+- 博客后台搜索 + WordPress 老文章导入：`/admin/blog` 支持按标题/Slug/摘要搜索本地 D1 文章；
+  有搜索词时联合搜索 WordPress，展示尚未导入本地的老文章，点「导入并编辑」写入 D1（`wpPostId` 已关联）
+  后跳转编辑器；后续编辑发布走既有的 D1→WP 同步（`syncBlogPostToWordPress` 见 `wpPostId` 会走
+  update 而非 create），不需要单独的"同步回 WordPress"逻辑。
 - 性能优化：第三方脚本延迟加载、首页图片 loader 适配。
 
 ## 关键设计策略
@@ -137,6 +141,34 @@ return new Response(transformed.image(), {
 - ⚠️ **route 不能 `export const runtime = 'edge'`**：OpenNext Cloudflare 只打包 Node runtime
   路由，edge runtime 的 route 不进产物，线上变成裸 500（2026-06-11 踩坑，feed 自迁移
   OpenNext 起就因此是坏的）
+
+### HTML → Markdown 转换：不要用 turndown（Workers 下会崩）
+
+`src/lib/blog-html-to-markdown.ts`（WordPress 老文章导入用，把 `content.rendered` 转成 Markdown
+再喂给已有的 `buildDraftContentFromMarkdown`）踩过的坑：
+
+- **`turndown` 在这个项目里跑不起来**：它内部靠 `@mixmark-io/domino`（一个 DOM 实现）解析 HTML，
+  而 `turndown` 的 `.mjs`/`.es.js` 构建产物里是用 CommonJS `require('@mixmark-io/domino')` 引入的——
+  Cloudflare Workers 是纯 ESM 运行时，没有全局 `require`，会在 Worker 启动/首次调用时直接抛
+  `ReferenceError: require is not defined`（有对应的 Cloudflare 官方 issue 可查）。`jsdom` 在
+  `package.json` 里只是 `devDependencies`（Vitest 测试环境用），业务代码从不 import，同理不能拿来
+  垫 DOM。
+- **改用 `node-html-parser`**：纯 JS 实现（依赖只有 `css-select`/`entities`，同一类库 `cheerio` 也在用），
+  ESM 构建产物里没有 `require()`，`pnpm run build` + `opennextjs-cloudflare build` 都验证过能正常打包。
+  给出一棵可递归遍历的树，写法上和仓库里已有的 `markdownToBlocks`（`src/lib/mcp/blog-draft.ts`，
+  遍历 `marked.lexer()` 的 token）风格一致，只是遍历对象换成 HTML 节点。
+- **坑：`<pre>` 是 node-html-parser 的 "block text element"**（和 `script`/`style` 同类），默认不会把
+  `<pre>` 内部解析成子节点——`pre.text` 拿到的是**未解析的原始字符串**（`<code class="...">` 标签本身
+  还是字面字符）。要拿到里面 `<code>` 的语言 class/纯文本，得把 `pre.text` 再 `parse()` 一遍。
+- 一般 HTML→Markdown 库都需要新增依赖，且大概率隐式依赖某种 DOM 实现——引入前先确认它在
+  Workers 环境（ESM-only、无 DOM）下能不能跑，不要只看 npm 周下载量。
+
+### wp_post_id 唯一约束：SQLite 的 UNIQUE 允许多个 NULL
+
+`blog_posts.wp_post_id`（`schema.ts`）加 `.unique()` 防止同一篇 WordPress 文章被并发导入两次，
+不需要额外写"部分唯一索引"（`WHERE wp_post_id IS NOT NULL`）——SQLite 的 `UNIQUE` 约束本来就把
+每一个 `NULL` 当作互不相同的值处理，所以本地新建的草稿（`wp_post_id` 全部是 `NULL`）不会互相冲突，
+只有两个真正相同的非空 `wp_post_id` 才会撞上唯一约束。踩坑记录：曾经以为需要部分索引，其实用不上。
 
 ### Middleware 是 async
 
