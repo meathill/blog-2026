@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   extractTOC,
   hasCodeBlocks,
+  hasMermaidBlocks,
   extractFaq,
   selectRelatedPosts,
   getPostPath,
@@ -72,6 +73,24 @@ describe('post-utils', () => {
 
     it('不应匹配 <prefix> 等标签', () => {
       expect(hasCodeBlocks('<prefix>Not a pre</prefix>')).toBe(false);
+    });
+  });
+
+  describe('hasMermaidBlocks', () => {
+    it('检测到 language-mermaid class 返回 true', () => {
+      expect(hasMermaidBlocks('<pre><code class="language-mermaid">flowchart TD</code></pre>')).toBe(true);
+    });
+
+    it('class 里还有其它值时也能命中', () => {
+      expect(hasMermaidBlocks('<pre><code class="hljs language-mermaid foo">x</code></pre>')).toBe(true);
+    });
+
+    it('没有 language-mermaid 时返回 false', () => {
+      expect(hasMermaidBlocks('<pre><code class="language-javascript">const x = 1;</code></pre>')).toBe(false);
+    });
+
+    it('空字符串返回 false', () => {
+      expect(hasMermaidBlocks('')).toBe(false);
     });
   });
 

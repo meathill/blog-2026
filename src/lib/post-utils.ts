@@ -83,6 +83,14 @@ export function hasCodeBlocks(html: string): boolean {
 }
 
 /**
+ * 检查 HTML 内容是否包含 mermaid 代码块（BlockNote 代码块语言选了 mermaid 时，
+ * 会导出 `<code class="language-mermaid">`）。
+ */
+export function hasMermaidBlocks(html: string): boolean {
+  return /class="[^"]*\blanguage-mermaid\b[^"]*"/i.test(html);
+}
+
+/**
  * 从文章正文提取 FAQ 问答对，用于生成 FAQPage 结构化数据。
  * 约定：标题含「常见问题」或「FAQ」的 <h2> 区块内，每个 <h3> 为问、其后内容为答。
  * 未命中约定时返回空数组（不产出 FAQ schema）。

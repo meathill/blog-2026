@@ -138,9 +138,11 @@
   background-color: transparent !important;
 }
 
-.wp-block-code[title]::before {
-  content: attr(title);
+.wp-block-code[title]::before,
+pre[data-filename]::before,
+.mermaid-diagram[data-filename]::before {
   display: block;
+  width: 100%;
   padding: 0.5rem 1rem;
   font-size: 0.75rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -148,4 +150,31 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: #9da5b4;
   user-select: none;
+}
+
+.wp-block-code[title]::before {
+  content: attr(title);
+}
+
+/* 新版 BlockNote 代码块的文件名条：toExternalHTML 把文件名写进 <pre data-filename="..."> */
+pre[data-filename]::before,
+.mermaid-diagram[data-filename]::before {
+  content: attr(data-filename);
+}
+
+/* Mermaid 图表容器：发布页把 <pre><code class="language-mermaid"> 整个替换成这个 */
+.mermaid-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  background-color: #282c34;
+}
+
+.mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
 }

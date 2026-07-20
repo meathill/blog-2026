@@ -1,6 +1,7 @@
 'use client';
 
 import type { BlockNoteEditor, PartialBlock } from '@blocknote/core';
+import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core';
 import { zh, en } from '@blocknote/core/locales';
 import {
   BasicTextStyleButton,
@@ -12,9 +13,21 @@ import {
 import { BlockNoteView } from '@blocknote/shadcn';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { CODE_BLOCK_SUPPORTED_LANGUAGES, DEFAULT_CODE_BLOCK_LANGUAGE } from '@/config/code-block-languages';
 import { getInitialBlogBlocks } from '@/lib/blog-blocks';
+import { createBlogCodeBlockSpec } from '@/lib/blog-code-block';
 import { looksLikeMarkdownDocument } from '@/lib/blog-markdown-paste';
 import styles from '@/components/admin/BlogBlockEditor.module.css';
+
+const blogEditorSchema = BlockNoteSchema.create({
+  blockSpecs: {
+    ...defaultBlockSpecs,
+    codeBlock: createBlogCodeBlockSpec({
+      defaultLanguage: DEFAULT_CODE_BLOCK_LANGUAGE,
+      supportedLanguages: CODE_BLOCK_SUPPORTED_LANGUAGES,
+    }),
+  },
+});
 
 interface BlogBlockEditorProps {
   locale: string;
@@ -29,6 +42,7 @@ export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBloc
   const [markdownValue, setMarkdownValue] = useState('');
   const editor = useCreateBlockNote(
     {
+      schema: blogEditorSchema,
       initialContent,
       dictionary: locale === 'en' ? en : zh,
       pasteHandler: handleEditorPaste,

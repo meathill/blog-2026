@@ -47,6 +47,8 @@
   后跳转编辑器；后续编辑发布走既有的 D1→WP 同步（`syncBlogPostToWordPress` 见 `wpPostId` 会走
   update 而非 create），不需要单独的"同步回 WordPress"逻辑。
 - 性能优化：第三方脚本延迟加载、首页图片 loader 适配。
+- 代码块编辑器增强：语言选择、文件名标注、mermaid 图表（编辑器内实时预览 + 发布页渲染成图），
+  详见「已知限制与解法」的「代码块 codeBlock 是本地 fork」条目。
 
 ## 关键设计策略
 
@@ -84,6 +86,30 @@
   发布后用 `revalidateAfterAppMutation` 失效）。后台 `/admin/apps` 可勾选 Featured + 设排序。
 
 ## 已知限制与解法
+
+### 代码块 codeBlock 是本地 fork（语言/文件名/mermaid，2026-07-20）
+
+`src/lib/blog-code-block.ts` 整份 fork 自 `@blocknote/core` 的 `src/blocks/Code/block.ts`（用
+`createBlockConfig`/`createBlockSpec`/`createExtension`/`getLanguageId` 这些公开导出搭的，不是碰内部私有
+API）。原因：BlockNote 的 `createCodeBlockSpec()` propSchema 写死只有 `language`，没有扩展点，加不了
+`filename` 字段，只能整份 fork 才能塞进文件名 UI + mermaid 实时预览面板。**没有复用上游的
+`lazyShikiPlugin`**：它要求显式传 `createHighlighter`，本项目从未配置过，一直是空转 no-op，去掉不算功能
+倒退，也省得引入 shiki 依赖。
+
+- **BlockNote 精确锁定在 `0.51.4`，没跟到 `0.52.0`**：`0.52.0`（发布于同一天）把 `codeBlock` 的
+  `content` 类型从 `"inline"` 改成新引入的 `"plain"`（字符串），官方自己标注「breaking-ish」。这正是
+  fork 的那个块类型，以后升级 BlockNote 到 `0.52+` 时，需要把 `blog-code-block.ts` 的
+  `content`/`parseContent` 从 inline-array 语义迁移到 plain-string 语义，重新对比一遍上游
+  `Code/block.ts` 的改动，不能直接改版本号了事。
+- 语言 id 直接对齐 highlight.js 自己的语言名（`src/config/code-block-languages.ts` 和
+  `src/config/highlight-languages.json`/`CodeHighlight.tsx` 的 `ALIASES` 共用同一套词表），编辑器和
+  前端高亮之间不设翻译层。默认语言 key 保留 BlockNote 自己的硬编码值 `'text'`（没有改成
+  `'plaintext'`），避免历史草稿/文章重新打开编辑器时下拉选项错位。
+- **`mermaid` 只在浏览器端动态 import**（`src/lib/mermaid-render.ts`，`import('mermaid')` 在
+  `'use client'` 组件的 `useEffect`/DOM 事件回调里触发），不会被 Cloudflare Workers 运行时求值，不会
+  踩 `turndown` 那种 CJS-under-Workers 的坑（见下面「HTML → Markdown 转换」条目）。
+- 文件名走 `data-filename` 属性 + CSS `::before`（`pre[data-filename]::before`），复用了
+  `.wp-block-code[title]::before` 已有的视觉方案（同一份声明块，只有 `content: attr(...)` 不同）。
 
 ### 动态 OG 图（next/og + Cloudflare IMAGES binding）
 

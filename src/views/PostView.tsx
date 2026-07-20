@@ -18,8 +18,9 @@ import { getDb } from '@/lib/db';
 import { SITE_URL } from '@/lib/constants';
 import { buildArticleJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo/jsonld';
 import { PostToc } from '@/components/posts/post-toc';
-import { extractTOC, extractFaq, hasCodeBlocks } from '@/lib/post-utils';
+import { extractTOC, extractFaq, hasCodeBlocks, hasMermaidBlocks } from '@/lib/post-utils';
 import FeaturedImage from '@/components/posts/featured-image';
+import MermaidRenderer from '@/components/posts/mermaid-renderer';
 import PostBreadcrumb from '@/components/posts/post-breadcrumb';
 import PostHeader from '@/components/posts/post-header';
 import PostFooter from '@/components/posts/post-footer';
@@ -74,6 +75,7 @@ export default async function PostView({ post, locale }: PostViewProps) {
   const processedContent = processContent(post.content.rendered);
   const toc = extractTOC(processedContent, stripHtml);
   const needsCodeHighlight = hasCodeBlocks(processedContent);
+  const needsMermaid = hasMermaidBlocks(processedContent);
 
   // 并发获取分类和标签
   const [allCategories, allTags] = await Promise.all([
@@ -176,6 +178,7 @@ export default async function PostView({ post, locale }: PostViewProps) {
         </div>
       </div>
       {needsCodeHighlight && <CodeHighlight />}
+      {needsMermaid && <MermaidRenderer />}
     </div>
   );
 }

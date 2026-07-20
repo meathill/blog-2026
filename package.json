@@ -28,6 +28,7 @@
     "@next/third-parties": "^16.2.4",
     "@notionhq/client": "^5.20.0",
     "@opennextjs/cloudflare": "^1.19.4",
+    "@tiptap/pm": "^3.22.5",
     "better-auth": "^1.6.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

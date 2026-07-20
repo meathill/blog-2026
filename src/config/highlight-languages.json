@@ -1,1 +1,17 @@
-["bash", "css", "javascript", "json", "typescript", "xml"]
+[
+  "bash",
+  "css",
+  "diff",
+  "dockerfile",
+  "javascript",
+  "json",
+  "markdown",
+  "nginx",
+  "plaintext",
+  "python",
+  "scss",
+  "sql",
+  "typescript",
+  "xml",
+  "yaml"
+]

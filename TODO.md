@@ -5,7 +5,7 @@
 ## P1
 
 - [ ] 优化 Admin 编辑器的图片粘贴与拖拽体验
-- [ ] 补充 BlockNote 自定义 Block 的渲染测试
+- [x] 补充 BlockNote 自定义 Block 的渲染测试（`tests/lib/blog-code-block.test.ts` 等，2026-07-20）
 
 ## P2
 

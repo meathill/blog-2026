@@ -41,10 +41,14 @@ const LANGUAGE_LOADERS: Record<string, () => Promise<{ default: unknown }>> = {
  * 语言别名映射
  */
 const ALIASES: Record<string, string[]> = {
-  javascript: ['js'],
-  typescript: ['ts'],
+  javascript: ['js', 'jsx'],
+  typescript: ['ts', 'tsx'],
   xml: ['html', 'htm', 'svg'],
   bash: ['sh', 'shell', 'zsh'],
+  // 代码块语言默认值是 'text'（BlockNote 自身的硬编码默认，未选择语言时的现状），
+  // 但 highlight.js 的纯文本语法包注册名是 'plaintext'，这里补上别名，
+  // 否则 hljs 找不到 'text' 语言会退化成自动探测，容易把纯文本误判高亮成其它语言。
+  plaintext: ['text', 'txt'],
 };
 
 /**
@@ -100,6 +104,8 @@ export default function CodeHighlight() {
         });
 
       await Promise.all(loadPromises);
+      // mermaid 代码块交给 MermaidRenderer 单独渲染成图，这里排除掉，避免和 hljs 抢同一个节点
+      hljs.configure({ cssSelector: 'pre code:not(.language-mermaid)' });
       hljs.highlightAll();
 
       // 上报实际使用的语言（供下次构建优化）

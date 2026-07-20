@@ -32,6 +32,9 @@ importers:
       '@opennextjs/cloudflare':
         specifier: ^1.19.4
         version: 1.19.4(next@16.2.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(wrangler@4.86.0)
+      '@tiptap/pm':
+        specifier: ^3.22.5
+        version: 3.22.5
       better-auth:
         specifier: ^1.6.9
         version: 1.6.9(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(kysely@0.28.16))(next@16.2.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@4.1.5)
