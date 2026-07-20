@@ -259,14 +259,47 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   从外部完全看不出区别,拿错密码测试区分不出问题在哪层,得直接调用
   `wp_authenticate_application_password()` 才能看到真实校验结果。
 
+**WordPress 核心 RCE 补丁(2026-07-20,CVE-2026-63030「wp2shell」+ CVE-2026-60137):**
+- 未授权(无需登录)远程代码执行漏洞链,REST API batch 接口路由混淆 + SQL 注入,影响
+  6.9.0–6.9.4 / 7.0.0–7.0.1,官方 2026-07-17 发 6.9.5/7.0.2 修复,披露后几小时内即有在野利用。
+  服务器当时是 6.9.0 基线(6.9.1~6.9.4 点版本从未打过),确认过暴露。
+- **根因**:点版本从未自动打过,是因为 WP 的"次要/安全版本自动后台更新"机制依赖
+  wp-cron,而 wp-cron 早就被边缘 301 打断了(见下一条)——不是谁忘了升级,是自动更新
+  本身从来没跑起来过。
+- 处理:装 wp-cli(见下)→ 备份(`/var/www/backups/2026-07-20-wp-6.9.5/`,DB dump + 
+  wp-admin/wp-includes/根 PHP 打包)→ `wp core update --version=6.9.5`(锁同分支,不跳
+  7.0 大版本)→ `wp core update-db`(无 schema 变更,空跑)→ 重启 php8.5-fpm → 
+  `wp core verify-checksums` 确认核心文件干净。7.0 大版本升级留作单独任务
+  (仓库还装了 `gutenberg` 功能插件,叠加大版本升级排查面更大)。
+- **服务器现在装了 wp-cli**(`/usr/local/bin/wp` 2.12.0)。以后核心/插件/主题更新、DB
+  迁移都优先用 `sudo -u www-data wp ... --path=/var/www/blog`,不必再绕
+  `scripts/seo/runner.php` 那套裸 `wp-load.php` + `WP_CLI` shim(那套仍保留给
+  SEO 文案脚本用,两者不冲突)。
+- ⚠️ `wp db export`/`wp core update` 会在 `/var/www/.wp-cli/cache/` 建缓存目录,
+  www-data 对 `/var/www` 本身无写权限,会报 permission warning(不影响功能,未处理)。
+- 验证 Application Passwords 401 修复(见上)没被这次核心更新带崩:直接在服务器 CLI 跑
+  `is_ssl()` 测不出真实结果(裸 CLI 天然没有 HTTPS 概念,当初就是这个坑),得走真实
+  Caddy→FPM 请求路径测,且 Caddy 只把 `/wp-json* /wp-admin* /wp-login.php /wp-cron.php
+  /xmlrpc.php /.well-known*` 这几个 path 转给 PHP(见 Caddyfile `@preserve`),其余一律
+  redirect——改用确认 Caddyfile 里两处 `env HTTPS on` 仍在 + Caddy 自 07-16 至今没重启过,
+  等价证明这个修复没受影响。
+- 取证:管理员账号只有 `meathill` 一个(2011 注册,无新增);`wp-admin`/`wp-includes`
+  在漏洞披露后无文件改动;access log 里搜 `batch` 无命中(但日志 50MiB 滚动,窗口不保证
+  覆盖完整披露期,只能算辅助信号,不是确凿的"未失陷"证明)。
+
 **坑与约定：**
 - Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
   （脚本已封装，规则 ref：`blog2026_*`）。
 - Page Rules 接口不支持 account-owned token（盘点脚本已做非致命处理）。
 - wrangler 走系统代理会连不上 Cloudflare API，跑 wrangler/部署前 `env -u HTTPS_PROXY ...` 清代理；
   多账号 OAuth 需 `CLOUDFLARE_ACCOUNT_ID=fdc63ee...` 跳过交互选择。
-- **wp-cron.php 被边缘 301，WP loopback cron 已失效**（定时发布等）。如需恢复：服务器
-  system cron 定时 `curl -H "Host: blog.meathill.com" http://127.0.0.1:8080/wp-cron.php`。
+- **wp-cron.php 被边缘 301，WP loopback cron 已失效**（定时发布等）。⚠️ 服务器上**没有
+  cron 守护进程**（Ubuntu 26.04 上 `crontab` 命令都不存在，只有 systemd timers，`/etc/cron.d`
+  下的文件是死的没人处理）——如需恢复，机制是 systemd timer + oneshot service（参考
+  `phpsessionclean.timer` 的写法），定期 `curl -H "Host: blog.meathill.com"
+  http://127.0.0.1:8080/wp-cron.php`，不是传统 crontab。2026-07-20 曾尝试创建
+  `wp-cron.timer`/`wp-cron.service`（每 15 分钟触发一次），被 Claude Code 的权限分类器拦下
+  （新建持久化、开机自启的系统服务，合理地要求人工确认），**截至目前尚未创建**。
 - 发布时效：边缘 wp-json 24h / feed 30d + ISR 300s——时效由 **purge-on-publish** 保证
   （publishBlogPost 成功后自动 `purge_everything`，secret `CLOUDFLARE_PURGE_TOKEN`，
   失败不阻断发布、toast 提醒手动 Purge Everything）。
