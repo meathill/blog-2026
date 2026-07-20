@@ -289,6 +289,17 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 - 顺带更新了插件(akismet 5.7、gutenberg 23.5.3、jetpack 16.0.1、jetpack-boost 4.6.3、
   wp-super-cache 3.1.1),更新前打包备份到 `/var/www/backups/2026-07-20-plugins/`。
   `code-syntax-block`/`foodpack` 已是最新;`uyan` 目前是 inactive 状态,未更新。
+- **`foodpack`/`code-syntax-block` 已 deactivate**(未删除文件,仅停用)。核实
+  `code-syntax-block` 安全:全站发布文章走 `wp_posts.post_content` 搜索,匹配
+  `wp:code-syntax*`/`class="code-syntax*` 均 0 条,没有任何已发布文章真正用过这个插件注册的
+  block;`wp-block-code`(165 条)是 WordPress **核心自带**的 Code block,和这个第三方插件无关。
+  代码高亮实际由前端 `highlight.js` 独立处理(见 `src/lib/wordpress/posts.ts` 的
+  `processContent`),不依赖 WP 侧插件输出的 markup/CSS。
+  ⚠️ 但 `PostView.tsx` 仍然直接渲染 `post.content.rendered`(wp-json 返回的服务端渲染 HTML)——
+  "前端渲染不依赖 WP 了"**只对 code-syntax-block 这个具体插件成立**,WordPress 本身仍是文章
+  正文内容的来源,不要泛化到"WP 插件都能随便删"。
+- **核心版本决定(2026-07-20)**:暂不升级到 7.0.x,等 **7.2** 前后再评估,除非官方提前终止
+  6.x 分支的安全维护(WP 历来对旧大版本长期出安全补丁,目前没有 6.x 停止维护的迹象)。
 
 **坑与约定：**
 - Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
