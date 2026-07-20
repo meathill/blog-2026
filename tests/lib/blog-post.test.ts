@@ -82,7 +82,7 @@ describe('blog-post', () => {
         hasMeaningfulBlogBlocks([
           {
             type: 'paragraph',
-            content: [{ type: 'text', text: 'BlockNote 正文' }],
+            content: [{ type: 'text', text: 'BlockNote 正文', styles: {} }],
           },
         ]),
       ).toBe(true);
