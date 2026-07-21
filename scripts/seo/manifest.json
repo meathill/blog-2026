@@ -9,15 +9,15 @@
       "faq": [
         {
           "q": "Next.js 能直接部署到 Cloudflare Workers 吗？",
-          "a": "需要通过 @opennextjs/cloudflare 适配器把 Next.js 构建产物转换为 Workers 可运行的格式，再用 wrangler 部署；App Router、ISR、Route Handlers 都受支持。"
+          "a": "需要通过 @opennextjs/cloudflare 适配器把 Next.js 构建产物转换为 Workers 可运行的格式，再用 wrangler 部署；App Router、ISR、Route Handlers 都受支持，本站（Next.js 16 + @opennextjs/cloudflare 1.19）就是生产实例。"
         },
         {
           "q": "OpenNext 和 next-on-pages 有什么区别？",
-          "a": "next-on-pages 面向 Cloudflare Pages 且依赖 Edge Runtime；@opennextjs/cloudflare 面向 Workers，支持 Node.js 运行时与更完整的 Next.js 特性，是目前推荐路径。"
+          "a": "next-on-pages 面向 Cloudflare Pages 且依赖 Edge Runtime，目前已退役；@opennextjs/cloudflare 面向 Workers，支持 Node.js 运行时与更完整的 Next.js 特性，是官方推荐路径。"
         },
         {
           "q": "部署后 ISR / 缓存不生效怎么办？",
-          "a": "确认已配置 R2 增量缓存与对应绑定，并检查 revalidate 设置；Workers 环境的缓存依赖 OpenNext 的 incremental cache，与 Vercel 默认行为不同。"
+          "a": "确认已配置 R2 增量缓存与对应绑定（配合 DO 队列、D1 tag cache），并检查 revalidate 设置；另外注意响应里不要带 set-cookie（会变 no-store），且每次 deploy 会更换 build id、ISR 缓存整体失效属预期现象。"
         }
       ],
       "related": [
@@ -34,15 +34,15 @@
       "faq": [
         {
           "q": "为什么在 Workers 里要用 Hyperdrive 连 Supabase？",
-          "a": "Workers 无常驻连接，直连 Postgres 会受连接数与握手延迟困扰；Hyperdrive 提供连接池与边缘缓存，显著降低查询延迟、避免连接耗尽。"
+          "a": "Workers 无常驻连接，直连 Postgres 每个请求都要付出 TCP/TLS/认证握手的多次往返，还会撞上连接数上限；Hyperdrive 在 Cloudflare 网络内维护常驻连接池并缓存可缓存的读查询，显著降低查询延迟、避免连接耗尽。"
         },
         {
           "q": "Hyperdrive 支持 Supabase 的连接方式吗？",
-          "a": "支持。使用 Supabase 提供的 Postgres 连接串（建议用 pooler 端口）配置 Hyperdrive，即可在 Workers 中通过 Hyperdrive 绑定访问。"
+          "a": "支持。用 Supabase 的直连地址（端口 5432）配置 Hyperdrive，即可在 Workers 中通过 Hyperdrive 绑定访问；Supavisor pooler 地址（端口 6543）留给本地开发用，Hyperdrive 本身就是连接池，不要给它再套一层 pooler。"
         },
         {
           "q": "Hyperdrive 会缓存写操作吗？",
-          "a": "不会。Hyperdrive 只缓存可缓存的读查询，写操作与事务始终直达数据库，因此不必担心数据一致性问题。"
+          "a": "不会。Hyperdrive 只缓存可缓存的读查询，写操作、事务以及含易变函数的查询始终直达数据库，因此不必担心数据一致性问题。"
         }
       ],
       "related": [
@@ -59,18 +59,21 @@
       "faq": [
         {
           "q": "Vercel 和 Cloudflare 哪个更便宜？",
-          "a": "中小流量下两者免费额度都够用；流量增大后 Cloudflare 在带宽（出站不计费）和请求计费上通常更省，Vercel 的带宽与函数调用费用增长更快。"
+          "a": "中小流量下两者免费额度都够用；流量增大后 Cloudflare 明显更省——出站带宽不计费、函数只按 CPU 时间计费（IO 等待免费），而 Vercel 的带宽与图片优化费用会随流量线性上涨，具体单价以官方定价页为准。"
         },
         {
           "q": "Cloudflare 能完整支持 Next.js 吗？",
-          "a": "可以。通过 OpenNext 适配器，App Router、ISR、Route Handlers 等大部分特性都能在 Cloudflare Workers 上运行，少数 Vercel 专有能力需替代方案。"
+          "a": "可以。通过 @opennextjs/cloudflare 适配器（Node runtime），App Router、SSR、ISR、Route Handlers 等主流特性都能在 Cloudflare Workers 上运行；旧的 next-on-pages/Edge runtime 路线已淘汰。少数 Vercel 专有能力（如全托管图片优化）需要用 Cloudflare Images 等替代方案。"
         },
         {
           "q": "已经在 Vercel 上，值得迁移到 Cloudflare 吗？",
-          "a": "若主要诉求是降低带宽成本、用 Workers/R2/D1 等一体化生态，迁移收益明显；若重度依赖 Vercel 专有特性或团队流程，则需权衡迁移成本。"
+          "a": "若主要诉求是降低带宽成本、或想用 Workers/R2/D1 等一体化生态，迁移收益明显，且 OpenNext 成熟后迁移成本已大幅下降；若重度依赖 Vercel 专有特性或团队协作流程，则建议留在 Vercel，等特性追平后再评估。"
         }
       ],
-      "related": ["migrate-next-js-from-vercel-to-cloudflare", "best-practice-for-nextjs-on-cloudflare-worker-2026"]
+      "related": [
+        "migrate-next-js-from-vercel-to-cloudflare",
+        "best-practice-for-nextjs-on-cloudflare-worker-2026"
+      ]
     },
     "upload-file-via-cloudflare-r2": {
       "category": "infra",
@@ -80,15 +83,15 @@
       "faq": [
         {
           "q": "R2 上传要用预签名 URL 吗？",
-          "a": "推荐。由 Worker 用 S3 兼容 API 生成预签名 URL，让浏览器直传到 R2，避免文件经过 Worker 中转，节省 CPU 时间与带宽。"
+          "a": "大文件推荐。由服务端用 S3 兼容 API 生成预签名 URL，让浏览器直传到 R2，避免文件经过 Worker 中转，节省 CPU 时间与带宽；小文件在 Workers 上用 R2 binding 中转更简单。"
         },
         {
           "q": "R2 兼容 S3 SDK 吗？",
-          "a": "兼容 S3 API。可用 aws4fetch 或 AWS SDK 配置 R2 的 endpoint 与凭证来生成预签名 URL；在 Workers 中更推荐轻量的 aws4fetch。"
+          "a": "兼容 S3 API。可用 aws4fetch 或 AWS SDK 配置 R2 的 endpoint 与凭证来生成预签名 URL；在 Workers 中更推荐轻量的 aws4fetch，体积小、冷启动友好。"
         },
         {
           "q": "上传遇到 CORS 报错怎么解决？",
-          "a": "在 R2 存储桶的 CORS 策略中放行你的源站域名与所需方法（PUT/GET），并确保预签名 URL 的请求头与签名时一致。"
+          "a": "在 R2 存储桶的 CORS 策略中放行你的源站域名与所需方法（PUT/GET），AllowedHeaders 里加上 Content-Type，并确保预签名 URL 的请求头与签名时一致。"
         }
       ],
       "related": [
@@ -104,15 +107,15 @@
       "faq": [
         {
           "q": "从 Vercel 迁到 Cloudflare 难吗？",
-          "a": "多数 Next.js 项目用 @opennextjs/cloudflare 适配后改动不大，主要工作在环境变量/绑定迁移、缓存与图片优化的差异处理，以及域名与 DNS 切换。"
+          "a": "多数 Next.js 项目用 @opennextjs/cloudflare 适配后代码改动不大，一个周末足够完成。主要工作在环境变量与绑定迁移、ISR/缓存与图片优化的差异处理，以及域名与 DNS 切换；建议按文中 Checklist 逐项核对。"
         },
         {
           "q": "迁移后图片优化怎么办？",
-          "a": "Vercel 的 next/image 优化需替换为 Cloudflare Images 或自定义 loader；可配置 images.loader 指向 Cloudflare 的图片缩放服务。"
+          "a": "Vercel 的 next/image 优化需替换为 Cloudflare Images 或自定义 loader；可配置 images.loader 指向 Cloudflare 的图片缩放服务（/cdn-cgi/image/），服务端生成图片的场景则用 IMAGES binding。"
         },
         {
           "q": "环境变量和密钥如何迁移？",
-          "a": "用 wrangler secret 管理敏感变量，公开变量写入 wrangler 配置；注意 Workers 不读取 .env，需显式声明绑定。"
+          "a": "用 wrangler secret put 管理敏感变量，公开变量写入 wrangler 配置的 vars 字段；注意 Workers 线上不读取 .env 文件，D1/R2/KV 等资源也需在配置里显式声明绑定。"
         }
       ],
       "related": [
@@ -163,7 +166,10 @@
           "a": "用 tools.meathill.com 的 OG 校验工具或社交平台 debugger 检查 og:image 尺寸、可访问性与缓存头。"
         }
       ],
-      "related": ["best-practice-for-nextjs-on-cloudflare-worker-2026", "upload-file-via-cloudflare-r2"]
+      "related": [
+        "best-practice-for-nextjs-on-cloudflare-worker-2026",
+        "upload-file-via-cloudflare-r2"
+      ]
     }
   }
 }

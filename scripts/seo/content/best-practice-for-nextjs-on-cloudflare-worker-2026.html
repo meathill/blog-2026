@@ -1,0 +1,786 @@
+<!-- wp:paragraph -->
+<p><strong>2026-07 更新</strong>：本文已按 2026 年年中的 OpenNext 生态现状全面更新。@opennextjs/cloudflare 现在是 Cloudflare 官方推荐的 Next.js 部署路径（next-on-pages 已经退役），我自己的博客也用这套方案在生产环境跑了大半年。这次更新补充了真实项目的 wrangler.jsonc / open-next.config.ts 配置、ISR 与 R2 增量缓存、Workers CPU 时间限制、一个 set-cookie 毁掉边缘缓存等一整批实战踩坑记录，全部来自线上真实事故，不是文档搬运。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>随着 Vibe coding 兴起，我们有越来越多的项目基于 <strong>Next.js</strong> + <strong>OpenNext</strong> 构建，部署在 <strong>Cloudflare Workers</strong> 上。这套方案性能强悍、成本极低，堪称目前全栈开发的“版本答案”。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>但是，很多同学（包括我自己）从 Vercel、Docker 或者 VPS 迁移过来时，都会掉进同一批坑里：<strong>环境变量怎么不生效？</strong> 或者<strong>为什么本地好好的，部署上去就是 undefined？甚至，怎么部署又失败了，为啥访问不到数据库？</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>今天我们就借着手里这个实战项目——也就是你正在看的这个博客——来彻底搞清楚 Cloudflare Workers 环境下部署 Next.js 的门道。顺带说一句，如果你还没迁移、正在犹豫，可以先看我之前写的《<a href="/posts/next-js/migrate-next-js-from-vercel-to-cloudflare">把 Next.js 从 Vercel 迁移到 Cloudflare Workers</a>》，那篇讲的是迁移动机和整体步骤；本文更聚焦“迁过来之后怎么配好、怎么别踩坑”。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">🗺️ 先对齐 2026 现状：OpenNext 已经是官方答案</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>先把生态现状说清楚，免得你照着老教程折腾。截至 2026 年中：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><strong>@opennextjs/cloudflare 是官方推荐路径</strong>。老一代的 <code>@cloudflare/next-on-pages</code> 已经退役，官方文档也把新项目全部指向 OpenNext 适配器。如果你搜到的教程还在讲 next-on-pages + Edge Runtime，直接关掉。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>跑在 Workers 的 Node.js 运行时上</strong>（<code>nodejs_compat</code>），不再强迫你把所有路由改成 Edge Runtime。App Router、Route Handlers、Middleware、Server Actions、ISR 都支持。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>ISR / 增量缓存要自己配</strong>：靠 R2 + Durable Objects + D1 组一套“三件套”（下文详解），这是和 Vercel 差异最大的地方。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong><code>next/image</code> 要换自定义 loader</strong>，对接 Cloudflare 的 <code>/cdn-cgi/image/</code> 边缘裁剪，或者用 IMAGES binding。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">本站就是真实案例</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>你现在看到的这个博客，就是 Next.js 16 + OpenNext 部署在 Workers 上的，版本和关键脚本长这样（直接从 package.json 里抄的）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="json" class="language-json">{
+  "scripts": {
+    "dev": "next dev -p 3100",
+    "build": "next build",
+    "preview": "opennextjs-cloudflare build &amp;&amp; opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build &amp;&amp; opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts"
+  },
+  "dependencies": {
+    "next": "^16.2.4",
+    "@opennextjs/cloudflare": "^1.19.4"
+  },
+  "devDependencies": {
+    "wrangler": "^4.86.0"
+  }
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>日常开发直接 <code>next dev</code>，跟在 Vercel 上没区别；部署就是 <code>opennextjs-cloudflare build</code> 把 Next.js 构建产物转换成 Worker，再 deploy 上去。<code>open-next.config.ts</code> 是全部的适配器配置，真实内容就这么几行：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">// open-next.config.ts
+import { defineCloudflareConfig } from '@opennextjs/cloudflare';
+import r2IncrementalCache from '@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache';
+import doQueue from '@opennextjs/cloudflare/overrides/queue/do-queue';
+import d1TagCache from '@opennextjs/cloudflare/overrides/tag-cache/d1-next-tag-cache';
+
+export default defineCloudflareConfig({
+  incrementalCache: r2IncrementalCache, // ISR 页面缓存存 R2
+  queue: doQueue,                       // revalidate 队列用 Durable Object
+  tagCache: d1TagCache,                 // revalidateTag 的索引存 D1
+  enableCacheInterception: true,        // 缓存命中时不进 Next.js 服务逻辑，直接回
+});</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>对应的 <code>wrangler.jsonc</code>（删掉了业务绑定和资源 ID，骨架是真实的）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="jsonc" class="language-jsonc">{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "blog-2026",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // ISR 三件套之一：Durable Object 队列
+  "durable_objects": {
+    "bindings": [
+      { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }
+  ],
+  // ISR 三件套之二：R2 增量缓存
+  "r2_buckets": [
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "site-cache" }
+  ],
+  // ISR 三件套之三：D1 tag cache
+  "d1_databases": [
+    { "binding": "NEXT_TAG_CACHE_D1", "database_name": "tag-cache", "database_id": "……" }
+  ],
+  // 图片转码（后文 Satori 出图那一节会用到）
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true },
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://meathill.com"
+  }
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>下面进入正题。先讲环境变量——它依然是新人掉得最惨的坑，然后是这一年在生产环境攒出来的新坑。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">❌ 反例教材：看起来很简单</h2>
+<!-- /wp:heading -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="json" class="language-json">{
+  "name": "app-worker",
+  "env": {
+    "prod": {
+      "vars": {
+        "NEXT_PUBLIC_API_URL": "https://api.example.com", // ☠️ 以为配在这里就行了？天真！
+        "DB_HOST": "postgres.prod.internal"
+      },
+      "secrets": ["API_SECRET_KEY"]
+    }
+  }
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>来看看这个典型的错误示范。很多人（比如我）的直觉是：“既然 Next.js 需要这些变量，又有 <code>wrangler.jsonc</code> 这个配置文件，那我就把它们全都配在这里，Wrangler 肯定会帮我处理好的。”</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>错！大错特错……</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">两个核心维度</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>要搞定环境变量，你必须先明确两个核心维度，如果不区分清楚，你的环境变量配置就只能“碰运气”。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading"><strong>构建时 (Build Time)</strong> vs <strong>运行时 (Runtime)</strong></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><strong>构建时，环境变量通过构建环境（CI 或 Cloudflare 的构建设置）配置</strong>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>编译打包代码</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>预渲染</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p><strong>运行时，环境变量由 <code>vars</code> + <code>secrets</code> 组成，可以本地配置，也可以线上配置</strong>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>Worker</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading"><strong>服务端 (Server-side)</strong> vs <strong>客户端 (Client-side)</strong></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><strong>服务端，可以访问所有变量</strong>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>Server component</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>Server action</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>API</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p><strong>客户端，只能访问构建时就存在的 <code>NEXT_PUBLIC_*</code></strong>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>HTML + JS，通常是静态</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">💣 坑一：构建时 (Build Time) 的缺失</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><strong>Next.js 的构建机制</strong>决定了 <code>NEXT_PUBLIC_</code> 变量的行为：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>所有以 <code>NEXT_PUBLIC_</code> 开头的变量，在执行 <code>next build</code> 时，会被<strong>直接替换成字符串常量</strong>并打包进客户端的 JS 文件里。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>也就是说，<strong>构建时环境变量必须预先定义在“构建 &gt; 变量”里，或者在创建 Worker 时，在“高级设置 &gt; 变量”里设置</strong>。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>当你运行 <code>npm run build</code> 时，此时 <strong>Cloudflare Worker 还没启动</strong>，Wrangler 的配置也没生效。Next.js 的编译器自然看不到 <code>wrangler.jsonc</code> 里的内容，也看不到 <code>.dev.vars</code>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading"><strong>后果</strong></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>编译后的客户端代码里，<code>process.env.NEXT_PUBLIC_API_URL</code> 会被编译成 <code>undefined</code>。用户打开浏览器，请求发不出去，控制台一片红。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">💣 坑二：构建完毕之后的预渲染</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Next.js 自带多种渲染模式：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>CSR：客户端渲染，前后端分离后常见的模式</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>SSR：服务器端渲染，在后端渲染完页面之后把 HTML 直接发给浏览器，有利于用户体验和 SEO</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>ISR：渐增式渲染，页面渲染后，将 HTML 作为缓存保存起来，一段时间内不需要重复渲染</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>Pre-rendering：预渲染，把静态页面和高频访问页面在构建时渲染好，运行时就只看缓存，性能最优</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>于是，构建完成之后，Next.js 会自动帮我们启动第四步，也就是预渲染首页、sitemap 和其他一些明确可以缓存的页面。这个时候，<code>wrangler.jsonc</code> 里的变量也没有生效。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">后果</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>预渲染的执行环境在构建运行时，也要启动服务器，但是没有 <code>wrangler.jsonc</code> 定义的变量……😵‍💫😵‍💫……所以不是 <code>NEXT_PUBLIC_</code> 的环境变量也要定义在构建时变量里。否则，可能连不上数据库、访问不到 API，导致预渲染失败，继而部署失败。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">💣 坑三：运行时 (Runtime) 的混淆</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Cloudflare Worker 和传统的 Node.js 服务器不同。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>在 <strong>Traditional Node</strong>（如 Vercel / Docker）里，环境变量通常在启动进程前注入到 <code>process.env</code>。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>在 <strong>Cloudflare Worker</strong> 里，环境变量是作为对象绑定 (Bindings) 挂载在 <code>env</code> 参数上的。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>虽然 <strong>OpenNext</strong> 和 <strong><code>nodejs_compat</code></strong> 帮我们做了很多兼容工作，试图把 <code>env</code> 映射回 <code>process.env</code>，但这仅限于<strong>服务端运行时</strong>。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">✅ 正确姿势：分而治之</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>要在 Cloudflare Worker + Next.js 体系下玩转环境变量，你需要把它们拆开处理。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">1. 搞定构建时 (Build Time)</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><strong>目标</strong>：确保 <code>next build</code> 能读到 <code>NEXT_PUBLIC_</code> 变量。<br><strong>做法</strong>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><strong>本地开发</strong>：老老实实写 <code>.env</code> 文件（如果在 <code>.dev.vars</code> 里写了 <code>NODEJS_ENV=development</code>，那就要写 <code>.env.development</code>）。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>CI/CD (GitHub Actions / Cloudflare Worker Build)</strong>：<strong>必须</strong>在构建时环境变量设置里，把所有 <code>NEXT_PUBLIC_</code> 变量填一遍。同时，预渲染所需的环境变量也要定义。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash"># 必须在构建环境存在的变量
+NEXT_PUBLIC_API_URL=https://api.example.com
+NEXT_PUBLIC_ANALYTICS_ID=xyz123
+
+# 预渲染时所需的变量，比如首页需要读取数据库
+DATABASE_URL=mysql:xxxx</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">2. 搞定运行时 (Runtime)</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><strong>目标</strong>：让服务端代码 (API Routes, Server Components) 能读到 Vars 和 Secrets。<br><strong>做法</strong>：使用 <code>wrangler.jsonc</code>（或 <code>wrangler.toml</code>）配置。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>这就是 <code>wrangler</code> 发挥作用的地方。这里的变量只会在 Worker 跑在边缘节点上时存在，并且<strong>只有服务端代码能读到</strong>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="jsonc" class="language-jsonc">{
+  "env": {
+    "prod": {
+      // ✅ 这里的变量是给 Server 用的
+      "vars": {
+        // 其实这里甚至不需要配 NEXT_PUBLIC_...，除非你在 Server 端也用了它
+        // 但为了统一管理，通常也会保留一份
+        "NEXT_PUBLIC_API_URL": "https://api.example.com",
+        "INTERNAL_CONFIG": "some-value"
+      },
+      // ✅ 敏感信息放 secrets，不要明文写在 vars 里
+      "secrets": ["DATABASE_PASSWORD", "OPENAI_API_KEY"]
+    }
+  }
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>通常来说，不能暴露给前端的环境变量都会定义在这里。典型的就是数据库连接串——顺带一提，如果你的后端连的是 Postgres / Supabase 这类传统数据库，别让 Worker 每次请求都裸连数据库，中间套一层连接池是必须的，这块我单独写过一篇《<a href="/posts/cloudflare-worker/best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker">Workers + Supabase + Hyperdrive 最佳实践</a>》，讲连接串怎么配、Hyperdrive 怎么绑定。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">3. 本地开发必备：<code>.dev.vars</code> 和 <code>.env(.development)</code></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>你可能会问：“<code>wrangler.jsonc</code> 里只能写明文的 vars，那 secrets 怎么办？总不能把 API Key 提交到 GitHub 吧？”</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>这时候就需要 <strong><code>.dev.vars</code></strong> 文件出场了。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><strong>作用</strong>：专门用于本地开发 (<code>npm run dev</code>) 时的 Secrets 注入。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>格式</strong>：和 <code>.env</code> 一样，<code>KEY=VALUE</code>。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>注意</strong>：<strong>千万不要提交到 git！</strong>（记得加 <code>.gitignore</code>）</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash"># 本地开发用的 Secrets
+OPENAI_API_KEY=sk-proj-123456
+DATABASE_PASSWORD=secret-password</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>当你运行 <code>wrangler dev</code> 或 <code>next dev</code>（通过 OpenNext 适配器）时，Wrangler 会自动读取这个文件，并把它挂载到 <code>env</code> 上。这样你就不用在 <code>wrangler.jsonc</code> 里写假的 secrets。线上的 secrets 则用 <code>wrangler secret put KEY</code> 上传，或在 Dashboard 里添加。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>如果某些环境变量只有前端会用，那么就可以用 <code>.env</code> 来存放，跟其他框架的开发体验一致。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">4. 极致体验：类型安全 (Type Safety)</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在 TypeScript 项目里，最爽的莫过于输入 <code>env.</code> 之后，编辑器自动提示所有的变量名。Cloudflare 提供了官方支持来实现这一点。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>步骤</strong>：运行命令生成类型定义（我把它挂在 <code>pnpm cf-typegen</code> 脚本上）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash">npx wrangler types --env-interface CloudflareEnv env.d.ts</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>这个命令会扫描你的 <code>wrangler.jsonc</code> 和 <code>.dev.vars</code>，自动生成类型定义文件，里面定义了 <code>CloudflareEnv</code> 接口——vars、secrets、KV、R2、D1、DO 绑定全都有：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">interface CloudflareEnv {
+  KV_Company: KVNamespace;
+  DB: D1Database;
+  NEXT_PUBLIC_API_URL: string;
+  OPENAI_API_KEY: string;
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>然后在代码里通过 <code>getCloudflareContext()</code> 使用这个类型：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">import { getCloudflareContext } from '@opennextjs/cloudflare';
+
+export async function GET(request: Request) {
+  const { env } = getCloudflareContext();
+  // 这里的 env 就是 CloudflareEnv 类型，有自动补全！
+  console.log(env.NEXT_PUBLIC_API_URL);
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>注意一个细节：在<strong>静态生成 / 预渲染</strong>的上下文里（比如 <code>generateStaticParams</code>、构建期跑的 <code>generateMetadata</code>），要用异步形式 <code>await getCloudflareContext({ async: true })</code>，否则会直接抛错。我的经验是：不确定调用点会不会进静态化路径的，一律写 async 形式，省心。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">5. 代码怎么写？</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在 Next.js + OpenNext 环境下，你可以像平时一样写代码，但心里要有数：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">// ✅ 场景 A：客户端组件 (Client Component)
+// 这个值是在 Build Time 被“烧录”进来的。
+// 如果构建时没给 env，这就是 undefined，不管你 wrangler 里配没配。
+console.log(process.env.NEXT_PUBLIC_API_URL);
+
+// ✅ 场景 B：服务端组件 (Server Component / API Route)
+// 这个值是在 Runtime 动态获取的。
+// OpenNext 会帮我们从 Worker 的 env 注入到 process.env
+export async function GET() {
+  // 这里能读到 wrangler secrets
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('Missing API Key! Check your wrangler secrets!');
+  }
+
+  return Response.json({ status: 'ok' });
+}
+
+// 但是，考虑到类型安全、通常我们还要用 bindings，更推荐 getCloudflareContext()
+export async function GET() {
+  const { env } = getCloudflareContext();
+  const apiKey = env.OPENAI_API_KEY;
+  await env.KV.get(key);
+  return Response.json({ status: 'ok' });
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">6. 高级技巧：环境隔离与 Secrets 管理</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>除了以上几点，还有几个非常重要的“潜规则”，也是新手经常踩坑的地方。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">🔒 规则一：Secrets 不会被覆盖 (Secrets Persistence)</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>很多同学担心部署时 <code>wrangler.jsonc</code> 里没有写 Secrets 的值（出于安全原因），会不会把线上已经配置好的 Secrets 给覆盖成空？<br><strong>答案是：不会。</strong><code>wrangler deploy</code> 只更新代码和 <code>vars</code>。Secrets 是存储在 Cloudflare 的加密保险箱里的，只要你不显式地去删除或更新它，它就一直都在。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">🧬 规则二：Env 不会继承 (No Inheritance)</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>这是一个反直觉的设计：<strong>Environment 配置之间是互不继承的</strong>。<br>如果你在 <code>wrangler.jsonc</code> 的最外层写了一堆通用配置，然后在 <code>[env.production]</code> 里只写了差异部分……<br><strong>恭喜你，你的 Production 环境会丢失所有最外层的配置！</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>正确做法</strong>：在每个 Env（<code>dev</code>、<code>staging</code>、<code>prod</code>）里，<strong>老老实实把所有变量重新写一遍</strong>。虽然看起来冗余，但能保证配置的确定性，避免缺乏隐式继承带来的诡异 Bug。类似的还有各种 bindings，很难用，但是没办法。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">🛡️ 规则三：如果没有指定环境，dev 环境不会默认生效</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>如果你在 <code>wrangler.jsonc</code> 配置了多个环境，比如 dev、staging、prod。但是启动开发环境的时候没有指定环境，那么 dev 环境不会默认生效。需要在 <code>next.config.ts</code> 里指定环境：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">initOpenNextCloudflareForDev({
+  environment: 'dev',
+  configPath: './wrangler.jsonc',
+});</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">💣 2026 追加：这一年在生产环境踩出来的新坑</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>环境变量只是入门关。这个博客上线之后，我又陆续踩了一批更隐蔽的坑，每一个都消耗过我半天以上的排查时间。下面按“杀伤力”排序。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">坑四：ISR 不是配个 revalidate 就完事——R2 增量缓存三件套</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在 Vercel 上，ISR 是“开箱即用”的：写个 <code>revalidate</code>，平台自动帮你存缓存、跑重新验证。到了 Workers 上，<strong>这套基础设施要你自己搭</strong>——OpenNext 只提供接口，存储和队列得用 Cloudflare 自家的资源拼起来：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><strong>R2 增量缓存</strong>（<code>NEXT_INC_CACHE_R2_BUCKET</code>）：ISR 渲染出来的页面 HTML / RSC payload 存这里。不配的话，<code>revalidate</code> 等于摆设，每次请求都全量渲染。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>Durable Object 队列</strong>（<code>NEXT_CACHE_DO_QUEUE</code>）：负责 stale 页面的后台重新验证，保证同一页面不会被并发重复渲染。注意要在 <code>migrations</code> 里声明 DO 的 class。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>D1 tag cache</strong>（<code>NEXT_TAG_CACHE_D1</code>）：支撑 <code>revalidateTag</code> / <code>revalidatePath</code>。如果你只用时间驱动的 revalidate，可以不配；用了按需失效就必须有。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>配置就是前文贴过的 <code>open-next.config.ts</code> + <code>wrangler.jsonc</code>，照抄就能用。另外强烈建议把 <code>enableCacheInterception: true</code> 打开：缓存命中时直接在 Worker 入口把响应发回去，不再进入 Next.js 的路由和渲染逻辑，省 CPU 时间也降时延。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>这里还有一个必须知道的“预期现象”：<strong>每次 deploy 都会更换 build id，整个 ISR 缓存随之整体失效</strong>。部署之后的一小段时间里，所有页面都要重新回源渲染，你会看到一波源站请求 / 数据库负载尖峰。这不是 bug，但你要保证上游扛得住——我的做法是给上游 API（本站是 WordPress 的 wp-json）再加一层 Cloudflare 边缘缓存，让部署尖峰打在边缘缓存上而不是数据库上。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>顺带说一句，R2 在这套架构里是个多面手：除了当 ISR 缓存，我还用它存放生成好的 OG 图和用户上传的文件。R2 没有出口流量费，跟 Workers 又是零配置互通，具体上传怎么做可以看《<a href="/posts/infra/upload-file-via-cloudflare-r2">用 Cloudflare R2 上传文件实战</a>》。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">坑五：Workers 的 CPU 时间不是无限的——Satori 出图翻车记</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Workers 按 <strong>CPU 时间</strong>计费和限额（墙钟时间里等待 I/O 不算），日常渲染页面绰绰有余。但一旦你干重活——比如用 <code>next/og</code>（底层是 Satori）动态生成社交分享图——就会立刻撞到天花板。我在做文章 OG 图的时候连踩三个坑：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>Satori 不支持 WebP</strong>。WordPress 的特色图片十有八九是 WebP，直接喂进去就报错。必须先转码成 PNG/JPEG。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong><code>global_fetch_strictly_public</code> 之下，Worker 不能回打同 zone 的 URL</strong>。所以想借 <code>/cdn-cgi/image/</code> 转码是走不通的——那个子请求会被打回 Worker 自己，拿到的根本不是图片。正解是用 <strong>IMAGES binding</strong> 在 Worker 内部直接转码。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong><code>ImageResponse</code> 永远输出 PNG，没有参数能改</strong>。带照片的 1200×630 合成图 PNG 普遍在 1MB 上下，超过 WhatsApp 约 300KB 的红线，分享卡片直接降级甚至不显示。</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>最终方案：输入侧用 IMAGES binding 把封面图裁成 1200×630 的 PNG 再喂给 Satori（顺便省 base64 体积和解码内存），输出侧把 <code>ImageResponse</code> 的 PNG 再过一次 IMAGES 转成 JPEG：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">// 输入侧：把 WebP 封面在 Worker 内转成 PNG，裁到 OG 画布尺寸
+const cover = await env.IMAGES.input(upstream.body)
+  .transform({ width: 1200, height: 630, fit: 'cover' })
+  .output({ format: 'image/png' });
+
+// 输出侧：把 ImageResponse 的 PNG 再转成 JPEG@82
+const transformed = await env.IMAGES.input(pngStream).output({
+  format: 'image/jpeg',
+  quality: 82,
+});
+return new Response(transformed.image(), {
+  headers: { 'Content-Type': 'image/jpeg' },
+});
+// 实测体积从 ~1MB 降到 150–280KB，稳过各家社交平台的限制</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>另外，Satori 渲染是纯 CPU 密集操作，<strong>千万不要每次请求都现渲</strong>。我的做法是渲染结果写进 R2，命中缓存就直接回图，一篇文章一辈子只渲染一次（发布钩子里主动刷新）。CPU 限额的具体数字随套餐不同，以官方定价页为准，但“重计算的结果必须缓存”这个原则在 Workers 上是铁律。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">坑六：一个 set-cookie，毁掉整个边缘缓存</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>这个坑最隐蔽，杀伤力却最大。我用 next-intl 做双语，它默认会写一个 <code>NEXT_LOCALE</code> cookie 记住用户语言。看起来人畜无害？问题在于：<strong>只要响应里带了 <code>set-cookie</code>，这个响应就会被按 <code>no-store</code> 处理</strong>——边缘缓存直接失效，浏览器的 bfcache（后退/前进秒开）也被禁用。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>结果就是：明明配好了 ISR 和边缘缓存，页面却每次都回源渲染，Core Web Vitals 也上不去。排查了半天，罪魁祸首竟然是一个我根本没用到的 cookie。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>修复很简单——语言完全由 URL 驱动，把探测和 cookie 都关掉（这是本站 <code>src/i18n/routing.ts</code> 的真实配置）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">// src/i18n/routing.ts
+export const routing = defineRouting({
+  locales: ['en', 'zh'],
+  defaultLocale: 'zh',
+  localePrefix: 'as-needed',
+
+  // URL 即权威：不依赖 cookie / Accept-Language 自动改语言
+  localeDetection: false,
+
+  // 不写 NEXT_LOCALE cookie：set-cookie 会让响应变 no-store
+  // —— 边缘缓存失效 + bfcache 被禁
+  localeCookie: false,
+});</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>推而广之：在 Workers + 边缘缓存的架构下，<strong>审计你的每一个 set-cookie</strong>。A/B 测试 SDK、统计脚本、i18n 库都可能悄悄写 cookie，把你的缓存命中率打成零。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">坑七：<code>export const runtime = 'edge'</code> 会让路由直接消失</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>反直觉预警：在“边缘计算平台”上部署，反而<strong>不能</strong>用 Next.js 的 Edge Runtime。<code>@opennextjs/cloudflare</code> 只打包 Node runtime 的路由，凡是标了 <code>export const runtime = 'edge'</code> 的 route，<strong>根本不会进入构建产物</strong>——本地一切正常，线上直接裸 500。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>我的 RSS feed 路由就是这么坏的：从 Vercel 迁过来时留着一行 <code>runtime = 'edge'</code>（在 Vercel 上这是优化），结果 feed 悄无声息地 500 了很久才被发现。结论：<strong>迁移时全局搜索 <code>runtime = 'edge'</code>，全部删掉</strong>，让所有路由都走默认的 Node runtime——反正整个 Worker 本来就跑在边缘。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">坑八：Workers 是纯 ESM 运行时，选依赖先看构建产物</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>最后一个坑关于依赖选型。Workers 运行时没有全局 <code>require</code>，如果某个包的 ESM 构建产物里内部还藏着 CommonJS 的 <code>require()</code> 调用，Worker 会在启动或首次调用时直接抛 <code>ReferenceError: require is not defined</code>。我在做 HTML 转 Markdown 时用 <code>turndown</code> 就翻了车——它的 <code>.mjs</code> 产物里用 <code>require()</code> 引 DOM 实现，本地 Node 下毫无异常，一上 Workers 就崩，最后换成纯 ESM 的 <code>node-html-parser</code> 才解决。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>经验：给 Workers 项目挑依赖，别只看 npm 周下载量，先确认它在 <strong>ESM-only、无 DOM</strong> 的环境下能跑；拿不准的就 <code>opennextjs-cloudflare build</code> + <code>preview</code> 在本地 workerd 里实际验证一遍——这也是我把 <code>pnpm preview</code> 留在日常流程里的原因。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">🏆 最佳实践总结</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>说了这么多，最后送大家一份 <strong>Cloudflare Workers 上部署 Next.js 的完全清单</strong>（2026 版）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>选对适配器</strong>：新项目直接上 <code>@opennextjs/cloudflare</code>，不要再碰 next-on-pages 的老教程。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>Build Time 分离</strong>：凡是 <code>NEXT_PUBLIC_</code> 开头的变量，在构建时环境变量里配置，构建时注入代码，有助于 Tree-shaking。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>Runtime 显式声明</strong>：服务端用的变量，全部写在 <code>wrangler.jsonc</code> 的 <code>vars</code> 里。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>Build Time 预渲染</strong>：预渲染要用的变量，两边都写，写两遍。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>Secrets 隐式管理</strong>：敏感信息必须用 <code>wrangler secret put</code> 上传，或在 Worker 设置面板里添加；本地开发用 <code>.dev.vars</code>。<code>.env</code> 在线上运行时不生效。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>环境完全隔离</strong>：为 <code>dev</code> 和 <code>prod</code> 准备两套完全独立的资源 ID（KV、R2、D1），防止数据污染；所有 Env 的配置<strong>必须全量复制</strong>，不要依赖继承。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>类型安全</strong>：用 <code>wrangler types</code> 生成 <code>CloudflareEnv</code>，代码里统一 <code>getCloudflareContext()</code> 拿 <code>env</code>；静态化路径记得 <code>{ async: true }</code>。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>ISR 三件套</strong>：R2 增量缓存 + DO 队列 + D1 tag cache 一次配齐，并打开 <code>enableCacheInterception</code>；心里记住“deploy 会清空 ISR 缓存”这个预期现象。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>重计算必缓存</strong>：Satori 出图这类 CPU 密集任务，结果写 R2，绝不每次现算。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>守住边缘缓存</strong>：审计所有 set-cookie；删光 <code>runtime = 'edge'</code>；给上游 API 加边缘缓存兜住部署尖峰。</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><strong>依赖选型看 ESM</strong>：引入新包之前，确认它在 ESM-only、无 DOM 的 Workers 环境能跑，用 <code>preview</code> 实测。</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>遵循这套最佳实践，你的 Cloudflare Workers 项目就能稳如磐石，既享受 Serverless 的低成本，又拥有企业级的稳定性。这套方案我已经在生产环境验证了大半年，上面每一条都有真实事故背书。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>希望这篇文章能帮你少踩几个坑。如果你也在 Workers 上跑 Next.js，欢迎交流你踩到的新坑！</p>
+<!-- /wp:paragraph -->
+
+<!-- seo:faq:start -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">常见问题（FAQ）</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Next.js 能直接部署到 Cloudflare Workers 吗？</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>需要通过 @opennextjs/cloudflare 适配器把 Next.js 构建产物转换为 Workers 可运行的格式，再用 wrangler 部署；App Router、ISR、Route Handlers 都受支持，本站（Next.js 16 + @opennextjs/cloudflare 1.19）就是生产实例。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">OpenNext 和 next-on-pages 有什么区别？</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>next-on-pages 面向 Cloudflare Pages 且依赖 Edge Runtime，目前已退役；@opennextjs/cloudflare 面向 Workers，支持 Node.js 运行时与更完整的 Next.js 特性，是官方推荐路径。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">部署后 ISR / 缓存不生效怎么办？</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>确认已配置 R2 增量缓存与对应绑定（配合 DO 队列、D1 tag cache），并检查 revalidate 设置；另外注意响应里不要带 set-cookie（会变 no-store），且每次 deploy 会更换 build id、ISR 缓存整体失效属预期现象。</p>
+<!-- /wp:paragraph -->
+<!-- seo:faq:end -->
+
+<!-- seo:related:start -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">延伸阅读</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><a href="/posts/next-js/migrate-next-js-from-vercel-to-cloudflare">把 Next.js 从 Vercel 迁移到 Cloudflare</a></li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><a href="/posts/cloudflare-worker/best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker">Workers + Supabase + Hyperdrive 最佳实践</a></li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li><a href="/posts/infra/vercel-vs-cloudflare-pages-how-to-choose-to-deploy-your-website">Vercel vs Cloudflare：部署平台怎么选</a></li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- seo:related:end -->

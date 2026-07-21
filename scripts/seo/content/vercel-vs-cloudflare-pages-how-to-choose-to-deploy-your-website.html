@@ -1,0 +1,378 @@
+<!-- wp:paragraph -->
+<p><strong>2026-07 更新</strong>：这篇文章写于 2024 年，当时的对比对象还是 Vercel vs Cloudflare Pages。两年过去，格局已经变了：Cloudflare 官方的重心从 Pages 全面转向 Workers，Pages 进入维护态；Next.js 部署到 Cloudflare 的推荐路径也从 next-on-pages（Edge runtime）换成了 @opennextjs/cloudflare（Node runtime）。所以这次我把全文重写了一遍，对比对象更新为「Vercel vs Cloudflare Workers」，并补上真实的生产案例——你现在看到的这个博客（meathill.com）就是 Next.js 16 + OpenNext 跑在 Workers 上的。原文里仍然成立的观点我保留了，过时的结论都已修订。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>全栈开发者部署网站，首选无外乎 Vercel 和 Cloudflare 二选一。那么，这两者间有何区别呢？结合我过去几年的体验——我目前两边都在付费使用，都经历过团队协作，去年还亲手把项目从 Vercel 迁到了 Cloudflare Workers——简单分享一下。我觉得本次分享应该言之有物，不过如果跟事实有出入，欢迎各位指正。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table-of-contents {"headings":[{"content":"2026 年的大变化：Pages 让位，Workers 接棒","level":2,"link":"#2026-年的大变化-pages-让位-workers-接棒"},{"content":"Next.js 上 Cloudflare 的正确姿势变了","level":3,"link":"#next-js-上-cloudflare-的正确姿势变了"},{"content":"相似之处","level":2,"link":"#相似之处"},{"content":"Vercel 的优势","level":2,"link":"#vercel-的优势"},{"content":"1. 零配置的开发体验","level":3,"link":"#1-零配置的开发体验"},{"content":"2. Preview 部署体验更完整","level":3,"link":"#2-preview-部署体验更完整"},{"content":"3. 团队管理更好用","level":3,"link":"#3-团队管理更好用"},{"content":"4. Next.js 专有特性开箱即用","level":3,"link":"#4-next-js-专有特性开箱即用"},{"content":"Cloudflare Workers 的优势","level":2,"link":"#cloudflare-workers-的优势"},{"content":"1. 出站带宽免费","level":3,"link":"#1-出站带宽免费"},{"content":"2. 函数计费模型更划算","level":3,"link":"#2-函数计费模型更划算"},{"content":"3. 没有传统意义上的冷启动","level":3,"link":"#3-没有传统意义上的冷启动"},{"content":"4. 一体化生态：R2 / D1 / KV / Queues / Hyperdrive / AI","level":3,"link":"#4-一体化生态-r2-d1-kv-queues-hyperdrive-ai"},{"content":"5. 分析工具和免费额度依然大方","level":3,"link":"#5-分析工具和免费额度依然大方"},{"content":"逐项对比","level":2,"link":"#逐项对比"},{"content":"真实案例：本博客就跑在 Workers 上","level":2,"link":"#真实案例-本博客就跑在-workers-上"},{"content":"怎么选：给不同画像的建议","level":2,"link":"#怎么选-给不同画像的建议"},{"content":"排除的其它选项","level":2,"link":"#排除的其它选项"},{"content":"总结","level":2,"link":"#总结"}]} -->
+<nav class="wp-block-table-of-contents"><ol><li><a class="wp-block-table-of-contents__entry" href="#2026-年的大变化-pages-让位-workers-接棒">2026 年的大变化：Pages 让位，Workers 接棒</a><ol><li><a class="wp-block-table-of-contents__entry" href="#next-js-上-cloudflare-的正确姿势变了">Next.js 上 Cloudflare 的正确姿势变了</a></li></ol></li><li><a class="wp-block-table-of-contents__entry" href="#相似之处">相似之处</a></li><li><a class="wp-block-table-of-contents__entry" href="#vercel-的优势">Vercel 的优势</a><ol><li><a class="wp-block-table-of-contents__entry" href="#1-零配置的开发体验">1. 零配置的开发体验</a></li><li><a class="wp-block-table-of-contents__entry" href="#2-preview-部署体验更完整">2. Preview 部署体验更完整</a></li><li><a class="wp-block-table-of-contents__entry" href="#3-团队管理更好用">3. 团队管理更好用</a></li><li><a class="wp-block-table-of-contents__entry" href="#4-next-js-专有特性开箱即用">4. Next.js 专有特性开箱即用</a></li></ol></li><li><a class="wp-block-table-of-contents__entry" href="#cloudflare-workers-的优势">Cloudflare Workers 的优势</a><ol><li><a class="wp-block-table-of-contents__entry" href="#1-出站带宽免费">1. 出站带宽免费</a></li><li><a class="wp-block-table-of-contents__entry" href="#2-函数计费模型更划算">2. 函数计费模型更划算</a></li><li><a class="wp-block-table-of-contents__entry" href="#3-没有传统意义上的冷启动">3. 没有传统意义上的冷启动</a></li><li><a class="wp-block-table-of-contents__entry" href="#4-一体化生态-r2-d1-kv-queues-hyperdrive-ai">4. 一体化生态：R2 / D1 / KV / Queues / Hyperdrive / AI</a></li><li><a class="wp-block-table-of-contents__entry" href="#5-分析工具和免费额度依然大方">5. 分析工具和免费额度依然大方</a></li></ol></li><li><a class="wp-block-table-of-contents__entry" href="#逐项对比">逐项对比</a></li><li><a class="wp-block-table-of-contents__entry" href="#真实案例-本博客就跑在-workers-上">真实案例：本博客就跑在 Workers 上</a></li><li><a class="wp-block-table-of-contents__entry" href="#怎么选-给不同画像的建议">怎么选：给不同画像的建议</a></li><li><a class="wp-block-table-of-contents__entry" href="#排除的其它选项">排除的其它选项</a></li><li><a class="wp-block-table-of-contents__entry" href="#总结">总结</a></li></ol></nav>
+<!-- /wp:table-of-contents -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="2026-年的大变化-pages-让位-workers-接棒">2026 年的大变化：Pages 让位，Workers 接棒</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>先把最重要的信息说清楚：<strong>Cloudflare Pages 已经不是 Cloudflare 的主推产品了</strong>。自从 Workers 支持了静态资产托管（static assets）之后，Pages 能做的事 Workers 全都能做，而且做得更好——静态文件 + 服务端逻辑 + 各种数据绑定，全部收敛在一个 Worker 里。Cloudflare 官方文档现在明确建议新项目直接上 Workers，Pages 进入维护状态：不会关停，存量项目继续跑没问题，但新功能基本不会再往 Pages 上加了。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>所以如果你今天搜「Vercel vs Cloudflare Pages」，得到的多数文章其实已经过时了。真正值得对比的是 <strong>Vercel vs Cloudflare Workers</strong>，本文余下部分都按这个口径来。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="next-js-上-cloudflare-的正确姿势变了">Next.js 上 Cloudflare 的正确姿势变了</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>原文里我吐槽过「CF 只支持 Node.js 的子集，函数库不兼容就没法用」。这条在 2026 年已经不成立了，但演进路径值得说一下：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul><!-- wp:list-item -->
+<li><strong>旧路线（已淘汰）</strong>：<code>@cloudflare/next-on-pages</code>，强制所有路由跑 Edge runtime。这就是当年「Node API 子集」痛苦的来源——很多依赖装上就崩，社区一度劝退。这条路线官方已经不再推荐。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>新路线（当前推荐）</strong>：<code>@opennextjs/cloudflare</code>，基于 OpenNext 适配器，跑在 Workers 的 Node runtime（<code>nodejs_compat</code>）上。App Router、Route Handlers、SSR、ISR、按需 revalidate 这些都支持，绝大多数 npm 依赖可以直接用。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>换句话说，「Next.js 只能部署在 Vercel 才完整」这个曾经的事实，现在只剩下少数 Vercel 专有特性还成立（后面细说）。这是整个选型天平上变化最大的一块砝码。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="相似之处">相似之处</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>两者整体体验依然非常接近，都很好用：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul><!-- wp:list-item -->
+<li>GitHub 导入仓库，新 commit 自动部署</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>分支自动部署，预览新版本</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>支持多种框架和构建脚本</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>免费二级域名 + 免费永久 SSL 证书</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>全球 CDN</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>可观的免费额度，个人项目基本够用</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>对于一个纯静态站或者小流量的全栈项目，闭着眼选哪个都不会错。分歧出现在流量上来之后、以及你开始依赖平台配套服务之后。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="vercel-的优势">Vercel 的优势</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="1-零配置的开发体验">1. 零配置的开发体验</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>这依然是 Vercel 最大的护城河。导入仓库，点一下 Deploy，完事。不需要理解任何平台概念，框架预设全自动，环境变量在 GUI 上点点就好。集成数据服务（Postgres、KV、Blob 之类的 Marketplace 服务）也是一样，GUI 上点一下、本地拉一下环境变量，和常规工作流程完全一致。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Cloudflare 这边你绕不开两个概念：<strong>绑定（bindings）和 wrangler</strong>。R2、D1、KV 都不是「填个连接字符串」的用法，而是要在 <code>wrangler.jsonc</code> 里声明绑定，在代码里通过 env 取用。这套模型一旦理解了其实比连接字符串优雅（没有密钥泄漏问题，本地 <code>wrangler dev</code> 自动给你模拟环境），但学习曲线确实存在。给新手的体感就是：Vercel 十分钟上线，Cloudflare 第一次可能要折腾一晚上。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="2-preview-部署体验更完整">2. Preview 部署体验更完整</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>两家都有分支预览部署，但细节差距不小。Vercel 的 PR 评论集成、部署状态回写、预览环境的环境变量隔离、还有团队成员在预览页上直接留评论的功能，整套流程非常顺。这对多人协作的产品团队价值很大——设计师和 PM 直接在预览链接上圈图评论，比截图发群里高效多了。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Cloudflare 的 Workers 也有 preview URL 和版本管理（每次部署产生一个可回滚的版本），Workers Builds 也能接 GitHub 自动构建，但整体打磨程度和 Vercel 还有肉眼可见的差距，更偏工程师自助。像本博客这种走 OpenNext 的项目，我干脆不用它的 Git 集成，本地一条命令直接部署，也挺好。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="3-团队管理更好用">3. 团队管理更好用</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>虽然 Vercel 团队按人头收费（$20/人月这个量级，相当贵，以官方定价页为准），但是团队管理很好用，该有的功能都有，权限配置清晰，用起来顺畅。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Cloudflare 的账号权限体系是面向「管理一整个 zone 的基础设施」设计的，粒度粗、概念多，想只把某个项目的统计报表分享给朋友这种需求，到现在依然不顺手。这点原文的吐槽完全保留。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="4-next-js-专有特性开箱即用">4. Next.js 专有特性开箱即用</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Next.js 是 Vercel 主力开发的，新特性永远是 Vercel 先吃到。虽然 OpenNext 把大部分能力都追平了，但截至 2026 年中，仍有一些东西是 Vercel 独有或者明显更省心的：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul><!-- wp:list-item -->
+<li><strong>next/image 全托管</strong>：Vercel 上图片优化零配置；Cloudflare 上你需要自己写一个 image loader 对接 Cloudflare Images（后面案例里有真实做法）。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>最新实验特性</strong>：PPR 这类新东西，Vercel 首发支持，OpenNext 要等适配。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>零运维的 ISR</strong>：Cloudflare 上 ISR 能用，但缓存底座（R2/D1）要你自己在配置里搭出来。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="cloudflare-workers-的优势">Cloudflare Workers 的优势</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="1-出站带宽免费">1. 出站带宽免费</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>这是两家商业模式上最本质的差别。Cloudflare 是 CDN 出身，<strong>出站带宽（egress）不计费</strong>，静态资产请求也不计费；R2 对象存储同样没有出口流量费。Vercel 则是带宽按量计费，免费额度用完之后按 GB 收钱。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>小站感知不到这个差别。但只要你的站图多、视频多、或者流量涨起来，账单曲线会完全不同：Cloudflare 这边基本是「$5/月量级的订阅费 + 少量请求费」，Vercel 那边带宽费会随流量线性上涨（具体单价以两家官方定价页为准）。社区里隔三差五出现的「Vercel 账单惊魂」帖子，主角几乎都是带宽和图片优化费用。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="2-函数计费模型更划算">2. 函数计费模型更划算</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Workers 按请求数 + <strong>CPU 时间</strong>计费：函数在等待数据库、等待上游 API 的时间（wall time）不收钱，只有真正烧 CPU 的毫秒数才计费。对于典型的 Web 应用——大部分时间都在等 IO——这个模型非常划算。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>公平地说，Vercel 后来推出的 Fluid Compute 也转向了 Active CPU 计费思路，实例可以并发复用，比早年按 GB-小时整段计费厚道多了，两家在计费哲学上正在趋同。但叠加上带宽这一层，总账通常还是 Cloudflare 更便宜，尤其是高流量、IO 密集的场景。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="3-没有传统意义上的冷启动">3. 没有传统意义上的冷启动</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Workers 跑在 V8 isolate 里，不是容器也不是微虚拟机，启动开销是毫秒级的，实践上可以认为没有冷启动。而且代码天然部署在全球几百个节点上，用户请求就近执行，不需要你选 region。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Vercel 的函数本质是 AWS Lambda 体系，冷启动虽然通过 Fluid Compute 的实例复用大幅缓解了，但「函数部署在某个 region、其他大洲用户绕地球半圈」这个结构性问题依然存在（多 region 部署要加钱）。原文里说「CF 自动选择离用户最近的地方执行」，这点今天依然成立，而且依然是 Cloudflare 的架构级优势。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="4-一体化生态-r2-d1-kv-queues-hyperdrive-ai">4. 一体化生态：R2 / D1 / KV / Queues / Hyperdrive / AI</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>原文里我吐槽 CF 的数据服务「只针对自家 Worker 做了简单集成，用起来麻烦」。现在我要收回这句话——当你的应用本身就跑在 Workers 上时，这套东西反而成了最大的优势：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul><!-- wp:list-item -->
+<li><strong>R2</strong>：S3 兼容的对象存储，零出口流量费</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>D1</strong>：边缘 SQLite 数据库，配 Drizzle 用体验很好</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>KV</strong>：全球复制的键值存储，读多写少场景利器</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Queues</strong>：消息队列，异步任务不用再借第三方</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Hyperdrive</strong>：给传统 Postgres/MySQL 做连接池和就近加速，存量数据库不用搬家</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Workers AI / Images</strong>：推理和图片处理直接以绑定的形式调用</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>这些服务全部通过绑定接入，没有连接字符串、没有密钥管理、没有跨云网络延迟，账单也收敛在一处。Vercel 的思路则是 Marketplace：数据服务由 Neon、Upstash 这些第三方提供，集成体验很好，但每多一个服务就多一份账单、多一层网络边界。两种哲学，规模小的时候 Vercel 省心，规模大了 Cloudflare 省钱也省运维。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="5-分析工具和免费额度依然大方">5. 分析工具和免费额度依然大方</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>原文的两条 Cloudflare 优势今天依然成立：Web Analytics（含 Web Vitals）免费开箱即用，而 Vercel 的分析要付费还要嵌代码，额度设计依旧抠门（免费档一个月几万次事件的量级，流量稍好就要掏钱）；免费额度整体上 Cloudflare 依然是业界最大方的一档，Workers 免费版每天十万量级的请求数，足够个人项目和小产品跑很久（额度细节以官方定价页为准）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>另外原文提过 *.pages.dev 当时没被墙、*.vercel.app 已经被墙很彻底。这类情况随时会变，不建议作为选型依据——真要运营产品，第一天就上自己的域名。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="逐项对比">逐项对比</h2>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>维度</th><th>Vercel</th><th>Cloudflare Workers</th></tr></thead><tbody><tr><td>出站带宽</td><td>按 GB 计费，流量大了是主要成本</td><td>免费，R2 也没有出口流量费</td></tr><tr><td>函数计费</td><td>Fluid Compute，Active CPU 计费</td><td>请求数 + CPU 时间，IO 等待不计费</td></tr><tr><td>冷启动</td><td>Lambda 体系，实例复用后已大幅缓解</td><td>V8 isolate，毫秒级，几乎无感</td></tr><tr><td>执行位置</td><td>指定 region（多 region 加钱）</td><td>全球边缘节点就近执行</td></tr><tr><td>Next.js 支持</td><td>原生完整，新特性首发</td><td>@opennextjs/cloudflare，主流特性已齐</td></tr><tr><td>图片优化</td><td>next/image 全托管（按优化次数计费）</td><td>自定义 loader 对接 Cloudflare Images</td></tr><tr><td>数据服务</td><td>Marketplace 第三方集成（Neon、Upstash…）</td><td>自家一体化：R2/D1/KV/Queues/Hyperdrive/AI</td></tr><tr><td>上手成本</td><td>零配置，十分钟上线</td><td>要理解 bindings 和 wrangler</td></tr><tr><td>Preview 部署</td><td>PR 集成 + 预览评论，非常完整</td><td>有版本和 preview URL，打磨稍逊</td></tr><tr><td>团队协作</td><td>按人头付费但好用</td><td>权限粒度粗，偏基础设施视角</td></tr><tr><td>免费额度</td><td>偏紧，超额价格高</td><td>业界最大方一档</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="真实案例-本博客就跑在-workers-上">真实案例：本博客就跑在 Workers 上</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>空谈误国，上生产环境。你现在看到的 meathill.com 就是 Next.js 16（App Router）+ <code>@opennextjs/cloudflare</code> 部署在 Workers 上的，此前我也完整经历过把 Next.js 项目从 Vercel 迁到 Cloudflare 的全过程。部署就是两条命令：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash">opennextjs-cloudflare build
+opennextjs-cloudflare deploy</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>前面说的「一体化生态」在这个站上不是摆设，wrangler.jsonc 里的绑定长这样（节选）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="json" class="language-json">{
+  "r2_buckets": [
+    { "binding": "BUCKET", "bucket_name": "blog" },
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "site-cache" }
+  ],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "meathill" },
+    { "binding": "NEXT_TAG_CACHE_D1", "database_name": "tag-cache" }
+  ],
+  "kv_namespaces": [{ "binding": "PERF_KV" }],
+  "images": { "binding": "IMAGES" },
+  "durable_objects": {
+    "bindings": [{ "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }]
+  }
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>逐条翻译成人话：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul><!-- wp:list-item -->
+<li><strong>ISR 增量缓存放 R2</strong>（NEXT_INC_CACHE_R2_BUCKET），tag 失效记录放 <strong>D1</strong>，revalidate 队列用 <strong>Durable Objects</strong>——OpenNext 把 Vercel 上「看不见的那层缓存基础设施」摊开让你自己拼，拼好之后 ISR、按需 revalidate 都正常工作。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>图片优化</strong>：全站 next/image 走一个十几行的自定义 loader，把图片 URL 改写到 Cloudflare 的 <code>/cdn-cgi/image/</code> 路径，边缘裁剪 + 自动转 WebP/AVIF；动态 OG 图则在 Worker 里直接用 IMAGES 绑定转码压缩。效果和 Vercel 的托管方案相当，而且没有按次计费的图片优化账单。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>业务数据在 D1</strong>，配 Drizzle ORM；性能监控数据放 KV。全套服务一份账单，互相之间没有出网流量。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>代价也如实说：这套东西的配置心智成本确实比 Vercel 高。ISR 缓存要自己声明三个绑定、图片要自己写 loader、部分依赖要确认 Workers 运行时兼容性（我踩过 CJS 包在 Workers 下 <code>require is not defined</code> 的坑）。选了 Cloudflare 之后，这些坑我都替你踩过一遍了，整理在<a href="/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026">在 Cloudflare Workers 上部署 Next.js 最佳实践</a>这篇里，照着抄可以省很多时间。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="怎么选-给不同画像的建议">怎么选：给不同画像的建议</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul><!-- wp:list-item -->
+<li><strong>个人项目 / Side Project</strong>：两边免费额度都够用，选你熟的。如果想顺便学点东西、或者项目里有图片视频这类流量大户，选 Cloudflare；如果只想快点上线验证想法，Vercel 十分钟搞定。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>初创团队（重协作、快迭代）</strong>：Vercel。Preview 部署 + 评论流程对产品团队的价值，值那个人头费。这个阶段工程师时间比服务器账单贵得多。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>流量增长期（账单开始疼）</strong>：认真评估 Cloudflare。带宽免费 + CPU 时间计费的组合，在高流量下和 Vercel 的差距是数量级的。迁移成本比想象中低，主流 Next.js 特性 OpenNext 都接住了。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>重度依赖 Vercel 专有特性</strong>（最新实验功能、全托管图片、深度 Marketplace 集成）：留在 Vercel，别为了省钱牺牲核心工作流。等特性被 OpenNext 追平了再议。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>如果你评估后决定动手迁移，我把整个过程整理成了一份可以逐项打勾的清单：<a href="/posts/next-js/migrate-next-js-from-vercel-to-cloudflare">把 Next.js 从 Vercel 迁移到 Cloudflare Workers：完整迁移清单</a>，从依赖兼容性检查到 DNS 切换都覆盖了。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="排除的其它选项">排除的其它选项</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul><!-- wp:list-item -->
+<li>VPS：太麻烦了，我已经不想再自己折腾服务器了（虽然这个博客的 WordPress 后端还委屈地跑在服务器上，那是历史包袱，不是选择）。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>GitHub Pages：不支持服务端逻辑，纯静态限制太多。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Netlify：定位和 Vercel 重叠但 Next.js 支持始终慢半拍，没有非选它不可的理由。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Supabase：数据库和 Auth 依然好用，但 Edge Functions 的 Deno 限制太多，不适合当部署主平台。</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="总结">总结</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>两年前我的结论是「Vercel 强在开发体验（DX），CF 强在量大管饱」。2026 年这个结论大方向没变，但天平明显向 Cloudflare 倾斜了：Workers 接棒 Pages 之后，配合 OpenNext，Next.js 的兼容性短板基本补齐，而带宽免费 + 一体化生态的成本优势随流量增长越来越显著。Vercel 依然是上手最快、协作最顺的平台，这份 DX 值不值它的溢价，取决于你处在哪个阶段。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>我自己的答案已经写在生产环境里了：这个博客就跑在 Workers 上。如果你对出海开发、全栈开发、云服务提供商有什么想法、问题和分享，欢迎留言讨论。</p>
+<!-- /wp:paragraph -->
+
+<!-- seo:faq:start -->
+<h2>常见问题（FAQ）</h2>
+<h3>Vercel 和 Cloudflare 哪个更便宜？</h3>
+<p>中小流量下两者免费额度都够用；流量增大后 Cloudflare 明显更省——出站带宽不计费、函数只按 CPU 时间计费（IO 等待免费），而 Vercel 的带宽与图片优化费用会随流量线性上涨，具体单价以官方定价页为准。</p>
+<h3>Cloudflare 能完整支持 Next.js 吗？</h3>
+<p>可以。通过 @opennextjs/cloudflare 适配器（Node runtime），App Router、SSR、ISR、Route Handlers 等主流特性都能在 Cloudflare Workers 上运行；旧的 next-on-pages/Edge runtime 路线已淘汰。少数 Vercel 专有能力（如全托管图片优化）需要用 Cloudflare Images 等替代方案。</p>
+<h3>已经在 Vercel 上，值得迁移到 Cloudflare 吗？</h3>
+<p>若主要诉求是降低带宽成本、或想用 Workers/R2/D1 等一体化生态，迁移收益明显，且 OpenNext 成熟后迁移成本已大幅下降；若重度依赖 Vercel 专有特性或团队协作流程，则建议留在 Vercel，等特性追平后再评估。</p>
+<!-- seo:faq:end -->
+
+<!-- seo:related:start -->
+<h2>延伸阅读</h2>
+<ul>
+<li><a href="/posts/next-js/migrate-next-js-from-vercel-to-cloudflare">把 Next.js 从 Vercel 迁移到 Cloudflare</a></li>
+<li><a href="/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026">在 Cloudflare Workers 上部署 Next.js 最佳实践</a></li>
+</ul>
+<!-- seo:related:end -->

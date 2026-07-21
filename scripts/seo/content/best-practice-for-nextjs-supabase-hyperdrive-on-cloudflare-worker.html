@@ -1,0 +1,658 @@
+<!-- wp:paragraph -->
+<p><strong>2026-07 更新</strong>：这篇文章首发后，成了我被问得最多的一篇。这次更新我把它彻底加深了一轮：补上了「为什么 Workers 直连 Postgres 这么痛」的原理分析、Hyperdrive 配置全流程（wrangler.jsonc 绑定、连接串怎么选）、缓存行为的细节、性能提升的量化方法，以及一份可以直接对照排查的踩坑清单。原来的三关闯关记全部保留，新内容穿插其中。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote"><!-- wp:paragraph -->
+<p>再见 Vercel，你好 Cloudflare Worker。</p>
+<!-- /wp:paragraph --></blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:paragraph -->
+<p>前些天，一位朋友找到我，因为 Vercel 太贵，她想把一个网站迁移到 Cloudflare。其它问题似乎 AI 和她请的程序员都搞定了，但是由于之前使用的是 Supabase 数据库，而 Cloudflare Worker 不支持 Supabase，所以她咨询我应该迁移到什么数据库。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>我的第一反应是不可能，绝对不可能。这都 2026 年，这么出名的 Supabase，Cloudflare Worker 不可能不支持。搞不定就丢给我，我分分钟拿下。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>实际上，为了让她的 <a href="https://ai3dmodel.app/">3D 模型处理服务</a> 成功跑在 Cloudflare Worker 上，我经历了三场漫长的 Debug 战役，把整个数据库连接层重写了 N 遍。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>如果你也正打算使用 Cloudflare Worker + Supabase，也在使用 AI 开发，那你也可能会踩进 Cloudflare Worker + Hyperdrive + Supabase 的坑。我建议你认真阅读这篇文章，然后把地址保存下来，将来开发的时候，把它丢给 AI，应该可以帮你节省很多时间。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="为什么要逃离-vercel">为什么要逃离 Vercel？</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Vercel 很好，Developer Experience 极佳。但是当你的用户量开始增长，你会发现 Vercel 的账单成长得更快……你此刻可能还没开始挣钱，但 Vercel 不管那些，看着每个月几十上百的账单，你会不由得焦虑起来……</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Cloudflare Workers 提供了极高的性价比和几乎无限的并发能力，区区 $5/m，媲美 Vercel $100/m 以上的额度；还有 <strong>Hyperdrive</strong> —— 那个声称能让你的数据库连接像开了加速器一样的神奇功能。整个迁移过程（OpenNext 适配、构建配置、部署流水线）我在 <a href="/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026">在 Cloudflare Workers 上部署 Next.js 最佳实践</a> 里写得很细，本文只聚焦数据库这一层。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="是否应该选择-supabase">是否应该选择 Supabase？</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>如果你只是需要一个数据库，我其实不太推荐 Supabase。相对来说，Supabase 是个非常强力的一站式解决方案，除了 Serverless 数据库，它还支持 Auth、Storage 和 Edge Function，可以用一个工具满足很多需求，尤其是开发移动 App 的时候，非常方便。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>但如果你并不了解 Serverless 数据库应该怎么开发应用，或者只是需要一个关系型数据库，那么 Supabase 提供的好处你恐怕享受不到，而它的免费额度要远低于 D1 或者 TiDB Cloud。所以我起初的想法是，搞不定我就帮朋友迁移到 TiDB。后来也是上头了才开始跟 Hyperdrive + Supabase 死磕。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>顺带一提，如果你选了 Cloudflare 全家桶，文件/对象存储也不必留在 Supabase Storage 上：R2 兼容 S3 协议、出站流量免费，跟 Workers 的配合更顺滑。具体接入方式可以看我这篇 <a href="/posts/infra/upload-file-via-cloudflare-r2">用 Cloudflare R2 上传文件实战</a>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="workers-直连-postgres-为什么这么痛">Workers 直连 Postgres，为什么这么痛？</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在讲配置之前，先把原理讲透。理解了「痛在哪」，后面每一个反直觉的设定你都能自己推导出来。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="每个请求都要重新握手">每个请求都要重新握手</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>传统 Node.js 服务是长驻进程：启动时建好连接池，之后所有请求复用现成的连接，建连成本被摊薄到几乎为零。而 Workers 是彻底的 Serverless——实例随时创建、随时销毁，<strong>没有任何「常驻连接」可言</strong>。这意味着每个冷的数据库请求都要完整走一遍：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>TCP 三次握手</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>TLS 握手（云数据库必然开着 SSL）</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Postgres 协议的认证流程（startup message、SASL/SCRAM 密码校验等，本身又是好几次往返）</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>最后才轮到你那条真正的查询</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>这一套下来是<strong>多次网络往返（RTT）</strong>。如果你的 Worker 跑在美西边缘节点，数据库在新加坡，一次 RTT 就是 150ms+，乘上握手需要的往返次数，一条 5ms 就能执行完的查询，光建连就烧掉大几百毫秒。这不是查询慢，是「路上」慢。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="连接数上限-serverless-的天敌">连接数上限：Serverless 的天敌</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>更致命的是连接数。Postgres 的每个连接都是真实的服务端资源，云数据库都会限制最大连接数（Supabase 免费档的直连数很有限，具体额度以官方文档为准）。而 Workers 的并发模型是「流量来了瞬间起几千个实例」，每个实例都天真地去开自己的连接，数据库瞬间就会被打爆，抛出经典的 <code>Too many connections</code>，然后所有人一起 503。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="hyperdrive-到底解决了什么">Hyperdrive 到底解决了什么</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Hyperdrive 的思路是把上面两个问题一起端掉：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>连接池驻留在 Cloudflare 网络里</strong>：Hyperdrive 在靠近你数据库的位置维护一个到真实数据库的长连接池，TCP/TLS/认证握手只在池子补充连接时发生。你的 Worker 连的是 Cloudflare 内网里的 Hyperdrive 接入点，几乎是内网延迟。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Query Cache</strong>：对可缓存的读查询，Hyperdrive 可以直接在边缘返回缓存结果，连数据库都不用碰（后文详述缓存规则）。</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>对 Worker 侧来说，你拿到的仍然是一个标准的 Postgres 连接串，驱动层（postgres.js、node-postgres、Drizzle）完全无感，这是它最优雅的地方。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="hyperdrive-配置全流程">Hyperdrive 配置全流程</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="第一步-创建-hyperdrive-配置">第一步：创建 Hyperdrive 配置</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>可以在 Dashboard 里点，也可以用 wrangler 一条命令搞定：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash">npx wrangler hyperdrive create my-supabase \
+  --connection-string=&quot;postgres://postgres:你的密码@db.xxxxxxxx.supabase.co:5432/postgres&quot;</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>注意两个细节：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>这里填的是 Supabase 的<strong>直连地址（端口 5432）</strong>，不是 pooler 地址，原因下面细说。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>如果密码里有 <code>@</code>、<code>#</code>、<code>?</code>、<code>/</code> 这类特殊字符，必须先做 URL 编码（<code>encodeURIComponent</code> 的结果），否则连接串会在奇怪的位置被截断，报出来的错误千奇百怪，完全指不到根因。Supabase 随机生成的密码里出现特殊字符的概率不低，这个坑我替你踩过了。</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="第二步-wrangler-jsonc-里绑定">第二步：wrangler.jsonc 里绑定</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>创建成功后会得到一个配置 ID，把它绑进 <code>wrangler.jsonc</code>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre title="wrangler.jsonc" class="wp-block-code"><code lang="json" class="language-json">{
+  &quot;name&quot;: &quot;app-worker&quot;,
+  &quot;main&quot;: &quot;.open-next/worker.js&quot;,
+  &quot;compatibility_flags&quot;: [&quot;nodejs_compat&quot;],
+  &quot;hyperdrive&quot;: [
+    {
+      &quot;binding&quot;: &quot;HYPERDRIVE&quot;,
+      &quot;id&quot;: &quot;这里填 wrangler 返回的配置 ID&quot;,
+      &quot;localConnectionString&quot;: &quot;postgres://postgres.xxxxxxxx:密码@aws-0-us-east-1.pooler.supabase.com:6543/postgres&quot;
+    }
+  ]
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p><code>localConnectionString</code> 是给本地开发用的：<code>wrangler dev</code> / <code>opennextjs-cloudflare preview</code> 跑在你本机，够不到 Cloudflare 内网的 Hyperdrive，所以本地会直接用这个连接串连数据库。也可以不写进配置文件，用环境变量 <code>WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_&lt;绑定名&gt;</code> 传入，避免把连接串提交进仓库（具体变量名规则以官方文档为准）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="第三步-连接串怎么选-直连还是-supavisor">第三步：连接串怎么选——直连还是 Supavisor？</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Supabase 会给你三种连接串，这是最容易选错的地方：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>Direct Connection</strong>（<code>db.xxx.supabase.co:5432</code>）：直连数据库本体。<strong>Hyperdrive 必须用这个</strong>。注意免费档的直连地址只解析到 IPv6。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Supavisor Session Mode</strong>（pooler 域名，端口 5432）：每个客户端独占一条池化连接，行为最接近直连。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Supavisor Transaction Mode</strong>（pooler 域名，端口 6543）：事务级复用，容量最大，但不支持部分会话级特性。<strong>本地开发用这个</strong>。</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>取舍逻辑其实一句话：<strong>Hyperdrive 自己就是 pooler，pooler 不该套 pooler</strong>——给 Hyperdrive 配直连；而你的本机连不上免费档的 IPv6 直连地址，所以本地开发反过来用 Supavisor 的 pooler 地址。两个环境用的连接串<strong>就应该不一样</strong>，这不是 bug，是架构决定的。我当初没想通这一点，来回折腾了很久。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="prepared-statements-兼容性">Prepared Statements 兼容性</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>还有一个隐蔽的差异：postgres.js 默认会用 prepared statements。走 Hyperdrive（直连语义）没问题；但本地走 Supavisor 的 <strong>Transaction Mode（6543）时，prepared statements 的支持是受限的</strong>，可能出现「本地随机报错、线上完全正常」的灵异现象。保险做法是本地连 pooler 时显式关掉：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">const client = postgres(connectionString, {
+  // 走 Supavisor transaction pooler 时关闭 prepared statements
+  prepare: source === &#039;hyperdrive&#039; ? true : false,
+});</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>Supavisor 对 prepared statements 的支持一直在改进，你读到本文时或许已经放开，具体以 Supabase 官方文档为准。但显式声明总归不吃亏。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="第一关-消失的环境变量">第一关：消失的环境变量</h2>
+<!-- /wp:heading -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote"><!-- wp:paragraph -->
+<p>关于环境变量，我写过一篇更详尽的文章，建议你阅读：<a href="https://meathill.com/en/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026"><strong>Cloudflare Worker + Next.js 使用环境变量最佳实践（2026终极版）</strong></a></p>
+<!-- /wp:paragraph --></blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:paragraph -->
+<p>在 Vercel（或者标准的 Node.js 环境）里，我们习惯了这样拿数据库连接串：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">import postgres from &#039;postgres&#039;;
+
+const connectionString = process.env.DATABASE_URL;
+const client = postgres(connectionString)
+export const db = drizzle(client, config);</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>代码写完，本地 <code>next dev</code> 一跑，完美。部署到 Cloudflare Worker，报错……</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>原因</strong>：Cloudflare Workers 的环境变量机制和 Node.js 不同。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>在 Workers 运行时里，Hyperdrive 是 binding，并不是典型的环境变量，自然也不会挂在 <code>process.env</code> 上，而是通过 <code>env</code> 对象传递给请求的上下文。特别是当你使用了 <code>@opennextjs/cloudflare</code> 适配器时，你需要显式地去<strong>获取上下文</strong>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="并不是简单的-process-env">并不是简单的 <code>process.env</code></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>你需要把所有直接读取 <code>process.env</code> 的代码，改成通过 <code>getCloudflareContext()</code> 获取：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">import { getCloudflareContext } from &#039;@opennextjs/cloudflare&#039;;
+
+// 必须在函数内部调用，因为只有真正在处理请求时才有 Context
+function getConnectionInfo() {
+  const runtimeEnv = getCloudflareContext().env;
+  // 现在的 runtimeEnv 里才真正包含了你在 Cloudflare Dashboard 或者 wrangler.jsonc 配置的 vars 和 secrets，以及 bindings
+  // 然后再把 hyperdrive 拿出来创建实例
+  const hyperdrive = runtimeEnv.HYPERDRIVE as { connectionString?: string } | undefined;
+  if (hyperdrive?.connectionString) {
+    return { connectionString: hyperdrive.connectionString, source: &#039;hyperdrive&#039; };
+  }
+
+  const localHyperdrive = runtimeEnv.CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE;
+  if (localHyperdrive) {
+    return { connectionString: localHyperdrive, source: &#039;hyperdrive-local&#039; };
+  }
+
+  throw new Error(&#039;HYPERDRIVE is not configured&#039;);
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>这带来了一个巨大的架构变动：<strong>你不能在文件顶层（Top Level）初始化数据库连接了</strong>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>之前我们可以：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">// global.ts
+export const db = drizzle(client); // 全局单例，直接导出</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>现在如果你在顶层调用 <code>getCloudflareContext()</code>，它会抛错或者返回 undefined，因为模块加载时还没有请求进来。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="第二关-hyperdrive-真正的奥义-连接池">第二关：Hyperdrive 真正的奥义：连接池</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>解决了环境变量，下一步就是连接数据库。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Cloudflare Hyperdrive 不仅可以加速全球访问，速度更快；实际上它对于 Serverless 架构来说，更核心的作用是维护 <strong>连接池（Connection Pooling）</strong>。前面原理部分已经讲过：Worker 不直接连真实的数据库，而是连 Cloudflare 部署在网络边缘的 Hyperdrive 代理，代理维护着到真实数据库的长连接池。你的 Worker 连 Hyperdrive 极快（内网级别），而 Hyperdrive 帮你把成千上万的 Worker 实例复用在有限的几十个真实数据库连接上。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>这样一来，即使你有很多个应用，也不用考虑应用间的连接池共享，因为 Cloudflare 都帮你维护着。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="supabase-的坑中坑">Supabase 的坑中坑</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>朋友的数据库是 Supabase，Supabase 为了不要动不动就被阻塞，自己也提供连接池（Supavisor），而且默认引导用户使用连接池（连接 URL 中包含 <code>pooler</code> 字眼，使用 6543 端口）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>直觉告诉我</strong>：既然要连接池，那我用 Hyperdrive 连 Supabase 的 Pooler 岂不是双倍快乐？<br><strong>现实告诉我</strong>：报错。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Hyperdrive 必须连接数据库的 <strong>Direct Connection</strong>（通常是 port 5432）。它自己就是一个 Pooler，它不适合去连另一个 Pooler（协议层面的会话语义对不上）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>这引出了三个连锁反应的坑：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>必须用直连 Direct Connection</strong>：配置 Hyperdrive 时，Host 必须是 Supabase 的直连地址（特征：端口 5432）。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>本地开发连不上</strong>：Supabase 的免费版（Free Tier）直连地址只支持 IPv6。如果你的本地网络环境或者开发工具只支持 IPv4，你在本地是死活连不上这个 Direct 地址的。对我来说，由于连不上，我以为这个连接 URL 有问题，直接放弃使用它，换用 6543 pooler，导致后面一系列反复的问题。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>必须关闭 SSL</strong>：这里也很反直觉。通常连接云数据库必须开 SSL (<code>ssl: &#039;require&#039;</code>)。但是，Worker 到 Hyperdrive 这一段走的是 Cloudflare 内部网络，驱动层<strong>必须显式关闭 SSL</strong>（Hyperdrive 到源数据库那一段的加密由 Hyperdrive 配置负责）：</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">// 这里 cache 的作用下一节会解释
+export const getDb = cache(() =&gt; {
+  const { connectionString, source } = getConnectionInfo();
+
+  return createDatabase({
+    connectionString,
+    // Worker 到 Hyperdrive 相当于内网，没有 SSL，必须关掉！
+    // 只有直连真实数据库（比如本地开发、build 阶段）才启用 require
+    enableSSL: source === &#039;hyperdrive&#039; ? false : &#039;require&#039;,
+  });
+});</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>我们在 DEBUG 期间被这个问题折磨了很久：明明连接串是对的，明明 Supabase 设置也没问题，但就是握手失败。尤其使用 AI 开发一定要小心，因为 AI 很可能会顺手就加上 SSL。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="第三关-每个连接用一次-用完即弃">第三关：每个连接用一次，用完即弃</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>debug 过程中我发现，如果按照惯例缓存数据库连接实例反复使用，就会遇到这个错误：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash">The Workers runtime canceled this request because it detected that your Worker&#039;s code had hung and would never generate a response. Refer to: https://developers.cloudflare.com/workers/observability/errors/</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>表现为没有响应，到达设置的时限之后报超时错误。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>后来认真阅读 OpenNext 官方文档 <a href="https://opennext.js.org/cloudflare/howtos/db">Cloudflare &gt; How-Tos &gt; Database &amp; ORM</a> 后，了解到不能全局缓存数据库连接实例，必须每个请求——这里的请求指 <strong>用户的请求</strong>，即一次用户访问产生的数据库连接请求，比如同一个 API 里执行 3 次查询，可以复用同一个连接——都需要创建新的连接实例才行。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>具体到代码上，是这样的。在 Vercel/Node 时代，为了防止 serverless function 每次反复连接数据库把连接池撑爆，通常来说我们会<strong>使用全局单例</strong>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">// Before: Global Singleton
+import { drizzle } from &#039;drizzle-orm/postgres-js&#039;;
+import postgres from &#039;postgres&#039;;
+
+// 无论 import 多少次，client 和 db 只有一份
+const client = postgres(process.env.DATABASE_URL!);
+export const db = drizzle(client);</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>然后你在业务代码里随心所欲地 <code>import { db } from &#039;@/lib/db&#039;</code>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>但是</strong>，结合前面提到的两点：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>必须在请求上下文 (<code>getCloudflareContext</code>) 里才能拿到真实连接串。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Hyperdrive 的连接建议是“随用随连”（轻量级）。</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>我们不得不把 <code>db</code> 从一个<strong>全局变量</strong>变成一个<strong>请求级函数</strong>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">// After: Function based
+// 使用 React Cache 确保同一个请求内只创建一次以复用
+// 这里可以是 async function，主要看是否在 Server component 里使用
+export const getDb = cache(() =&gt; {
+  const { connectionString, source } = getConnectionInfo();
+
+  // 创建连接
+  return createDatabase({
+    connectionString,
+    // Hyperdrive 不需要 SSL，这里根据本地开发或线上部署切换 &#039;require&#039;
+    enableSSL: source === &#039;hyperdrive&#039; ? false : &#039;require&#039;,
+  });
+});</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="用-ctx-waituntil-优雅收尾">用 <code>ctx.waitUntil</code> 优雅收尾</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>「请求级创建」还有配套的后半句：<strong>请求结束后要把连接还回去</strong>。直接 <code>await client.end()</code> 会白白拖慢响应，正确姿势是交给 <code>ctx.waitUntil</code>，让运行时在响应发出后异步收尾。一个完整的 Route Handler 长这样（postgres.js 版）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">import { getCloudflareContext } from &#039;@opennextjs/cloudflare&#039;;
+import postgres from &#039;postgres&#039;;
+
+export async function GET() {
+  const { env, ctx } = getCloudflareContext();
+  const sql = postgres(env.HYPERDRIVE.connectionString, {
+    max: 5,
+    // 减少一次类型探测往返，Cloudflare 官方文档推荐
+    fetch_types: false,
+  });
+
+  const users = await sql`SELECT id, name FROM users LIMIT 10`;
+
+  // 响应返回后异步关闭连接，不阻塞响应本身
+  ctx.waitUntil(sql.end());
+
+  return Response.json(users);
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>用 node-postgres（<code>pg</code>）的话思路完全一样：请求内 <code>new Client()</code> + <code>connect()</code>，查询完 <code>ctx.waitUntil(client.end())</code>。别忘了 <code>wrangler.jsonc</code> 里要开 <code>nodejs_compat</code>。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="有点痛苦的重构过程">有点痛苦的重构过程</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>这一改，意味着整个项目里几百个 <code>import { db } from &#039;@/lib/db&#039;</code> 全部失效。这是需要最大规模重构的部分，不过因为有 AI 存在，所以其实还好。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>所有的 Server Action、API Route、Data Access Layer 全部要改：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>Before:</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">import { db } from &#039;@/lib/db&#039;;
+
+export async function getUser(id: string) {
+  return await db.query.users.findFirst({ ... });
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p><strong>After:</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="typescript" class="language-typescript">import { getDb } from &#039;@/lib/db&#039;;
+
+export async function getUser(id: string) {
+  const db = await getDb(); // &lt;--- 每一处都要加这个
+  return await db.query.users.findFirst({ ... });
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>不仅仅是加一行代码，由于 <code>db</code> 现在是异步获取或者在函数内部获取，很多原本直接导出 <code>query</code> 对象的工具函数也得重写。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="缓存行为-哪些查询会被缓存">缓存行为：哪些查询会被缓存？</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Hyperdrive 的 Query Cache 默认开启，但它非常保守，只缓存「确定安全」的查询。理解规则后你就不用担心读到脏数据：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>会被缓存的</strong>：不修改数据的读查询，典型的就是普通 <code>SELECT</code>。命中缓存时直接从边缘返回，连数据库都不碰。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>不会被缓存的</strong>：所有写操作（<code>INSERT</code> / <code>UPDATE</code> / <code>DELETE</code>）、事务内的查询、含易变函数（比如 <code>now()</code>、<code>random()</code> 这类每次结果都不同的函数）的查询——这些永远直达数据库。</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>换句话说：<strong>写路径的正确性 Hyperdrive 不会动，读路径的时效性你要自己权衡</strong>。缓存的默认过期时间不长，绝大多数「列表页、详情页」类查询完全无感；但如果你的业务是「写完立刻读、且必须读到最新值」（比如扣库存后立刻校验），要么把这段逻辑放进事务，要么为这类场景单独建一个关闭缓存的 Hyperdrive 配置——同一个数据库可以建多个 Hyperdrive 配置，各自独立设置缓存开关，缓存 TTL 的具体默认值以官方文档为准。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="性能到底能提升多少">性能到底能提升多少？</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>很多文章只会说「快了很多」，我给你一个能自己复现的分析框架。Hyperdrive 省掉的核心开销是<strong>建连的多次 RTT</strong>：假设 Worker 边缘节点到数据库单程 100ms，TCP + TLS + Postgres 认证合计要好几次往返，每个冷请求就是固定几百毫秒的「入场费」。Hyperdrive 把这笔入场费变成了池内复用，一次付清、长期摊销。要量化的话，方法也简单：写一个只执行 <code>SELECT 1</code> 的接口，分别用直连和 Hyperdrive 各压几十次，对比 P50/P95——差值几乎全部来自建连开销。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>「连接建立开销」这个问题有多普遍？我自己的博客（WordPress + MySQL，跟本文完全不同的技术栈）也中过同一枪：wp-json 接口一度慢到 1.3s，查了半天发现是 PHP 每个请求都在重新建立数据库连接。给 <code>DB_HOST</code> 加上 <code>p:</code> 前缀启用持久连接后，<strong>响应时间直接从 1.3s 降到 0.3s</strong>——什么查询优化都没做，只是不再反复握手。技术栈不同，病根相同：<strong>数据库慢的锅，经常是建连在背</strong>。Hyperdrive 就是把这个优化以托管服务的形式送到你手上。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>再叠加 Query Cache：热门读查询直接边缘返回，连那一次池内往返都省了。实际收益取决于你的用户、边缘节点、数据库三者的地理关系——数据库离用户越远，Hyperdrive 的收益越夸张。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="常见坑清单">常见坑清单（Checklist）</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>把前面散落的坑集中列一遍，部署前逐条对照：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>本地 dev 连不上 / 行为不一致</strong>：本地够不到 Hyperdrive，记得配 <code>localConnectionString</code>（或对应环境变量），并且本地用 Supavisor pooler 地址而不是 IPv6 直连地址。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>免费版限制</strong>：Workers 免费计划也能用 Hyperdrive，但配置数量、缓存等能力与付费计划有差异；Supabase 免费档直连仅 IPv6、连接数有限。两边的具体额度都以官方文档为准，别按老博文的数字做容量规划。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>连接串特殊字符</strong>：密码含 <code>@</code>、<code>#</code>、<code>/</code> 等字符必须 URL 编码，否则报错信息会把你带偏到天涯海角。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>SSL 配置</strong>：走 Hyperdrive 时驱动层关 SSL，直连真实数据库时开 <code>require</code>，用 <code>source</code> 标记区分，别让 AI 顺手统一加上。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Supabase RLS 与连接池的 auth 上下文</strong>：这是最隐蔽的一个。RLS 策略依赖 <code>auth.uid()</code> 之类的会话上下文，而这套机制是配合 Supabase 客户端 SDK（走 PostgREST，每个请求带 JWT）设计的。当你通过 Hyperdrive + Postgres 驱动直连时，用的是 <code>postgres</code> 超级用户角色，<strong>RLS 对它并不生效，会话里也没有用户身份</strong>。所以权限校验必须在你的应用层（Server Action / API Route）自己做，别指望 RLS 兜底；反过来，如果你的表启用了 RLS 而查询「莫名少数据」，先检查连接用的是什么角色。</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>全局缓存连接实例</strong>：会触发 Worker 假死超时，老老实实请求级创建 + <code>ctx.waitUntil</code> 收尾。</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="总结">总结</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>虽然过程很痛苦，但问题终归是解决了。以下是使用 Cloudflare Worker + Supabase 总攻略：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>用 Supabase <strong>直连 URL（端口 5432）</strong>创建 Hyperdrive 配置，在 <code>wrangler.jsonc</code> 里绑定</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>本地开发使用 Supabase 的 <strong>Supavisor pooler URL（端口 6543）</strong>，通过 <code>localConnectionString</code> 配置，注意 prepared statements 兼容性</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>修改环境变量读取方式，妥善利用 <code>getCloudflareContext().env</code>，不要在模块顶层初始化连接</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>把全局 <code>db</code> 单例重构成 <code>await getDb()</code>，请求级创建连接，用 <code>ctx.waitUntil</code> 异步关闭</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>走 Hyperdrive 时关闭驱动层 SSL；权限校验放在应用层，别依赖 RLS</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>最后，我还是帮朋友把代码仓库修好了。Cloudflare Workers 的冷启动几乎可以忽略不计，配合 Hyperdrive，数据库查询速度在边缘节点也相当可观。最重要的是，再也不用担心 Next.js 部署在 Vercel 上的高昂账单了。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>如果你也在做类似的迁移，希望上面的经验总结能帮你一次性解决问题。</p>
+<!-- /wp:paragraph -->
+
+<!-- seo:faq:start -->
+
+<h2>常见问题（FAQ）</h2>
+
+<h3>为什么在 Workers 里要用 Hyperdrive 连 Supabase？</h3>
+
+<p>Workers 无常驻连接，直连 Postgres 每个请求都要付出 TCP/TLS/认证握手的多次往返，还会撞上连接数上限；Hyperdrive 在 Cloudflare 网络内维护常驻连接池并缓存可缓存的读查询，显著降低查询延迟、避免连接耗尽。</p>
+
+<h3>Hyperdrive 支持 Supabase 的连接方式吗？</h3>
+
+<p>支持。用 Supabase 的直连地址（端口 5432）配置 Hyperdrive，即可在 Workers 中通过 Hyperdrive 绑定访问；Supavisor pooler 地址（端口 6543）留给本地开发用，Hyperdrive 本身就是连接池，不要给它再套一层 pooler。</p>
+
+<h3>Hyperdrive 会缓存写操作吗？</h3>
+
+<p>不会。Hyperdrive 只缓存可缓存的读查询，写操作、事务以及含易变函数的查询始终直达数据库，因此不必担心数据一致性问题。</p>
+<!-- seo:faq:end -->
+
+<!-- seo:related:start -->
+
+<h2>延伸阅读</h2>
+
+<ul>
+<li><a href="/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026">在 Cloudflare Workers 上部署 Next.js 最佳实践</a></li>
+<li><a href="/posts/infra/upload-file-via-cloudflare-r2">用 Cloudflare R2 上传文件实战</a></li>
+<li><a href="/posts/cloudflare-worker/vibe-coding-lightweight-kms-on-cloudflare">在 Cloudflare 上自建轻量 KMS</a></li>
+</ul>
+
+<!-- seo:related:end -->

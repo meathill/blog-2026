@@ -1,0 +1,665 @@
+<!-- wp:paragraph -->
+<p><strong>2026-07 更新</strong>：这篇文章最初写于我把博客从 Vercel 迁到 Cloudflare 的当口，当时不少细节还是摸着石头过河。一年多过去，这套方案在生产环境稳定跑了很久，本站（meathill.com）本身就是迁移完成态：Next.js 16 + @opennextjs/cloudflare 1.19 + Workers，R2 增量缓存、D1 tag cache、Durable Object 队列全部上齐。这次更新我把迁移路线明确为 <strong>Workers（@opennextjs/cloudflare）</strong>——截至 2026 年中，Pages + next-on-pages 路线已经不推荐用于新项目——并补上完整的迁移 Checklist、ISR/缓存、next/image、middleware、域名切换与回滚方案，以及我这一年里踩过的真实的坑。配置片段全部来自本站正在线上运行的代码。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table-of-contents {"headings":[{"content":"一起逃离 Vercel 拥抱 Cloudflare 吧","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#一起逃离-vercel-拥抱-cloudflare-吧"},{"content":"Cloudflare 云服务","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#cloudflare-云服务"},{"content":"为什么是 Workers 而不是 Pages","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#为什么是-workers-而不是-pages"},{"content":"迁移 Checklist","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#迁移-checklist"},{"content":"迁移到 OpenNext","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#迁移到-opennext"},{"content":"安装 @opennextjs/cloudflare","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#安装-opennextjs-cloudflare"},{"content":"安装 Wrangler","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#安装-wrangler"},{"content":"创建 wrangler 配置文件","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#创建-wrangler-配置文件"},{"content":"添加 open-next.config.ts 配置文件","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#添加-open-next-config-ts-配置文件"},{"content":"添加 .dev.vars 文件","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#添加-dev-vars-文件"},{"content":"环境变量与 Secret","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#环境变量与-secret"},{"content":"更新 package.json","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#更新-package-json"},{"content":"添加静态资源缓存","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#添加静态资源缓存"},{"content":"移除 pages 相关内容","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#移除-pages-相关内容"},{"content":"忽略掉 .open-next 和 .wrangler","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#忽略掉-open-next-和-wrangler"},{"content":"本地开发","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#本地开发"},{"content":"【可选】移除首页的预渲染缓存","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#可选-移除首页的预渲染缓存"},{"content":"完成第一次部署","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#完成第一次部署"},{"content":"关联 GitHub 仓库","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#关联-github-仓库"},{"content":"部署完成","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#部署完成"},{"content":"ISR 与缓存：R2 增量缓存","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#isr-与缓存-r2-增量缓存"},{"content":"next/image：图片优化的差异","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#next-image-图片优化的差异"},{"content":"middleware 的差异","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#middleware-的差异"},{"content":"域名与 DNS 切换","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#域名与-dns-切换"},{"content":"回滚方案：保留 Vercel 项目做灾备","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#回滚方案-保留-vercel-项目做灾备"},{"content":"常见坑与排查","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#常见坑与排查"},{"content":"Node API 兼容性","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#node-api-兼容性"},{"content":"fetch 子请求限制","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#fetch-子请求限制"},{"content":"CPU 时间与重渲染","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#cpu-时间与重渲染"},{"content":"set-cookie 会让缓存失效","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#set-cookie-会让缓存失效"},{"content":"本地 preview 与生产差异","level":3,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#本地-preview-与生产差异"},{"content":"总结","level":2,"link":"https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#总结"}]} -->
+<nav class="wp-block-table-of-contents"><ol><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#一起逃离-vercel-拥抱-cloudflare-吧">一起逃离 Vercel 拥抱 Cloudflare 吧</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#cloudflare-云服务">Cloudflare 云服务</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#为什么是-workers-而不是-pages">为什么是 Workers 而不是 Pages</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#迁移-checklist">迁移 Checklist</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#迁移到-opennext">迁移到 OpenNext</a><ol><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#安装-opennextjs-cloudflare">安装 @opennextjs/cloudflare</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#安装-wrangler">安装 Wrangler</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#创建-wrangler-配置文件">创建 wrangler 配置文件</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#添加-open-next-config-ts-配置文件">添加 open-next.config.ts 配置文件</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#添加-dev-vars-文件">添加 .dev.vars 文件</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#环境变量与-secret">环境变量与 Secret</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#更新-package-json">更新 package.json</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#添加静态资源缓存">添加静态资源缓存</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#移除-pages-相关内容">移除 pages 相关内容</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#忽略掉-open-next-和-wrangler">忽略掉 .open-next 和 .wrangler</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#本地开发">本地开发</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#可选-移除首页的预渲染缓存">【可选】移除首页的预渲染缓存</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#完成第一次部署">完成第一次部署</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#关联-github-仓库">关联 GitHub 仓库</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#部署完成">部署完成</a></li></ol></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#isr-与缓存-r2-增量缓存">ISR 与缓存：R2 增量缓存</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#next-image-图片优化的差异">next/image：图片优化的差异</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#middleware-的差异">middleware 的差异</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#域名与-dns-切换">域名与 DNS 切换</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#回滚方案-保留-vercel-项目做灾备">回滚方案：保留 Vercel 项目做灾备</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#常见坑与排查">常见坑与排查</a><ol><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#node-api-兼容性">Node API 兼容性</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#fetch-子请求限制">fetch 子请求限制</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#cpu-时间与重渲染">CPU 时间与重渲染</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#set-cookie-会让缓存失效">set-cookie 会让缓存失效</a></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#本地-preview-与生产差异">本地 preview 与生产差异</a></li></ol></li><li><a class="wp-block-table-of-contents__entry" href="https://blog.meathill.com/tech/migrate-next-js-from-vercel-to-cloudflare.html#总结">总结</a></li></ol></nav>
+<!-- /wp:table-of-contents -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="一起逃离-vercel-拥抱-cloudflare-吧">一起逃离 Vercel 拥抱 Cloudflare 吧</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Vercel 再次调价之后，性价比越来越低，每个月 $20 的额度根本扛不住什么访问量；而且建站所需的各种服务（数据库，KV 等）也欠缺，所以我觉得是时候迁离 Vercel，投奔赛博菩萨 Cloudflare 的怀抱了。当然，该不该迁并不是一句话能说清的事，两家平台各有取舍，我在<a href="/posts/infra/vercel-vs-cloudflare-pages-how-to-choose-to-deploy-your-website">Vercel vs Cloudflare：怎么选部署平台</a>里做过详细对比，如果你还在犹豫，建议先读那一篇再回来。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>不过由于 Cloudflare 平台的整体架构，其 Edge Runtime 和 Serverless runtime 都跟 Vercel，或者说标准架构存在一些不同之处，所以迁移的过程中往往需要我们做一些工作。本篇博客就来分享这些经验。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="cloudflare-云服务">Cloudflare 云服务</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>首先，Cloudflare 不仅提供 Serverless / Edge 托管，更提供一整套几乎是必须的服务器组件：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>SQLite 接口的关系型数据库 D1，速度很快，第三方工具很多</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>形似 Redis 的 KV 数据库</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>存储服务 R2，兼容 AWS S3</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Queue、Durable Object 等几乎所有服务器长线运营必须的工具</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>而且以上大部分都包含慷慨的免费额度，当你的产品度过极早期，需要更多额度时，$5/月也够用很久。总之，对比 Vercel 万国造且每个都要独立付费，当然是 Cloudflare 更好用。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>（当然，也会跟 Cloudflare 绑定越来越深，这方面见仁见智吧。）</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="为什么是-workers-而不是-pages">为什么是 Workers 而不是 Pages</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>这篇文章最初发布时，Cloudflare 上跑 Next.js 还有两条路线：Pages + <code>@cloudflare/next-on-pages</code>，以及 Workers + <code>@opennextjs/cloudflare</code>。现在不用纠结了：<strong>截至 2026 年中，唯一值得选的路线就是 Workers + OpenNext 适配器</strong>。Cloudflare 官方的资源都投在 Workers 上，next-on-pages 早已停止跟进新的 Next.js 版本；Pages 平台本身也处于只维护不加新功能的状态。如果你还在 Pages 上跑 Next.js，这次迁移顺便把平台也换了吧。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>以我的经验，使用 Worker 而不是 Pages 有以下好处：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>实时日志和 observability，方便我们查看运行时错误和 debug</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>支持 cron trigger，可以方便的执行一些自动化操作</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>更好的缓存策略，比如预渲染、ISR 增量缓存</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>完整的 Node.js runtime（通过 <code>nodejs_compat</code>），而不是残缺的 Edge runtime</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>自然，Worker 需要更多的工作，我们必须整体迁移到 OpenNext 才行。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="迁移-checklist">迁移 Checklist</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>先给一份完整的迁移检查清单。后面的章节会逐项展开，你也可以照着这份清单自查进度：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>依赖与适配器</strong>：安装 <code>@opennextjs/cloudflare</code> 和 <code>wrangler</code>，卸载 <code>@cloudflare/next-on-pages</code>（如有）</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>wrangler.jsonc</strong>：配置 <code>main</code>、<code>assets</code>、<code>compatibility_date</code>、<code>nodejs_compat</code>，以及所有资源绑定（D1/R2/KV/DO）</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>open-next.config.ts</strong>：声明 incremental cache、queue、tag cache 等 override</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>环境变量 / Secret</strong>：线上 <code>.env</code> 不生效！普通变量进 <code>vars</code>，密钥用 <code>wrangler secret put</code>，所有绑定都要显式声明</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>ISR / 缓存</strong>：创建 R2 bucket 并绑定 <code>NEXT_INC_CACHE_R2_BUCKET</code>，按需配置 tag cache 和 revalidation queue</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>next/image</strong>：换成自定义 loader 或 Cloudflare Images，Vercel 的图片优化服务不会跟你走</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>middleware</strong>：检查是否用到了 Vercel 特有的 geo/ip 字段，改从 <code>request.cf</code> 或请求头取</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>移除 Edge runtime 声明</strong>：删掉所有 <code>export const runtime = "edge"</code></li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>本地验证</strong>：<code>opennextjs-cloudflare preview</code> 在 workerd 里跑一遍关键路径</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>首次部署</strong>：<code>pnpm run deploy</code>，用 workers.dev 域名验证</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>域名与 DNS 切换</strong>：给 Worker 加 custom domain，把 DNS 从 Vercel 切到 Cloudflare</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>CI/CD</strong>：关联 GitHub 仓库，配置 Workers Builds 自动部署</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>回滚预案</strong>：保留 Vercel 项目做灾备，观察一到两周再下线</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="迁移到-opennext">迁移到 OpenNext</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>首先，请参考官方文档：<a href="https://opennext.js.org/cloudflare/get-started">https://opennext.js.org/cloudflare/get-started</a></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>接下来，我也会捋一遍迁移过程，并分享我的经验。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="安装-opennextjs-cloudflare">安装 <code>@opennextjs/cloudflare</code></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p id="安装-opennextjs-cloudflare">这个适配器会帮我们在 Cloudflare 上运行我们的 Next.js 应用。本站目前用的是 1.19.x，配合 Next.js 16 一切正常。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash">pnpm install @opennextjs/cloudflare@latest</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="安装-wrangler">安装 Wrangler</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Wrangler 是 Cloudflare 提供的命令行工具，可以帮我们完成很多工作，也是上面适配器的必备工具。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash">pnpm install --save-dev wrangler@latest</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="创建-wrangler-配置文件">创建 wrangler 配置文件</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p id="3-创建-wrangler-配置文件">这个配置文件会影响到最后的部署和其它云服务使用。我建议大家使用 JSONC 格式，因为语法更熟悉，还能写注释。下面是本站线上正在使用的 <code>wrangler.jsonc</code>（省略了部分业务绑定，ID 类信息做了脱敏）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="wrangler.jsonc" class="wp-block-code"><code lang="jsonc" class="language-jsonc line-numbers">{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "blog-2026",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "account_id": "&lt;你的 account id&gt;",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+  // ISR revalidation 队列，走 Durable Object
+  "durable_objects": {
+    "bindings": [
+      { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }
+  ],
+  // 业务数据库 + tag cache 数据库
+  "d1_databases": [
+    { "binding": "DB", "database_name": "meathill", "database_id": "&lt;...&gt;" },
+    { "binding": "NEXT_TAG_CACHE_D1", "database_name": "tag-cache", "database_id": "&lt;...&gt;" }
+  ],
+  // 业务存储 + ISR 增量缓存
+  "r2_buckets": [
+    { "binding": "BUCKET", "bucket_name": "blog" },
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "site-cache" }
+  ],
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true },
+  "placement": { "mode": "smart" },
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://meathill.com",
+    "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2"
+  }
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>几个要点：<code>main</code> 指向 OpenNext 构建产物；<code>assets</code> 指向静态资源目录并绑定为 <code>ASSETS</code>；<code>compatibility_date</code> 尽量用较新的日期；<code>nodejs_compat</code> 是必须的（后文详述）；<code>observability</code> 打开后可以在 dashboard 看到结构化日志，排查线上问题全靠它。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="添加-open-next-config-ts-配置文件">添加 <code>open-next.config.ts</code> 配置文件</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在根目录添加 <code>open-next.config.ts</code> 配置文件。最小配置只需要 incremental cache，本站的完整配置是这样：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="open-next.config.ts" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">import { defineCloudflareConfig } from '@opennextjs/cloudflare';
+import r2IncrementalCache from '@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache';
+import doQueue from '@opennextjs/cloudflare/overrides/queue/do-queue';
+import d1TagCache from '@opennextjs/cloudflare/overrides/tag-cache/d1-next-tag-cache';
+
+export default defineCloudflareConfig({
+  // ISR/SSG 页面的增量缓存存进 R2
+  incrementalCache: r2IncrementalCache,
+  // stale-while-revalidate 的后台重渲染队列，用 Durable Object 保证去重
+  queue: doQueue,
+  // revalidateTag / revalidatePath 的 tag 映射，存在 D1
+  tagCache: d1TagCache,
+  // 缓存命中时直接在 Worker 层返回，不进 Next.js server，省 CPU
+  enableCacheInterception: true,
+});</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>如果你的站点纯 SSR、不用 ISR 和 <code>revalidateTag</code>，只配 <code>incrementalCache</code> 就够了。但只要你用了 <code>revalidate</code>，queue 和 tag cache 建议一起配上，否则后台重验证的行为和 Vercel 上会不一致。<code>enableCacheInterception</code> 强烈建议打开，缓存命中的请求完全不会唤醒 Next.js 的 server 部分，CPU 时间几乎为零。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="添加-dev-vars-文件">添加 <code>.dev.vars</code> 文件</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在根目录添加 <code>.dev.vars</code> 文件，告诉 Next.js 它应该使用哪一个 <code>.env</code> 文件。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre title=".dev.vars" class="wp-block-code"><code lang="bash" class="language-bash">NEXTJS_ENV=development</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="环境变量与-secret">环境变量与 Secret</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>环境变量是整个迁移里最容易翻车的一项，值得单独说清楚。<strong>核心认知：Workers 线上运行时不读 <code>.env</code> 文件</strong>。在 Vercel 上你习惯了在 dashboard 里填环境变量、代码里 <code>process.env.XXX</code> 直接用；在 Cloudflare 上，一切都必须显式声明：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>普通变量</strong>：写进 <code>wrangler.jsonc</code> 的 <code>vars</code> 字段，随代码一起进版本库、一起部署</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>密钥（apiKey、token 等）</strong>：用 <code>wrangler secret put SOME_KEY</code> 推到线上，值不落盘、不进 git</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>资源绑定（D1/R2/KV/DO）</strong>：也都要在 <code>wrangler.jsonc</code> 里显式声明，代码里通过 <code>getCloudflareContext()</code> 拿到 <code>env</code> 再访问</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code lang="bash" class="language-bash"># 交互式输入，值不会出现在 shell history
+wrangler secret put OPENAI_API_KEY
+# 查看已配置的 secret（只有名字，看不到值）
+wrangler secret list</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>本地开发则相反：把开发环境所需的变量放在 <code>.env.development</code>（配合上一节的 <code>NEXTJS_ENV=development</code>），本地密钥放 <code>.env</code> 或 <code>.dev.vars</code> 里即可，Next.js dev server 会正常读取。也就是说本地和线上是两套机制，迁移时最好列一张变量清单逐个核对，漏配一个 secret，线上就是运行时报错。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="更新-package-json">更新 <code>package.json</code></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p id="6-更新-package-json">需要给 <code>package.json</code> 加上以下命令，方便开发和部署。这也是本站现在实际使用的脚本：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre title="package.json" class="wp-block-code"><code lang="json" class="language-json">"build": "next build",
+"preview": "opennextjs-cloudflare build &amp;&amp; opennextjs-cloudflare preview",
+"deploy": "opennextjs-cloudflare build &amp;&amp; opennextjs-cloudflare deploy",
+"upload": "opennextjs-cloudflare build &amp;&amp; opennextjs-cloudflare upload",
+"cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>其中，<code>deploy</code> 用来完成主动部署，<code>upload</code> 用来部署开发分支，<code>cf-typegen</code> 会根据 <code>wrangler.jsonc</code> 里的绑定生成 <code>CloudflareEnv</code> 类型声明——每次增删绑定后跑一次，TypeScript 就能对 <code>env.DB</code>、<code>env.BUCKET</code> 这些访问做类型检查，非常推荐。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="添加静态资源缓存">添加静态资源缓存</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>创建 <code>/public/_headers</code> 文件，添加以下内容，让 Cloudflare CDN 默认缓存所有静态资源，加速网站访问。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre title="/public/_headers" class="wp-block-code"><code lang="bash" class="language-bash">/_next/static/*
+  Cache-Control: public,max-age=31536000,immutable</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="移除-pages-相关内容">移除 pages 相关内容</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>从代码中移除所有 <code>export const runtime = "edge";</code>。这一步非常重要：OpenNext Cloudflare 只打包 Node runtime 的产物，任何声明了 edge runtime 的 route 都会构建出残缺的产物，线上表现是该路由返回 500 或行为诡异。我自己就有一个 API route 因为遗留的 edge 声明坏了很久才发现。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>并卸载掉 <code>@cloudflare/next-on-pages</code>（如果你之前走的是 Pages 路线）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="忽略掉-open-next-和-wrangler">忽略掉 <code>.open-next</code> 和 <code>.wrangler</code></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>给 <code>.gitignore</code> 添加更多的忽略项。如果使用 ESLint / Biome，也可能需要添加。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre title=".gitignore" class="wp-block-code"><code lang="bash" class="language-bash">.open-next
+.next
+.wrangler</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="本地开发">本地开发</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>修改 <code>next.config.ts</code>，增加 <code>@opennextjs/cloudflare</code> 提供的适配器。之后，<code>next dev</code> 里就可以通过 <code>getCloudflareContext()</code> 访问到本地模拟的绑定（D1、R2、KV 都有本地实现）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre title="next.config.ts" class="wp-block-code"><code lang="typescript" class="language-typescript">import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+initOpenNextCloudflareForDev();</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="可选-移除首页的预渲染缓存">【可选】移除首页的预渲染缓存</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>如果你的首页需要加载远程数据，那么可能需要手动避免首页被预渲染，否则你可能会面对一个静态的首页。解决方案并不复杂，只需要给首页的 <code>page.tsx</code> 里添加下面的语句即可：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre title="app/page.tsx" class="wp-block-code"><code lang="typescript" class="language-typescript">// 完全不缓存，每次都重新渲染并加载
+export const dynamic = 'force-dynamic';
+// 或者如果不希望完全动态，只是希望数据不缓存
+// export const revalidate = 0;</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>不过以现在的经验，我更推荐反过来：能用 ISR 就用 ISR（配合上面的 R2 增量缓存），把 <code>force-dynamic</code> 留给真正需要实时数据的页面。Workers 按 CPU 时间计费，缓存命中越多越省钱。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="完成第一次部署">完成第一次部署</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>接下来，建议大家执行 <code>pnpm run deploy</code> 完成第一次部署，这样会在 Cloudflare 里添加一个新的 worker，然后我们才好添加 secrets。此时可以先用 <code>*.workers.dev</code> 域名把整站点一遍，确认功能正常再动 DNS。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="关联-github-仓库">关联 GitHub 仓库</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>找到刚才创建的 Worker，在设置面板里找到"构建"（Workers Builds），即可关联到我们的 GitHub 仓库。在构建配置里：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>删除"构建命令"（Build command）</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>部署命令（Deploy command）为 <code>pnpm run deploy</code></li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>非生产分支部署命令（Non-production branches deploy command）为 <code>pnpm run upload</code></li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>这套配置本站一直在用：push master 就自动构建部署，非生产分支则生成 preview 版本，体验和 Vercel 的 git 集成基本一致。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="部署完成">部署完成</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>至此，部署链路打通，后面正常推代码就可以触发自动部署了。但迁移还没完——下面几节是从 Vercel 过来最容易被忽略的差异点。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="isr-与缓存-r2-增量缓存">ISR 与缓存：R2 增量缓存</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>在 Vercel 上，ISR 是平台内置的，你感知不到缓存存在哪。到了 Workers 上，这套东西要自己搭，也就是前面 <code>open-next.config.ts</code> 里那三个 override 的由来：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><strong>incremental cache（R2）</strong>：预渲染和 ISR 页面的 HTML/RSC 产物存进 R2 bucket。需要先 <code>wrangler r2 bucket create site-cache</code>，再绑定为 <code>NEXT_INC_CACHE_R2_BUCKET</code></li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>queue（Durable Object）</strong>：页面过期后的后台重渲染任务队列，DO 保证同一路径不会被并发重渲染多次</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>tag cache（D1）</strong>：<code>revalidateTag()</code> / <code>revalidatePath()</code> 依赖的 tag→路径映射，需要单独建一个 D1 数据库绑定为 <code>NEXT_TAG_CACHE_D1</code></li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>验证方式很简单：部署后访问一个 ISR 页面，去 R2 的 bucket 里看有没有出现缓存对象；改动内容后调用 <code>revalidateTag</code>，确认页面在 revalidate 窗口后更新。本站的文章页全部走这套 ISR，发布新文章时通过 tag 失效，体验和 Vercel 时代没有差别，但流量大头都被缓存挡住了。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="next-image-图片优化的差异">next/image：图片优化的差异</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Vercel 的 <code>next/image</code> 背后是它家的图片优化服务，迁走之后这个服务不会跟你走。在 Cloudflare 上有两条替代路径：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>自定义 loader + Cloudflare Image Resizing</strong>：写一个 loader 把图片 URL 改写成 <code>/cdn-cgi/image/width=...,quality=.../原图地址</code>，在 <code>next.config.ts</code> 里配置 <code>images.loader = 'custom'</code>。要求域名已经在 Cloudflare 上代理</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Cloudflare Images binding</strong>：在 Worker 内直接用 <code>env.IMAGES</code> 做转码和缩放，适合服务端生成图片的场景（比如动态 OG 图）</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:code -->
+<pre title="image-loader.ts" class="wp-block-code"><code lang="typescript" class="language-typescript">export default function cloudflareLoader({
+  src, width, quality,
+}: { src: string; width: number; quality?: number }) {
+  const params = [`width=${width}`, `quality=${quality ?? 75}`, 'format=auto'];
+  return `/cdn-cgi/image/${params.join(',')}/${src}`;
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>一个隐蔽的坑：如果你开了 <code>global_fetch_strictly_public</code>（推荐开，防 SSRF），那么<strong>在 Worker 里 fetch 同 zone 的 <code>/cdn-cgi/image/...</code> URL 是行不通的</strong>——子请求会被打回 Worker 自己，拿到的不是图片。这种服务端场景必须改用 <code>env.IMAGES</code> binding。本站的 OG 图渲染就在这里栽过跟头，后文细说。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="middleware-的差异">middleware 的差异</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Next.js middleware 在 OpenNext 下会被打进同一个 Worker 里运行，大部分逻辑（rewrite、redirect、header 处理、next-intl 的 locale 路由）都能直接工作，本站的 i18n middleware 就是零改动迁过来的。需要注意的差异：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>Vercel 特有的 <code>request.geo</code>、<code>request.ip</code> 没有了。地理信息改从 Cloudflare 的请求头（<code>cf-ipcountry</code>）或 <code>request.cf</code> 对象取，IP 用 <code>cf-connecting-ip</code> 头</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>middleware 和页面渲染共享同一个 Worker 的 CPU 预算，别在 middleware 里做重活</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>middleware 里发 fetch 同样受子请求限制约束</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="域名与-dns-切换">域名与 DNS 切换</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>功能验证完，最后一步才是切域名。我的做法：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>先把域名的 DNS 托管迁到 Cloudflare（如果还没有的话）——反正 Image Resizing、Cache Rules 这些也都依赖它</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>在 Worker 的 Settings → Domains &amp; Routes 里添加 <strong>Custom Domain</strong>，Cloudflare 会自动创建 DNS 记录和证书，不需要手动配 CNAME</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>确认新域名下所有关键路径正常后，再去 Vercel 上摘掉这个域名</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>DNS 迁移期间把 TTL 调低，出问题可以快速切回</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>顺序很重要：先让 Worker 用 workers.dev 域名跑顺，再切生产域名。切换本身是分钟级的，不需要停机。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="回滚方案-保留-vercel-项目做灾备">回滚方案：保留 Vercel 项目做灾备</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>不要迁移当天就删 Vercel 项目。我的建议是：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>Vercel 项目保留但摘掉生产域名，让它继续跟着 git 部署（免费额度够用）。这样万一 Workers 侧出严重问题，把域名指回 Vercel 就能回滚，几分钟的事</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>观察一到两周：重点看错误日志（observability 面板）、CPU 时间分布、缓存命中率</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>确认稳定后再下线 Vercel 项目。若代码里已经用上了 D1/R2 绑定这类 Cloudflare 专属 API，回滚窗口就关闭了——所以深度绑定的改造（比如把数据迁进 D1）建议放在迁移稳定之后做</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="常见坑与排查">常见坑与排查</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>下面是这一年里我在生产环境实际踩过、印象最深的几个坑。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="node-api-兼容性">Node API 兼容性</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Workers 的 runtime 是 workerd 不是 Node.js，<code>nodejs_compat</code> flag 提供了大部分常用 Node API（<code>Buffer</code>、<code>crypto</code>、<code>path</code>、<code>process</code> 等），截至 2026 年中覆盖面已经相当好，本站用到的依赖（drizzle、better-auth、marked 等）都没遇到问题。但仍有例外：依赖原生模块（node-gyp 编译产物）的包、依赖 <code>fs</code> 读本地文件的包跑不了。迁移前用 <code>pnpm run preview</code> 在 workerd 里实测一遍，比看文档列表靠谱。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="fetch-子请求限制">fetch 子请求限制</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Worker 内的 fetch 是"子请求"，有两类限制。其一是数量：每个请求能发起的子请求数有上限，页面渲染时如果对着几十个接口并发 fetch，容易撞墙，尽量合并数据请求。其二是路由：开了 <code>global_fetch_strictly_public</code> 之后，fetch 自己 zone 下的 URL 不会走公网 CDN，而是被打回 Worker 自身——前面 next/image 一节的 <code>cdn-cgi</code> 问题就是这个机制导致的。凡是"Worker 里请求自己域名"的写法都要重新审视，改走 binding（ASSETS、IMAGES、R2）或者 service binding。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="cpu-时间与重渲染">CPU 时间与重渲染</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Workers 计费和限额看的是 <strong>CPU 时间</strong>而不是墙钟时间，等待 IO 不算钱，但重计算很贵。最典型的例子是本站的动态 OG 图：用 <code>next/og</code>（Satori）合成 1200×630 的图，一次渲染要做字体排版、图片解码、PNG 编码，再加 JPEG 转码，CPU 开销是普通页面渲染的几十倍。如果每次社交爬虫来抓都现渲染，既慢又烧 CPU 配额。我的方案是渲染结果写进 R2，请求先查 R2、命中直接回（见 <code>src/lib/og/post-image.tsx</code> 的 <code>getOrCreatePostOgJpeg</code>），发布文章时主动重新生成覆盖。一个 OG 图从"每次 500ms+ CPU"变成"R2 读一次"。原则可以推广：任何贵的计算结果，都应该落进 R2/KV，让 Worker 只做查表。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="set-cookie-会让缓存失效">set-cookie 会让缓存失效</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>只要响应里带 <code>set-cookie</code>，这条响应就会被按 <code>no-store</code> 处理：边缘缓存不存，浏览器 bfcache 也会被禁用。很多库会"顺手"写 cookie——本站踩的是 next-intl 的 locale cookie：明明关了自动语言检测，它还是每个响应都 set 一次 <code>NEXT_LOCALE</code>，导致全站页面在边缘零缓存。修复方式是在 routing 配置里显式关掉 <code>localeCookie</code>，语言切换纯 URL 驱动。迁移之后建议用 <code>curl -I</code> 抽查几个关键页面，确认响应头里没有多余的 <code>set-cookie</code>，缓存相关的 header 符合预期。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading" id="本地-preview-与生产差异">本地 preview 与生产差异</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>日常开发用 <code>next dev</code>（配合 <code>initOpenNextCloudflareForDev</code>，绑定走本地模拟）没问题，但它跑在 Node.js 里，不能代表生产行为。上线前务必用 <code>pnpm run preview</code>（即 <code>opennextjs-cloudflare build &amp;&amp; opennextjs-cloudflare preview</code>）在本地 workerd 里完整跑一遍——runtime 兼容性问题、构建产物问题只有在这一步才暴露。还要注意：本地模拟的 D1/R2 是空的独立副本，和线上数据无关；IMAGES 这类 binding 本地没有实现，代码里要做好降级（本站的做法是本地无 <code>env.IMAGES</code> 时跳过转码直接回 PNG）。最后，preview 也不模拟 CPU 限额和子请求配额，这两类问题只能靠线上 observability 日志观察。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading" id="总结">总结</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>回头看，这次迁移是值得的：账单可控、组件齐全，本站在 Workers 上稳定运行至今。整个过程按上面的 Checklist 走，一个周末足够；真正花时间的是迁移之后对缓存、图片、CPU 的持续调优。这部分经验我单独写成了一篇：<a href="/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026">在 Cloudflare Workers 上部署 Next.js 最佳实践</a>，讲迁移完成后怎么把 ISR 命中率、OG 图、边缘缓存这些做到位，算是本文的下篇。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>希望这篇文章对大家有所帮助。如果大家对 Vercel，Cloudflare，Next.js 有任何问题或想法，欢迎留言讨论。</p>
+<!-- /wp:paragraph -->
+
+<!-- seo:faq:start -->
+<h2>常见问题（FAQ）</h2>
+<h3>从 Vercel 迁到 Cloudflare 难吗？</h3>
+<p>多数 Next.js 项目用 @opennextjs/cloudflare 适配后代码改动不大，一个周末足够完成。主要工作在环境变量与绑定迁移、ISR/缓存与图片优化的差异处理，以及域名与 DNS 切换；建议按文中 Checklist 逐项核对。</p>
+<h3>迁移后图片优化怎么办？</h3>
+<p>Vercel 的 next/image 优化需替换为 Cloudflare Images 或自定义 loader；可配置 images.loader 指向 Cloudflare 的图片缩放服务（/cdn-cgi/image/），服务端生成图片的场景则用 IMAGES binding。</p>
+<h3>环境变量和密钥如何迁移？</h3>
+<p>用 wrangler secret put 管理敏感变量，公开变量写入 wrangler 配置的 vars 字段；注意 Workers 线上不读取 .env 文件，D1/R2/KV 等资源也需在配置里显式声明绑定。</p>
+<!-- seo:faq:end -->
+
+<!-- seo:related:start -->
+<h2>延伸阅读</h2>
+<ul>
+<li><a href="/posts/infra/vercel-vs-cloudflare-pages-how-to-choose-to-deploy-your-website">Vercel vs Cloudflare：部署平台怎么选</a></li>
+<li><a href="/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026">在 Cloudflare Workers 上部署 Next.js 最佳实践</a></li>
+</ul>
+<!-- seo:related:end -->

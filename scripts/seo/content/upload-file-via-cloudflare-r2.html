@@ -1,0 +1,355 @@
+<!-- wp:paragraph -->
+<p><strong>2026-07 更新</strong>：这篇最早只讲了预签名 URL 一条路。这几年我把博客搬到了 Cloudflare Workers 上，R2 的玩法也多了：R2 binding 直接读写、用轻量的 aws4fetch 替代 AWS SDK、大文件 multipart 分片。这次一并补上，外加 CORS 配置和排错清单，基本可当 R2 上传的完整指南用。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>先说点闲话。当年写这篇时我刚被流感放倒，发烧一天多，只好请假休养，博客划划水，就记录了一下 R2 上传文件的方案。没想到这篇的搜索流量一直不错，那就认真把它写透。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Cloudflare R2 兼容 AWS S3 API，但不需要复杂的 IAM 体系，天然对接 CF CDN，最大卖点是不收出站流量费（egress free），存储和读写按量计费，具体价格以官方文档为准。跟国内云存储比，它不需要备案，还提供域名和证书。想要低成本云存储，我建议先试试 R2。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>我假设读者已经拥有 CF 账号并创建了 bucket。接下来的问题是：文件怎么传上去？2026 年的今天主要有两条路线：<strong>预签名 URL</strong>（浏览器直传，文件不经过你的服务器）和 <strong>R2 binding</strong>（Workers 里直接 <code>env.BUCKET.put()</code>，连签名都不用）。先讲通用的前者。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>路线一：预签名 URL，浏览器直传</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>这是最通用的方案，服务端跑在哪都适用。思路是：浏览器先向你的 API 要一个"预签名 URL"，服务器用 R2 密钥签出限时有效的上传地址，浏览器再把文件 <code>PUT</code> 上去。服务器全程不碰文件本体，只做鉴权和签名，对 Serverless 特别友好。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>首先安装 AWS SDK（R2 兼容 S3 API，直接用 S3 的 SDK）：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre title="Terminal" class="wp-block-code"><code lang="bash" class="language-bash">pnpm i @aws-sdk/client-s3 @aws-sdk/s3-request-presigner</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>接下来建立 S3 客户端配置，密钥写在 <code>.env</code> 里。Access Key 在 R2 控制台的 "Manage R2 API Tokens" 里创建，建议按 bucket 授权 Object Read &amp; Write 即可，别偷懒给 Admin。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="lib/s3.ts" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">import { S3Client } from '@aws-sdk/client-s3';
+
+const S3 = new S3Client({
+  region: 'auto',
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY!,
+    secretAccessKey: process.env.R2_SECRET_KEY!,
+  },
+});
+
+export { S3 };</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>然后生成预签名 URL。这一步必须放在服务器端，避免泄漏密钥。我这里业务简单没做复杂鉴权，如有需要（限制文件大小、类型、配额），就在签名前多验证几步。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="api/get-upload-url.ts" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import slugify from 'slugify';
+import { S3 } from '~/lib/s3';
+
+export default defineEventHandler(async function (event) {
+  // 这一步提交的是元信息，没有文件本身，所以还是 json
+  const { fileName, fileType } = await readBody(event);
+
+  // 生成存储对象 key，其实就是文件名
+  const objectKey = `${Date.now()}-${slugify(fileName ?? 'file')}`;
+
+  const preSignedUrl = await getSignedUrl(S3, new PutObjectCommand({
+    Bucket: process.env.PUBLIC_S3_BUCKET_NAME,
+    Key: objectKey,
+    ContentType: fileType,
+  }), {
+    expiresIn: 60 * 5, // 此 URL 5分钟内有效
+  });
+
+  return { code: 0, data: { preSignedUrl, objectKey } };
+});</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>注意：<code>ContentType</code> 参与了签名，前端上传时的 <code>Content-Type</code> 头必须和它一模一样，否则 R2 返回 403，这是预签名方案最常见的翻车点。最后，前端拿到 URL 直接 <code>PUT</code>：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="upload.ts" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">const { data } = await $fetch('/api/get-upload-url', {
+  method: 'POST',
+  body: { fileName: file.name, fileType: file.type },
+});
+
+const res = await fetch(data.preSignedUrl, {
+  method: 'PUT',
+  // Content-Type 必须和签名时完全一致
+  headers: { 'Content-Type': file.type },
+  body: file,
+});
+if (!res.ok) console.error('Failed to upload file to R2');</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading -->
+<h2>Workers 时代：用 aws4fetch 替代 AWS SDK</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>如果服务端本身是 Worker，我不建议再用 <code>@aws-sdk/client-s3</code>：它打包进 Worker 几百 KB 起步，而 Workers 对 bundle 体积和冷启动都敏感。签名本质是算 HMAC，用官方文档也推荐的 aws4fetch（gzip 后几 KB）就够了：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="worker.ts" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">import { AwsClient } from 'aws4fetch';
+
+const r2 = new AwsClient({
+  accessKeyId: env.R2_ACCESS_KEY,
+  secretAccessKey: env.R2_SECRET_KEY,
+});
+
+const url = new URL(
+  `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${bucketName}/${objectKey}`
+);
+url.searchParams.set('X-Amz-Expires', '300');
+
+const signed = await r2.sign(
+  new Request(url, { method: 'PUT' }),
+  { aws: { signQuery: true } }, // 签名放进 query string
+);
+
+return Response.json({ preSignedUrl: signed.url });</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p><code>signQuery: true</code> 是关键：签名放进 query string 而不是请求头，浏览器拿到 URL 就能直接 PUT。效果和 <code>getSignedUrl</code> 完全等价，体积小两个数量级。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>路线二：R2 binding，在 Worker 里直接读写</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>代码跑在 Workers 上还有条更省事的路：在 <code>wrangler.jsonc</code> 里把 bucket 绑到 Worker，代码里就多了 <code>env.BUCKET</code> 对象，put/get/delete 直接调，不要密钥、不要签名、走内部通道延迟更低：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="worker.ts" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">// wrangler.jsonc: "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "my-assets" }]
+
+// 写入
+await env.BUCKET.put('uploads/avatar.png', file.stream(), {
+  httpMetadata: { contentType: file.type },
+});
+
+// 读取
+const obj = await env.BUCKET.get('uploads/avatar.png');
+if (obj) {
+  return new Response(obj.body, {
+    headers: { 'Content-Type': obj.httpMetadata?.contentType ?? 'application/octet-stream' },
+  });
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>我这个博客本身就跑在 Workers 上（迁移过程见<a href="/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026">在 Cloudflare Workers 上部署 Next.js 最佳实践</a>），站内的上传功能全部走 binding 路线，后面有真实代码。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>两条路线怎么选？</h3>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul>
+<li><strong>浏览器直传（预签名 URL）</strong>：适合大文件、视频、用户生成内容。文件不经过 Worker，不消耗 CPU 和请求体积限额。代价是要配 CORS、多一次签名请求。</li>
+<li><strong>Worker 中转（binding）</strong>：适合小文件，以及要在服务端处理内容的场景——校验文件头、生成缩略图、写数据库等。代码最简单，没有 CORS 问题，鉴权就是你的 session 逻辑。代价是文件流经 Worker，大文件吃 CPU 和内存。</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>一句话：几 MB 以内、要顺手处理的，走 binding；几十 MB 以上、纯存储的，浏览器直传。同一套 Workers 生态里数据层的类似取舍，我写过另一篇<a href="/posts/cloudflare-worker/best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker">Workers + Supabase + Hyperdrive 最佳实践</a>，思路一脉相承。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>实战：本站的两个真实用法</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3>1. 后台图片上传：binding + 鉴权</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>博客后台的图片上传就是典型的"小文件 + 需要鉴权"场景，我直接用 Next.js 的 Route Handler 中转。先查 session，再把文件塞进 R2，最后拼出 CDN URL 返回：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="app/api/upload/route.ts" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">export async function POST(req: NextRequest) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const formData = await req.formData();
+  const file = formData.get('file') as File;
+
+  const { env } = await getCloudflareContext({ async: true });
+  const key = `${crypto.randomUUID()}-${file.name}`;
+  await env.BUCKET.put(key, file.stream(), {
+    httpMetadata: { contentType: file.type },
+  });
+
+  return NextResponse.json({
+    url: `${process.env.NEXT_PUBLIC_ASSETS_URL}${key}`,
+  });
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>key 用 <code>crypto.randomUUID()</code> 加原始文件名，避免撞名又保留可读性。测试也好写：mock 掉 <code>getCloudflareContext</code>，断言 <code>BUCKET.put</code> 收到正确的 key 和 <code>httpMetadata</code>，未登录、缺文件、上传失败各写一条用例。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3>2. OG 图缓存：把 R2 当持久缓存用</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>另一个用法更有意思：R2 也可以当持久缓存。本站每篇文章的 OG 分享图是实时渲染的，一次要拉数据、合成图片、转码 JPEG，成本不低。所以我把结果写进 R2，下次直接读：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="lib/og/post-image.tsx" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">async function readR2(slug: string): Promise&lt;OgImage | null&gt; {
+  const { env } = await getCloudflareContext({ async: true });
+  if (!env.BUCKET) return null;
+  const obj = await env.BUCKET.get(ogR2Key(slug));
+  if (!obj) return null;
+  return {
+    bytes: await obj.arrayBuffer(),
+    contentType: obj.httpMetadata?.contentType ?? 'image/jpeg',
+  };
+}
+
+// 快路径：R2 命中直接返回；未命中则渲染并写入 R2
+export async function getOrCreatePostOgJpeg(slug: string) {
+  const cached = await readR2(slug);
+  if (cached) return cached;
+
+  const rendered = await renderPostOgJpeg(slug);
+  if (rendered) await writeR2(slug, rendered);
+  return rendered;
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>"读缓存 → 未命中就生成 → 回写"的模式非常通用，缩略图、报表、AI 生成内容都适用。注意 <code>if (!env.BUCKET) return null</code> 的兜底：本地没有 binding 时走实时渲染，不阻断流程。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>CORS 配置：直传方案的翻车重灾区</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>预签名直传的第一大坑就是 CORS。浏览器对跨域 <code>PUT</code> 会先发 <code>OPTIONS</code> preflight，而 R2 默认不响应任何 CORS 头，于是就有了经典的 "blocked by CORS policy"。解决办法：bucket → Settings → CORS Policy 里配置：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="cors-policy.json" class="wp-block-code"><code lang="json" class="language-json line-numbers">[
+  {
+    "AllowedOrigins": ["https://example.com", "http://localhost:3000"],
+    "AllowedMethods": ["PUT", "GET"],
+    "AllowedHeaders": ["Content-Type"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>易漏点：<code>AllowedOrigins</code> 要写完整 origin，本地的 <code>localhost:3000</code> 也要加；<code>AllowedHeaders</code> 至少要有 <code>Content-Type</code>，漏了 preflight 就过不去；分片上传要读 <code>ETag</code>，得在 <code>ExposeHeaders</code> 暴露；策略生效有几十秒延迟，别改完立刻测然后怀疑人生。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>大文件：multipart 分片上传</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>单次 PUT 传大文件，失败要整个重来，也没法并发。大文件建议上 multipart：<code>createMultipartUpload</code> 拿到上传会话，切片（除最后一片外每片至少 5MiB 且大小一致），逐片上传，最后 complete 合并：</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"lineNumbers":true} -->
+<pre title="multipart-worker.ts" class="wp-block-code"><code lang="typescript" class="language-typescript line-numbers">// Worker 端用 binding 做 multipart（S3 API 的
+// CreateMultipartUploadCommand / UploadPartCommand 流程一致）
+const upload = await env.BUCKET.createMultipartUpload(objectKey);
+
+const uploadedParts: R2UploadedPart[] = [];
+for (let i = 0; i &lt; chunks.length; i++) {
+  // partNumber 从 1 开始
+  const part = await upload.uploadPart(i + 1, chunks[i]);
+  uploadedParts.push(part); // { partNumber, etag }
+}
+
+const object = await upload.complete(uploadedParts);
+
+// 失败了记得中止，否则残留分片会占存储
+// await upload.abort();</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>想让浏览器直传分片，就用 S3 API 给每个 part 单独签预签名 URL（<code>UploadPartCommand</code> + <code>getSignedUrl</code>），前端并发 PUT、收集响应头里的 <code>ETag</code>，最后由服务端 complete。记得给 bucket 配生命周期规则，自动清理超时未完成的分片。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>自定义域名与缓存</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>R2 自带的 <code>r2.dev</code> 开发域名有速率限制、不走缓存，只适合调试。生产环境务必绑自定义域名：bucket → Settings → Custom Domains，填一个托管在 Cloudflare 的子域名，DNS 和证书全自动配好，流量自动走 CDN。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>R2 默认缓存头不积极，建议配 Cache Rule 给静态资源设长 Edge TTL；或上传时通过 <code>httpMetadata.cacheControl</code> 给不可变资源写 <code>public, max-age=31536000, immutable</code>，配合 UUID 文件名（内容变名字就变），缓存永远不用失效。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>常见错误排查清单</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul>
+<li><strong>403 SignatureDoesNotMatch</strong>：九成是签名与实际请求不一致——签名带了 <code>ContentType</code> 但前端没发 <code>Content-Type</code> 头或值有差异；剩下一成是密钥或 endpoint 里的 account id 抄错。</li>
+<li><strong>CORS preflight 失败</strong>：检查 <code>AllowedOrigins</code>／<code>AllowedMethods</code>／<code>AllowedHeaders</code> 三件套，等一分钟生效再测。</li>
+<li><strong>预签名 URL 过期（403）</strong>：<code>expiresIn</code> 太短，用户选完文件磨蹭一会儿就过期。我一般给 5–15 分钟，前端捕获 403 后自动重新请求签名。</li>
+<li><strong>binding 是 undefined</strong>：没配 <code>r2_buckets</code>，或本地 dev 没模拟 bucket。加一层 <code>if (!env.BUCKET)</code> 走降级逻辑。</li>
+<li><strong>大文件上传失败</strong>：单次 PUT 有体积上限，Worker 中转还受请求体限制（额度以官方文档为准），超限就切 multipart。</li>
+<li><strong>上传成功但访问 404</strong>：bucket 没绑自定义域名，或 key 编码不一致（中文文件名一定要处理，这也是我用 slugify／UUID 的原因）。</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2>小结</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>回头看，R2 是我这几年用得最省心的云服务之一：S3 生态无缝兼容、没有出站流量费、和 Workers 天然一体。小文件走 binding，代码最短；大文件浏览器直传，服务器零负担；再把 R2 当持久缓存用，很多"要不要上 Redis"的问题就直接消失了。这些互联网基础设施对我们全栈开发者非常重要，而无障碍的域名在国内还是一种奢望，用国外服务就成为一种必然。希望未来会更好吧。</p>
+<!-- /wp:paragraph -->
+
+<!-- seo:faq:start -->
+<h2>常见问题（FAQ）</h2>
+<h3>R2 上传要用预签名 URL 吗？</h3>
+<p>大文件推荐。由服务端用 S3 兼容 API 生成预签名 URL，让浏览器直传到 R2，避免文件经过 Worker 中转，节省 CPU 时间与带宽；小文件在 Workers 上用 R2 binding 中转更简单。</p>
+<h3>R2 兼容 S3 SDK 吗？</h3>
+<p>兼容 S3 API。可用 aws4fetch 或 AWS SDK 配置 R2 的 endpoint 与凭证来生成预签名 URL；在 Workers 中更推荐轻量的 aws4fetch，体积小、冷启动友好。</p>
+<h3>上传遇到 CORS 报错怎么解决？</h3>
+<p>在 R2 存储桶的 CORS 策略中放行你的源站域名与所需方法（PUT/GET），AllowedHeaders 里加上 Content-Type，并确保预签名 URL 的请求头与签名时一致。</p>
+<!-- seo:faq:end -->
+
+<!-- seo:related:start -->
+<h2>延伸阅读</h2>
+<ul>
+<li><a href="/posts/next-js/best-practice-for-nextjs-on-cloudflare-worker-2026">在 Cloudflare Workers 上部署 Next.js 最佳实践</a></li>
+<li><a href="/posts/cloudflare-worker/best-practice-for-nextjs-supabase-hyperdrive-on-cloudflare-worker">Workers + Supabase + Hyperdrive 最佳实践</a></li>
+</ul>
+<!-- seo:related:end -->
