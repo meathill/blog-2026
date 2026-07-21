@@ -119,9 +119,9 @@ GSC 侧（部署后几天）：
 4. `curl -sI https://meathill.com/api/og/home` —— 200，image/jpeg（原 /og-image.png 404 的替代）。
 5. 首跑 `pnpm indexnow -- --since 30` 做一次批量提交（200/202 均为成功）。
 
-### GSC（UI 手动，第一节的清单未完成部分）
-6. Search Console → sc-domain:meathill.com → Sitemaps：逐条移除第一节「删除」列表里的 6 条历史 sitemap（shop/seo/blog 子域与 http 旧条目）；UI 无「移除」入口的，靠源站 410 自然淡出，不阻塞。
-7. 移除后重新提交一次 `https://meathill.com/sitemap.xml`。
+### GSC（已结案，2026-07-21）
+6. ~~UI 删除历史 sitemap~~ —— **实测 UI 也没有移除入口**（issue #5 确认）。最终结论：不再尝试删除，依赖源站 410（已就位）+ 时间自然淡出；此项永久关闭，后续不必再碰。
+7. GSC 报告里这些条目属展示噪音，不影响 meathill.com 主 sitemap 的抓取与收录。
 
 ### Bing Webmaster
 8. 确认 meathill.com 已验证、sitemap 已提交；IndexNow 首次提交数日后在「IndexNow」面板确认已收到。
