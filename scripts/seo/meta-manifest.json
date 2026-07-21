@@ -1,0 +1,4 @@
+{
+  "_comment": "Issue #5 Bing meta 补全数据。key = post_name。apply-meta.php 据此只更新 post_title / post_excerpt；空字符串表示不改。骨架由 analyze-meta.ts 生成后人工填写。",
+  "posts": {}
+}

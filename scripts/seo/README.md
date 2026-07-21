@@ -42,6 +42,29 @@ SEO_APPLY=1 wp eval-file scripts/seo/restore.php
 - `restore.php` — 从 `backup/` 回滚。
 - `backup/` — 运行时生成，已 gitignore。
 
+### Issue #5 新增（正文加深 + Bing meta 补全）
+- `apply-content.php` — 用 `content/<slug>.html` **整篇替换** post_content。守卫：manifest 有 faq/related 的文章必须保留 marker 区块；新内容变短超 30% 需 `SEO_FORCE=1`。写入会自动 bump `post_modified`（sitemap lastmod 跟着更新）。
+- `content/*.html` — 每篇文章的完整新正文，**入库的唯一事实源**，文件名即 slug。改正文改这里，review diff 后再应用。
+- `content/source/` — 服务器 export 回来的正文基线（对照用），gitignore。
+- `export-meta.php` — 导出全站已发布文章的 title/excerpt/正文摘要到 `backup/meta-<date>.json`。
+- `analyze-meta.ts` — 本地分析上述导出，列出 title/description 过短清单并生成 `meta-manifest.json` 骨架。
+- `meta-manifest.json` — Bing meta 补全数据源（只含 title/excerpt）。
+- `apply-meta.php` — 按 meta-manifest 批量更新 title/excerpt。`SEO_KEEP_MODIFIED=1` 可保留原 post_modified。
+
+### 正文加深逐篇工作流（issue #5）
+```bash
+# 1) 服务器：导出该篇 raw 正文（export-current.php 覆盖 manifest 内全部文章）
+wp eval-file scripts/seo/export-current.php
+# 2) 把 backup/<slug>.content.html 传回本地，存为 scripts/seo/content/source/<slug>.html
+# 3) 本地编写 scripts/seo/content/<slug>.html（保留 seo:faq / seo:related marker），diff 审阅后提交
+# 4) 服务器：再备份一次 → dry-run 审 diff → 写入
+wp eval-file scripts/seo/export-current.php
+wp eval-file scripts/seo/apply-content.php
+SEO_APPLY=1 wp eval-file scripts/seo/apply-content.php
+# 5) 本地：提交 IndexNow
+pnpm indexnow -- /posts/<category>/<slug>
+```
+
 ## 幂等与安全
 - FAQ / 延伸阅读 用 HTML 注释 marker 包裹（`<!-- seo:faq:start -->` 等），重复运行只替换区块内部，不重复追加。
 - 只动 `post_title` / `post_excerpt` / `post_content`，不动 `post_name`（slug）。

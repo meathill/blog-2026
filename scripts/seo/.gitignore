@@ -1,2 +1,4 @@
 # 生产内容备份，不入库
 backup/
+# 服务器导出的正文基线（apply-content 的对照），入库的唯一事实源是 content/*.html
+content/source/
