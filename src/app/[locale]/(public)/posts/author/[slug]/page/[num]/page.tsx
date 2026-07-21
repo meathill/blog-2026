@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { getPosts, getCategories, getUserBySlug } from '@/lib/wordpress';
 import { PostList } from '@/components/posts/post-list';
 import { SITE_URL } from '@/lib/constants';
@@ -7,37 +8,42 @@ import { SITE_URL } from '@/lib/constants';
 const POSTS_PER_PAGE = 20;
 
 interface AuthorPageNumProps {
-  params: Promise<{ slug: string; num: string }>;
+  params: Promise<{ locale: string; slug: string; num: string }>;
 }
 
 export async function generateMetadata({ params }: AuthorPageNumProps): Promise<Metadata> {
-  const { slug, num } = await params;
+  const { locale, slug, num } = await params;
   const pageNum = parseInt(num, 10);
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
   const author = await getUserBySlug(slug);
 
   if (!author) {
     return {
-      title: '作者未找到',
+      title: t('author_not_found'),
     };
   }
 
-  const canonicalUrl = `${SITE_URL}/posts/author/${slug}/page/${pageNum}`;
+  const zhUrl = `${SITE_URL}/posts/author/${slug}/page/${pageNum}`;
+  const enUrl = `${SITE_URL}/en/posts/author/${slug}/page/${pageNum}`;
+  const canonical = locale === 'en' ? enUrl : zhUrl;
+  const title = t('author_page_title', { name: author.name, num: pageNum });
+  const description = t('author_page_description', { name: author.name, num: pageNum });
 
   return {
-    title: `${author.name} 的文章归档 - 第 ${pageNum} 页`,
-    description: `查看由 ${author.name} 编写的所有文章归档 - 第 ${pageNum} 页`,
+    title,
+    description,
     robots: { index: false, follow: true },
     alternates: {
-      canonical: canonicalUrl,
+      canonical,
       languages: {
-        zh: canonicalUrl,
-        en: `${SITE_URL}/en/posts/author/${slug}/page/${pageNum}`,
+        zh: zhUrl,
+        en: enUrl,
       },
     },
     openGraph: {
-      title: `${author.name} 的文章归档 - 第 ${pageNum} 页`,
-      description: `查看由 ${author.name} 编写的所有文章归档 - 第 ${pageNum} 页`,
-      url: canonicalUrl,
+      title,
+      description,
+      url: canonical,
     },
   };
 }

@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
@@ -10,46 +11,53 @@ import { getPostPath } from '@/lib/post-utils';
 import { SITE_URL } from '@/lib/constants';
 
 interface CategoryPageProps {
-  params: Promise<{ slug: string[] }>;
+  params: Promise<{ locale: string; slug: string[] }>;
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { locale, slug } = await params;
   const { categoryPath, pageNum } = parseCategorySlug(slug);
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
 
   if (categoryPath.length === 0) {
-    return { title: '分类未找到' };
+    return { title: t('category_not_found') };
   }
 
   const actualSlug = categoryPath[categoryPath.length - 1];
   const category = await getCategoryBySlug(actualSlug);
 
   if (!category) {
-    return { title: '分类未找到' };
+    return { title: t('category_not_found') };
   }
 
-  const siteUrl = SITE_URL;
   const basePath = `/category/${categoryPath.join('/')}`;
-  const canonicalUrl = pageNum > 1 ? `${siteUrl}${basePath}/page/${pageNum}` : `${siteUrl}${basePath}`;
+  const pagePath = pageNum > 1 ? `${basePath}/page/${pageNum}` : basePath;
+  const zhUrl = `${SITE_URL}${pagePath}`;
+  const enUrl = `${SITE_URL}/en${pagePath}`;
+  const canonical = locale === 'en' ? enUrl : zhUrl;
 
-  const title = pageNum > 1 ? `${category.name} - 文章分类 - 第 ${pageNum} 页` : `${category.name} - 文章分类`;
+  const title =
+    pageNum > 1
+      ? t('category_page_title', { name: category.name, num: pageNum })
+      : t('category_title', { name: category.name });
+  const description = t('category_description', { name: category.name });
 
   return {
     title,
-    description: `查看 ${category.name} 分类下的所有文章`,
+    description,
     // 分类首页保留索引；分页（/page/N, N>1）为薄内容，noindex
     ...(pageNum > 1 ? { robots: { index: false, follow: true } } : {}),
     alternates: {
-      canonical: canonicalUrl,
+      canonical,
       languages: {
-        zh: canonicalUrl,
-        en: pageNum > 1 ? `${siteUrl}/en${basePath}/page/${pageNum}` : `${siteUrl}/en${basePath}`,
+        zh: zhUrl,
+        en: enUrl,
       },
     },
     openGraph: {
       title,
-      description: `查看 ${category.name} 分类下的所有文章`,
-      url: canonicalUrl,
+      description,
+      url: canonical,
     },
   };
 }

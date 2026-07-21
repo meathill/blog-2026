@@ -56,6 +56,7 @@ describe('ArchivePageNum', () => {
 
     await ArchivePageNum({
       params: Promise.resolve({
+        locale: 'zh',
         num: '61',
       }),
     });
@@ -67,6 +68,7 @@ describe('ArchivePageNum', () => {
   it('should return notFound for invalid page numbers', async () => {
     await ArchivePageNum({
       params: Promise.resolve({
+        locale: 'zh',
         num: '0',
       }),
     });

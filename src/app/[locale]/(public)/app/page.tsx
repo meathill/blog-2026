@@ -14,22 +14,24 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Apps' });
-  const url = `${SITE_URL}/app`;
+  const zhUrl = `${SITE_URL}/app`;
+  const enUrl = `${SITE_URL}/en/app`;
+  const canonical = locale === 'en' ? enUrl : zhUrl;
 
   return {
     title: t('title'),
     description: t('subtitle_page'),
     alternates: {
-      canonical: url,
+      canonical,
       languages: {
-        zh: url,
-        en: `${SITE_URL}/en/app`,
+        zh: zhUrl,
+        en: enUrl,
       },
     },
     openGraph: {
       title: t('title'),
       description: t('subtitle_page'),
-      url,
+      url: canonical,
     },
   };
 }

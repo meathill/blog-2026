@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
@@ -10,36 +11,41 @@ import { getPostPath } from '@/lib/post-utils';
 import { SITE_URL } from '@/lib/constants';
 
 interface TagPageProps {
-  params: Promise<{ slug: string; num: string }>;
+  params: Promise<{ locale: string; slug: string; num: string }>;
 }
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
-  const { slug, num } = await params;
+  const { locale, slug, num } = await params;
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
   const tag = await resolveBySlugWithNormalizedFallback(slug, getTagBySlug);
 
   if (!tag) {
     return {
-      title: '标签未找到',
+      title: t('tag_not_found'),
     };
   }
 
-  const canonicalUrl = `${SITE_URL}/tag/${slug}/page/${num}`;
+  const zhUrl = `${SITE_URL}/tag/${slug}/page/${num}`;
+  const enUrl = `${SITE_URL}/en/tag/${slug}/page/${num}`;
+  const canonical = locale === 'en' ? enUrl : zhUrl;
+  const title = t('tag_page_title', { name: tag.name, num });
+  const description = t('tag_page_description', { name: tag.name, num });
 
   return {
-    title: `${tag.name} - 文章标签 - 第 ${num} 页`,
-    description: `查看 ${tag.name} 标签下的所有文章 - 第 ${num} 页`,
+    title,
+    description,
     robots: { index: false, follow: true },
     alternates: {
-      canonical: canonicalUrl,
+      canonical,
       languages: {
-        zh: canonicalUrl,
-        en: `${SITE_URL}/en/tag/${slug}/page/${num}`,
+        zh: zhUrl,
+        en: enUrl,
       },
     },
     openGraph: {
-      title: `${tag.name} - 文章标签 - 第 ${num} 页`,
-      description: `查看 ${tag.name} 标签下的所有文章 - 第 ${num} 页`,
-      url: canonicalUrl,
+      title,
+      description,
+      url: canonical,
     },
   };
 }

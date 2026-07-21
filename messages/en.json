@@ -122,5 +122,32 @@
     "related_posts": "Related Posts",
     "not_found_title": "App Not Found",
     "not_found_desc": "The app you are looking for does not exist or has been moved."
+  },
+  "Metadata": {
+    "posts_title": "Tech Insights",
+    "posts_description": "Articles from Meathill LLC: hands-on notes on Cloudflare full-stack, AI apps & billing, and cross-platform development.",
+    "posts_archive_title": "Post Archive - Page {num}",
+    "posts_archive_description": "Meathill LLC post archive - page {num}",
+    "search_title": "Search Posts",
+    "search_description": "Search articles and content on Meathill LLC",
+    "search_query_title": "Search: {query}",
+    "search_query_description": "Meathill LLC search results - {query}",
+    "about_title": "About Me",
+    "about_description": "Founder of Meathill LLC — 20+ years of full-stack experience, a solo studio delivering remotely, focused on Cloudflare full-stack, AI apps & billing, and cross-platform development.",
+    "about_og_description": "Founder of Meathill LLC — 20+ years of full-stack experience, a solo studio delivering remotely.",
+    "category_title": "{name} - Category",
+    "category_page_title": "{name} - Category - Page {num}",
+    "category_description": "Browse all posts in the {name} category",
+    "category_not_found": "Category Not Found",
+    "tag_title": "{name} - Tag",
+    "tag_page_title": "{name} - Tag - Page {num}",
+    "tag_description": "Browse all posts tagged {name}",
+    "tag_page_description": "Browse all posts tagged {name} - page {num}",
+    "tag_not_found": "Tag Not Found",
+    "author_title": "Posts by {name}",
+    "author_page_title": "Posts by {name} - Page {num}",
+    "author_description": "Browse all posts written by {name}",
+    "author_page_description": "Browse all posts written by {name} - page {num}",
+    "author_not_found": "Author Not Found"
   }
 }

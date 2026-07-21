@@ -11,6 +11,7 @@ import {
   DumbbellIcon,
   PlaneIcon,
 } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getAboutContent } from '@/actions/about';
@@ -19,12 +20,13 @@ import { marked } from 'marked';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
   const canonicalUrl = `${SITE_URL}${locale === 'en' ? '/en' : ''}/about`;
 
+  // title 不再带 "· Meathill LLC"——根 layout 的 title.template 会追加品牌名，避免重复
   return {
-    title: '关于我 · Meathill LLC',
-    description:
-      'Meathill LLC 创始人 — 20+ 年全栈开发经验，一人公司、远程交付，专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
+    title: t('about_title'),
+    description: t('about_description'),
     alternates: {
       canonical: canonicalUrl,
       languages: {
@@ -33,8 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
     },
     openGraph: {
-      title: '关于我 · Meathill LLC',
-      description: 'Meathill LLC 创始人 — 20+ 年全栈开发经验，一人公司、远程交付。',
+      title: t('about_title'),
+      description: t('about_og_description'),
       url: canonicalUrl,
     },
   };

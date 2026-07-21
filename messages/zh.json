@@ -122,5 +122,32 @@
     "related_posts": "相关文章",
     "not_found_title": "应用未找到",
     "not_found_desc": "无法找到该应用，可能已被删除或移动。"
+  },
+  "Metadata": {
+    "posts_title": "技术洞察",
+    "posts_description": "Meathill LLC 的技术文章：Cloudflare 全栈、AI 应用与计费、跨端开发的实践与踩坑笔记。",
+    "posts_archive_title": "文章归档 - 第 {num} 页",
+    "posts_archive_description": "Meathill LLC 技术文章归档 - 第 {num} 页",
+    "search_title": "搜索文章",
+    "search_description": "在 Meathill LLC 搜索技术文章和内容",
+    "search_query_title": "搜索: {query}",
+    "search_query_description": "Meathill LLC 搜索结果 - {query}",
+    "about_title": "关于我",
+    "about_description": "Meathill LLC 创始人 — 20+ 年全栈开发经验，一人公司、远程交付，专注 Cloudflare 全栈、AI 应用与计费、跨端开发。",
+    "about_og_description": "Meathill LLC 创始人 — 20+ 年全栈开发经验，一人公司、远程交付。",
+    "category_title": "{name} - 文章分类",
+    "category_page_title": "{name} - 文章分类 - 第 {num} 页",
+    "category_description": "查看 {name} 分类下的所有文章",
+    "category_not_found": "分类未找到",
+    "tag_title": "{name} - 文章标签",
+    "tag_page_title": "{name} - 文章标签 - 第 {num} 页",
+    "tag_description": "查看 {name} 标签下的所有文章",
+    "tag_page_description": "查看 {name} 标签下的所有文章 - 第 {num} 页",
+    "tag_not_found": "标签未找到",
+    "author_title": "{name} 的文章归档",
+    "author_page_title": "{name} 的文章归档 - 第 {num} 页",
+    "author_description": "查看由 {name} 编写的所有文章归档",
+    "author_page_description": "查看由 {name} 编写的所有文章归档 - 第 {num} 页",
+    "author_not_found": "作者未找到"
   }
 }

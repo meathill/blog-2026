@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { SearchIcon } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { SearchResultsClient } from '@/components/search/search-results-client';
 import { SITE_URL } from '@/lib/constants';
 
@@ -8,46 +9,54 @@ interface PageProps {
   searchParams: Promise<{ q?: string }>;
 }
 
-export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
   const { q } = await searchParams;
-  const canonicalUrl = `${SITE_URL}/search`;
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
 
   if (q) {
-    const url = `${canonicalUrl}?q=${encodeURIComponent(q)}`;
+    const zhUrl = `${SITE_URL}/search?q=${encodeURIComponent(q)}`;
+    const enUrl = `${SITE_URL}/en/search?q=${encodeURIComponent(q)}`;
+    const canonical = locale === 'en' ? enUrl : zhUrl;
+    const title = t('search_query_title', { query: q });
+    const description = t('search_query_description', { query: q });
     return {
-      title: `搜索: ${q}`,
-      description: `Meathill LLC搜索结果 - ${q}`,
+      title,
+      description,
       robots: { index: false, follow: true },
       alternates: {
-        canonical: url,
+        canonical,
         languages: {
-          zh: url,
-          en: `${SITE_URL}/en/search?q=${encodeURIComponent(q)}`,
+          zh: zhUrl,
+          en: enUrl,
         },
       },
       openGraph: {
-        title: `搜索: ${q}`,
-        description: `Meathill LLC搜索结果 - ${q}`,
-        url,
+        title,
+        description,
+        url: canonical,
       },
     };
   }
 
+  const zhUrl = `${SITE_URL}/search`;
+  const enUrl = `${SITE_URL}/en/search`;
+  const canonical = locale === 'en' ? enUrl : zhUrl;
   return {
-    title: '搜索文章',
-    description: '在Meathill LLC搜索技术文章和内容',
+    title: t('search_title'),
+    description: t('search_description'),
     robots: { index: false, follow: true },
     alternates: {
-      canonical: canonicalUrl,
+      canonical,
       languages: {
-        zh: canonicalUrl,
-        en: `${SITE_URL}/en/search`,
+        zh: zhUrl,
+        en: enUrl,
       },
     },
     openGraph: {
-      title: '搜索文章',
-      description: '在Meathill LLC搜索技术文章和内容',
-      url: canonicalUrl,
+      title: t('search_title'),
+      description: t('search_description'),
+      url: canonical,
     },
   };
 }

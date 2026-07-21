@@ -40,22 +40,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { apps: app, app_translations: translation } = result;
   const name = translation?.name || app.name;
   const description = translation?.description || app.description;
-  const canonicalUrl = `${SITE_URL}/app/${slug}`;
+  const zhUrl = `${SITE_URL}/app/${slug}`;
+  const enUrl = `${SITE_URL}/en/app/${slug}`;
+  const canonical = locale === 'en' ? enUrl : zhUrl;
 
   return {
     title: name,
     description: description,
     alternates: {
-      canonical: canonicalUrl,
+      canonical,
       languages: {
-        zh: canonicalUrl,
-        en: `${SITE_URL}/en/app/${slug}`,
+        zh: zhUrl,
+        en: enUrl,
       },
     },
     openGraph: {
       title: name,
       description: description || '',
-      url: canonicalUrl,
+      url: canonical,
       images: app.icon ? [app.icon] : [],
     },
   };
