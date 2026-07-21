@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3100",
     "sync-perf-data": "node --experimental-strip-types scripts/sync-perf-data.ts",
+    "indexnow": "node scripts/indexnow-submit.ts",
     "build": "next build",
     "test": "vitest",
     "test:run": "vitest run",
