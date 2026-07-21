@@ -1,4 +1,197 @@
 {
-  "_comment": "Issue #5 Bing meta 补全数据。key = post_name。apply-meta.php 据此只更新 post_title / post_excerpt；空字符串表示不改。骨架由 analyze-meta.ts 生成后人工填写。",
-  "posts": {}
+  "_comment": "Issue #5 Bing meta 补全数据。key = post_name。apply-meta.php 据此只更新 post_title / post_excerpt；空字符串表示不改。名单 = GSC 近 90 天有展示的文章 + 2025 年后发布/更新的文章（共 48 篇，回滚基线在 backup/meta-20260721.json）。",
+  "posts": {
+    "keep-chrome-extension-popup-html-open-when-debug": {
+      "title": "",
+      "excerpt": "开发 Chrome 扩展时 popup 页面一失焦就关闭，调试非常麻烦。本文介绍用 chrome-extension://<插件ID>/popup.html 在独立标签页打开 popup 的技巧，让你从容审查元素、断点调试，提升扩展开发效率。"
+    },
+    "no-error-message-in-websocket-onerror": {
+      "title": "",
+      "excerpt": "WebSocket 的 onerror 回调拿不到具体错误描述，这不是 bug 而是规范有意为之：出于安全考虑浏览器不暴露连接失败细节。本文解释背后原因，并给出排查 WebSocket 连接错误、向用户反馈问题的可行做法。"
+    },
+    "simple-steps-to-fix-npm-audit-vulnerabilities": {
+      "title": "",
+      "excerpt": "npm audit 报出一堆 vulnerabilities 怎么办？本文给出几步简单可行的修复流程：npm audit fix、手动升级依赖、用 overrides 强制版本，以及如何判断哪些告警可以安全忽略，帮你快速清掉安全警告。"
+    },
+    "ubuntu-20-04-climb-over-gfw": {
+      "title": "",
+      "excerpt": "记录在 Ubuntu 20.04 下配置科学上网的完整步骤：客户端选择与安装、配置文件写法、系统代理与终端代理设置，以及常见问题排查，适合需要在 Linux 桌面或服务器上稳定访问外网资源的开发者。"
+    },
+    "fix-gpg-cant-connect-to-the-agent-ipc-connect-call-failed": {
+      "title": "",
+      "excerpt": "在 WSL Ubuntu 20.04 里用 apt 源安装 Node.js 时遇到 gpg: can't connect to the agent: IPC connect call failed 报错。本文记录该错误的原因（WSL 下 gpg-agent 异常）与解决办法，几分钟即可恢复安装流程。"
+    },
+    "how-to-fix-error-rule-can-only-have-one-resource-source-provided-resource-and-test-include-exclude": {
+      "title": "",
+      "excerpt": "webpack 编译报错 Rule can only have one resource source 的原因与解法：多半是配置里同一条 rule 既声明了 resource 又有 test/include/exclude，本文教你定位冲突的 rule 并修复，附排查过程。"
+    },
+    "run-puppeteer-on-raspberry-pi-4b": {
+      "title": "",
+      "excerpt": "Puppeteer 自带的 Chromium 不支持 ARM，无法直接在树莓派上运行。本文分享在 Raspberry Pi 4B（Debian 10）上跑通 Puppeteer 的方法：安装系统版 Chromium Browser 并修改 executablePath，附完整配置代码。"
+    },
+    "welcome-sticky": {
+      "title": "",
+      "excerpt": "欢迎来到 Meathill 的博客：20+ 年经验的全栈开发者，专注 Cloudflare 全栈架构、AI 应用与跨端开发，也在 B 站/YouTube 制作 Web 开发视频教程。这里汇总了我的近期作品、联系方式与内容导航。"
+    },
+    "lets-upgrade-chrome-extension-to-manifest-v3-design-principles": {
+      "title": "",
+      "excerpt": "Chrome Extension Manifest V3 设计原则解读：为什么用 Service Worker 替代 background page、为什么限制远程代码执行、declarativeNetRequest 背后的隐私与性能考量，帮你在升级扩展前理解 V3 的整体方向。"
+    },
+    "lets-upgrade-chrome-extension-to-manifest-v3-mainly-changes-background-script": {
+      "title": "",
+      "excerpt": "Chrome Extension Manifest V3 主要变化详解：Service Worker 替换 background scripts 带来的代码架构调整、生命周期差异、常驻状态如何迁移，以及 API 层面的其他重要变更，是扩展升级 V3 的实操参考。"
+    },
+    "prevent-save-password-modal-in-puppeteer": {
+      "title": "",
+      "excerpt": "用 Puppeteer 自动化登录或录制视频时，Chrome 的保存密码弹窗很干扰。本文给出移除该弹窗的正确姿势：通过启动参数与 Profile 首选项禁用密码管理器，附可直接复制的 launch 配置。"
+    },
+    "how-to-use-height-100-with-flex-1": {
+      "title": "",
+      "excerpt": "height: 100% 为什么不生效？flex: 1 为什么撑不满？本文从盒模型讲起，说明百分比高度依赖父元素定高的规则、flex 布局中 flex-basis 与 min-height 的相互作用，给出让子元素可靠占满父容器高度的几种写法。"
+    },
+    "study-sonarqube-sonarjs-and-eslint-plugin-sonarjs": {
+      "title": "",
+      "excerpt": "SonarQube 社区版 + SonarJS 上手体验笔记：本地部署流程、扫描 JS/TS 项目的配置与报告解读，以及轻量替代方案 eslint-plugin-sonarjs 的对比，帮你评估这套代码质量静态分析工具是否值得引入团队。"
+    },
+    "free-online-workshop-develop-minesweeper-with-vue3": {
+      "title": "",
+      "excerpt": "免费线上讲习班记录：用 Vue3 + Vite 从零开发扫雷游戏。内容覆盖响应式数据建模、递归翻开空白格、标雷与胜负判定等核心逻辑，附完整开源代码仓库，适合想通过小游戏练手 Vue3 组合式 API 的同学。"
+    },
+    "sentry-cleanup-old-data": {
+      "title": "",
+      "excerpt": "自建 Sentry 磁盘占用暴涨怎么办？本文分享清理与维护经验：理解 Postgres 与 Kafka 各自存了什么、用 cleanup 命令清理过期事件、调小 Kafka retention、配置定时任务，把 40/50G 云盘从爆满边缘拉回来。"
+    },
+    "chrome-extension-mv3-capabilities-and-bugs": {
+      "title": "",
+      "excerpt": "Chrome Extension Manifest V3 已知兼容性问题与 Bug 摘译整理：结合官方 Known issues 文档与个人实践，汇总 Service Worker、API 缺口等迁移路上的坑，供准备升级 V3 的扩展开发者避雷。"
+    },
+    "git-1-team-sop": {
+      "title": "",
+      "excerpt": "Git 团队协作规范整理：分支模型与命名、commit message 约定、rebase 与 merge 的选择、PR 与 Code Review 流程等常用 SOP，来自实际团队的落地经验，适合作为小团队建立 Git 规范的起点。"
+    },
+    "wordpress-use-tidb-cloud-serverless-replace-mysql": {
+      "title": "",
+      "excerpt": "把 WordPress 的 MySQL 替换成 TiDB Cloud Serverless 的完整实践：注册与建库、数据导入、连接配置，以及解决 SQL_CALC_FOUND_ROWS 导致翻页丢失等兼容性问题，白嫖云数据库跑博客的真实体验。"
+    },
+    "sponsers": {
+      "title": "",
+      "excerpt": "感谢所有赞助过本站的老板与舰长。这里长期展示各位赞助商与充电用户名单；欢迎赞助支持我持续输出全栈开发、Cloudflare、AI 应用等内容，可获得内容致谢与定制主题。"
+    },
+    "fix-blog-timeout-failure-caused-by-tidb-cloud-serverless-out-of-quota": {
+      "title": "",
+      "excerpt": "一次真实故障复盘：TiDB Cloud Serverless 免费额度用尽导致博客 502 超时。记录从发现问题、定位到 RU 超额、上调预算恢复服务的全过程，以及后续降低数据库用量的思路，供使用 Serverless 数据库的站长参考。"
+    },
+    "advertise-on-this-site": {
+      "title": "",
+      "excerpt": "本站 2025 年度广告招商：对联广告 + 文章底部广告位，年度赞助 4800 元，可开发票，亦可定制评测、教学文章与视频。面向开发者工具、云服务等技术产品，覆盖全栈开发者读者群体。"
+    },
+    "build-billing-system-for-openai-with-supabase-stripe-2-user-sign-up-in": {
+      "title": "",
+      "excerpt": "OpenAI 计费系统实战系列第二篇：用 Supabase 处理用户注册与登录。讲解 Supabase Auth 的接入流程、邮箱验证与第三方登录配置、会话管理与前端集成，为后续接入 Stripe 计费打好用户体系基础。"
+    },
+    "use-cloudflare-worker-reverse-proxy-image": {
+      "title": "",
+      "excerpt": "用 Cloudflare Worker 反向代理图片、突破防盗链的实操教程：编写 Worker 转发请求并改写 Referer，配置路由与缓存，几行代码解决第三方图片无法直接展示的问题，附完整代码。"
+    },
+    "using-turnstile-to-protect-our-website": {
+      "title": "",
+      "excerpt": "用 Cloudflare Turnstile 免费保护网站表单与接口：与传统 CAPTCHA 的区别、前端挂件接入、服务端 siteverify 校验的完整代码，以及在 Vercel 等非 Cloudflare 托管站点上的使用体验。"
+    },
+    "practical-tutorial-integrate-speech-to-text-on-webpage-1-record-in-browser": {
+      "title": "",
+      "excerpt": "网页集成语音输入（STT）实用教程第一篇：在浏览器里完成录音。讲解 getUserMedia 获取麦克风权限、MediaRecorder 录制音频、音频格式选择与常见兼容性问题，为后续对接语音识别服务做准备。"
+    },
+    "tutorial-how-to-integrate-google-sso-in-browser-extension": {
+      "title": "",
+      "excerpt": "浏览器扩展集成 Google 一键登录教程（上）：结合开发 AutomateGPT 的真实经验，讲解在 Chrome Web Store 占坑、创建 Google OAuth 凭据、配置 Supabase Auth 等准备工作，为下篇的代码实现铺路。"
+    },
+    "tutorial-how-to-integrate-google-sso-in-browser-extension-2": {
+      "title": "",
+      "excerpt": "浏览器扩展集成 Google 一键登录教程（下）：用 chrome.identity API 实现 SSO 的完整代码解析，包括 manifest.json 配置、Login 方法实现、常见的坑与没有 Google 账户用户的兜底方案。"
+    },
+    "hackquest-io-solidity-rust-web3-workshop": {
+      "title": "",
+      "excerpt": "HackQuest.io 主办的 Solidity/Rust Web3 开发共学营信息：每周一开班滚动录取、全程线上免费参与，结营可获头部公链官方签发的学习证书与专属周边，适合想系统入门智能合约开发的同学。"
+    },
+    "2024-how-to-setup-react-native-develop-environment-in-china-mainland": {
+      "title": "",
+      "excerpt": "2024 年在中国大陆搭建 React Native 开发环境的完整指南：网络代理配置、JDK/Android Studio/Xcode 安装、npm 与 Gradle 镜像加速，以及常见报错的解决办法，帮你少走弯路顺利跑起第一个 RN 应用。"
+    },
+    "recent-notes-of-react-native-expo": {
+      "title": "",
+      "excerpt": "React Native + Expo 实战踩坑笔记：NativeWind 样式、Expo Image、FlashList 长列表、Expo AV 音视频等技术栈选型经验与渲染效率优化技巧，全部来自真实项目，官方文档查不到的坑都在这里。"
+    },
+    "note-of-fixing-weird-react-native-bug": {
+      "title": "",
+      "excerpt": "一次调试 React Native 诡异 bug 的完整记录：单选列表状态错乱的现象、逐步缩小范围的排查思路、最终定位到的原因与修复方案。比结论更有价值的是排查过程本身，适合正在被 RN 折磨的同学。"
+    },
+    "2024-summary-2025-wishes": {
+      "title": "",
+      "excerpt": "2024 年度总结与 2025 年展望：远程工作的合作体会、独立开发与自媒体的进展、力量举训练成果，以及新一年的目标与许愿。记录一个全栈开发者真实的一年。"
+    },
+    "reflection-why-i-cannot-be-100x-developer": {
+      "title": "",
+      "excerpt": "一人开发两年的反思：为什么 AI 加持下我仍没成为想象中的 100x 程序员？分享单人负责完整产品时在优先级、质量与精力管理上的挣扎与教训，写给有一定技术能力、想走独立开发路线的朋友。"
+    },
+    "serial-tutorial-send-push-notification-with-vercel-serverless-function-and-apns-basic-knowledges": {
+      "title": "",
+      "excerpt": "iOS 推送通知系列教程（1）基础知识：APNs 的工作原理、证书与密钥准备、用 Vercel Serverless Function 做推送服务端的整体架构，以及开发前必须了解的环境与配置要点。"
+    },
+    "serial-tutorial-send-push-notification-with-vercel-serverless-function-and-apns-code-tutorial": {
+      "title": "",
+      "excerpt": "iOS 推送通知系列教程（2）代码解析：Expo App 端设置通知类型、侦听通知点击并跳转页面，Vercel Serverless Function 端连接 APNs 发送通知的关键代码，逐段讲解可直接套用。"
+    },
+    "serial-tutorial-send-push-notification-with-vercel-serverless-function-and-apns-support-timezone": {
+      "title": "",
+      "excerpt": "iOS 推送通知系列教程（3）时区处理：如何给不同时区的用户在各自的当地时间定时推送消息，涵盖时区数据存储、服务端调度计算与边界情况处理，出海应用的必备知识。"
+    },
+    "sharing-our-chrome-extension-automate-gpt-batch-execute-tasks-in-chatgpt": {
+      "title": "",
+      "excerpt": "自制浏览器扩展 Automate GPT 分享：在 ChatGPT 网页里批量执行任务，把重复的提问流程自动化。介绍使用场景、安装方式与实现思路，适合经常用 ChatGPT 处理批量内容的同学。"
+    },
+    "sponsors-wanted-2025-july-ipl-powerlifting": {
+      "title": "",
+      "excerpt": "计划参加 2025 年 7 月广州 IPL 力量举三项赛（大师组 100KG，预测总成绩 510KG），诚征赞助商：全身广告位可用，并配合博客与视频内容增加赞助商曝光，10 元起丰俭由人。"
+    },
+    "from-40s-to-11ms-tidb-cloud-sql-optimization": {
+      "title": "",
+      "excerpt": "TiDB Cloud 一次 SQL 深潜优化实战：把一条查询从 40 秒优化到 11 毫秒。完整展示执行计划分析、索引设计与改写思路，本文获 TiDB 社区第四届专栏征文大赛二等奖。"
+    },
+    "remote-us-stablecoin-company-hiring-backend-heavy-fullstack-developer": {
+      "title": "",
+      "excerpt": "【已招到】Mizu Financial（硅谷稳定币财务管理 SaaS 初创）远程直聘偏后端全栈开发的招聘存档：职位要求、技术栈与工作方式说明，供关注远程工作机会的开发者参考。"
+    },
+    "how-to-fix-react-native-expo-google-play-16kb-memory-page-issue": {
+      "title": "",
+      "excerpt": "Google Play 开始要求支持 16KB memory page，React Native + Expo 项目怎么过审？记录该问题的来龙去脉与解决步骤：升级相关依赖、重新构建并验证，附踩坑细节。"
+    },
+    "some-bad-memory-about-xiaomi": {
+      "title": "",
+      "excerpt": "跟风吐槽小米：从市场部风波聊起，回顾我与小米产品和营销的几次不愉快经历，以及为什么多年来我坚持能不买就不买。纯个人向吐槽，理性看待。"
+    },
+    "video-tutorial-build-whitescreen-app-with-react-native-expo": {
+      "title": "",
+      "excerpt": "视频教程：React Native + Expo 入门实战开发多平台应用 WhiteScreen 第 1 集——移动应用开发现状、项目简介与技术栈选型，B 站/YouTube 双平台同步更新，帮你补上全栈开发的移动端拼图。"
+    },
+    "video-tutorial-build-whitescreen-app-with-react-native-expo-setup-simulator-build-with-expo": {
+      "title": "",
+      "excerpt": "视频教程 WhiteScreen 第 2 集：配置 iOS/Android 模拟器开发环境，创建并运行第一个 Expo 应用。手把手演示，适合零移动端经验的 Web 开发者跟练。"
+    },
+    "video-tutorial-build-whitescreen-app-with-react-native-expo-layouting-stat-management-animation-local-storage": {
+      "title": "",
+      "excerpt": "视频教程 WhiteScreen 第 3 集：深入开发完成应用主体——页面布局、状态管理、动画与本地存储的实战运用，看完即可独立完成一个可用的多平台小应用。"
+    },
+    "use-notion-as-editor-to-publish-blogs": {
+      "title": "",
+      "excerpt": "测试用 Notion 作为编辑器发布 WordPress 博客：博客重构成 headless 架构后的内容工作流探索，记录 Notion 同步方案的配置过程与遇到的问题。"
+    },
+    "welcome-to-awesome-comment": {
+      "title": "",
+      "excerpt": "自荐 Side Project：Awesome Comment——为 AI 时代的独立开发者打造的评论系统，内置 AI 辅助回复与多语言支持，让你的产品能和全球用户对话。介绍功能亮点、技术栈与接入方式。"
+    },
+    "tidb-vector-query-two-phase-optimization": {
+      "title": "一次 TiDB 向量查询优化实战：两阶段查询与 RU 优化",
+      "excerpt": "TiDB Cloud Serverless 向量检索的 RU 优化实战：通过统一 locale 字段、拆分两阶段查询等手段，把向量查询的 RU 消耗与慢 SQL 明显降下来，分享排查过程与可复用的优化结论。"
+    }
+  }
 }
