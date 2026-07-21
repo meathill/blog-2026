@@ -220,6 +220,14 @@ return new Response(transformed.image(), {
 - ⚠️ **`blog.meathill.com` 双角色**：既是历史公开站，又是 meathill.com 的 REST API 后端 + 媒体源。做旧站收敛（301/410/noindex，见 `scripts/seo/server/` 与 `docs/seo-gsc-cleanup.md`）时必须保留 `/wp-json/`、`/wp-admin/`、`/wp-content/`。
 - **GSC 清理**：GSC MCP 只能 list/submit、不能删 sitemap；历史 sitemap 退役按 `docs/seo-gsc-cleanup.md` 手动执行。
 
+### Issue #5 增补
+
+- **首页结构化数据**：`buildOrganizationJsonLd` / `buildWebSiteJsonLd`（含 SearchAction）只注入首页（Google 建议），Organization 通过 `@id: /#organization` 被 WebSite 引用。
+- **IndexNow**：发文/改文后手动 `pnpm indexnow -- /posts/{category}/{slug}`，或 `pnpm indexnow -- --since 3` 按 sitemap lastmod 批量提交。key 文件在 `public/<key>.txt`，按协议本就公开、不进 .env；key 常量在 `scripts/indexnow-submit.ts` 顶部，与文件漂移会报错。
+- **站点级 OG 图**：`/api/og/home`（英文文案——Satori 默认字体无 CJK 字形），根 layout 的 openGraph/twitter 引用它；文章页仍走 `/api/og/post`。
+- **localeCookie 已关**（`src/i18n/routing.ts`）：`localeDetection: false` 下 NEXT_LOCALE cookie 无用途，且 set-cookie 会让响应 `no-store`——边缘缓存失效 + bfcache 被禁。语言切换纯 URL 驱动，勿再引入 cookie。
+- **正文更新链路**：整篇替换走 `scripts/seo/content/<slug>.html` + `apply-content.php`（守卫见 `scripts/seo/README.md`）；批量 title/excerpt 走 `export-meta.php` → `analyze-meta.ts` → `meta-manifest.json` → `apply-meta.php`。
+
 ## TiDB 降载与 blog.meathill.com 边缘收口（2026-06-11）
 
 WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单见 `scripts/cloudflare/README.md`。

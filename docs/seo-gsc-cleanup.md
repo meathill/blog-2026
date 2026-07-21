@@ -108,6 +108,31 @@ GSC 侧（部署后几天）：
 - 服务器 `meathill@34.177.119.169`：已覆盖 `/etc/caddy/Caddyfile`（备份 `Caddyfile.bak-issue4-20260709145246`），`systemctl restart caddy`。
   - origin 实测：`/wp-json` 200；`/sitemap.xml` 410；`/tech/...html/attachment/...` → `301 Location: https://meathill.com/posts/tech/...`（父文，非首页）。
 
+## Issue #5 手动操作清单（2026-07-21）
+
+代码侧（首页 canonical/JSON-LD、IndexNow、localeCookie/bfcache、og-image）已入库。以下需人工执行：
+
+### 部署后立即
+1. `curl -sI https://meathill.com/` —— 确认响应**不再带 `set-cookie: NEXT_LOCALE`**，cache-control 不再是 `no-store`（localeCookie 关闭生效，bfcache 恢复）。
+2. `curl https://meathill.com/a44ae7d8815444ca6d7b7692ab26cf0b.txt` —— 应 200 且内容为 key 本身（IndexNow 验证文件）。
+3. `curl -s https://meathill.com/ | grep -o 'ld+json'` —— 首页应有两段 JSON-LD；再用 [Rich Results Test](https://search.google.com/test/rich-results) / validator.schema.org 校验 WebSite/Organization。
+4. `curl -sI https://meathill.com/api/og/home` —— 200，image/jpeg（原 /og-image.png 404 的替代）。
+5. 首跑 `pnpm indexnow -- --since 30` 做一次批量提交（200/202 均为成功）。
+
+### GSC（UI 手动，第一节的清单未完成部分）
+6. Search Console → sc-domain:meathill.com → Sitemaps：逐条移除第一节「删除」列表里的 6 条历史 sitemap（shop/seo/blog 子域与 http 旧条目）；UI 无「移除」入口的，靠源站 410 自然淡出，不阻塞。
+7. 移除后重新提交一次 `https://meathill.com/sitemap.xml`。
+
+### Bing Webmaster
+8. 确认 meathill.com 已验证、sitemap 已提交；IndexNow 首次提交数日后在「IndexNow」面板确认已收到。
+
+### 内容更新期间（逐篇，配合 scripts/seo/README.md 的工作流）
+9. 每篇应用后：GSC URL 检查 → 请求重新编入索引；`pnpm indexnow -- /posts/{category}/{slug}`。
+10. 服务器跑 `wp eval-file scripts/seo/export-meta.php`，把 `backup/meta-<date>.json` 传回本地，供 Bing description 补全分析。
+
+### 4–6 周后复盘
+11. 以 issue #5 表格为基线（cf-worker-2026：441 展示/14.1 名等）对比 GSC 28 天窗口，回填 issue。
+
 ## 四、验收指标（部署 + 清理后，延后测量）
 - Top 技术文（Next.js/CF Worker、Hyperdrive、Vercel-vs-CF、R2 等）在之后 28 天窗口回到 **4%+ CTR**（主要由 `scripts/seo/` 文案更新驱动）。
 - 活跃 HTTPS sitemap 0 error 且近期被抓取（基本已满足）。
