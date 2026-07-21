@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { buildArticleJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo/jsonld';
+import {
+  buildArticleJsonLd,
+  buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+} from '@/lib/seo/jsonld';
 import { SITE_URL } from '@/lib/constants';
 
 describe('seo/jsonld', () => {
@@ -61,6 +67,33 @@ describe('seo/jsonld', () => {
       expect(result.itemListElement).toHaveLength(3);
       expect(result.itemListElement[0]).toEqual({ '@type': 'ListItem', position: 1, name: '首页', item: SITE_URL });
       expect(result.itemListElement[2].position).toBe(3);
+    });
+  });
+
+  describe('buildOrganizationJsonLd', () => {
+    it('生成 Organization，@id 供 WebSite 引用，sameAs 含社交链接', () => {
+      const result = buildOrganizationJsonLd();
+      expect(result['@type']).toBe('Organization');
+      expect(result['@id']).toBe(`${SITE_URL}/#organization`);
+      expect(result.url).toBe(SITE_URL);
+      expect(result.logo).toBe(`${SITE_URL}/favicon.webp`);
+      expect(result.sameAs).toContain('https://github.com/meathill');
+    });
+  });
+
+  describe('buildWebSiteJsonLd', () => {
+    it('生成 WebSite，publisher 通过 @id 引用 Organization，SearchAction 指向站内搜索', () => {
+      const result = buildWebSiteJsonLd('zh');
+      expect(result['@type']).toBe('WebSite');
+      expect(result.url).toBe(SITE_URL);
+      expect(result.inLanguage).toBe('zh-CN');
+      expect(result.publisher).toEqual({ '@id': `${SITE_URL}/#organization` });
+      expect(result.potentialAction.target).toBe(`${SITE_URL}/search?q={search_term_string}`);
+      expect(result.potentialAction['query-input']).toBe('required name=search_term_string');
+    });
+
+    it('en locale 输出 en-US', () => {
+      expect(buildWebSiteJsonLd('en').inLanguage).toBe('en-US');
     });
   });
 

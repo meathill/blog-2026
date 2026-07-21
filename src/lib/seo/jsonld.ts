@@ -2,6 +2,9 @@ import { SITE_URL } from '@/lib/constants';
 
 const SITE_NAME = 'Meathill LLC';
 const AUTHOR_NAME = 'meathill';
+const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+// 与 Footer.tsx 的社交链接保持一致
+const SOCIAL_PROFILES = ['https://github.com/meathill', 'https://youtube.com/@meathill', 'https://x.com/meathill1'];
 
 export interface FaqPair {
   question: string;
@@ -45,6 +48,40 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput) {
 interface BreadcrumbItem {
   name: string;
   url: string;
+}
+
+/**
+ * 构造站点 Organization 结构化数据（只应注入首页，供 WebSite 通过 @id 引用）。
+ */
+export function buildOrganizationJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': ORGANIZATION_ID,
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.webp`,
+    sameAs: SOCIAL_PROFILES,
+  };
+}
+
+/**
+ * 构造站点 WebSite 结构化数据（只应注入首页），含站内搜索 SearchAction。
+ */
+export function buildWebSiteJsonLd(locale: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: SITE_URL,
+    inLanguage: locale === 'en' ? 'en-US' : 'zh-CN',
+    publisher: { '@id': ORGANIZATION_ID },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${SITE_URL}/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
 }
 
 /**

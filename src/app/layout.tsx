@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     description: '20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
     images: [
       {
-        url: '/og-image.png',
+        url: '/api/og/home',
         width: 1200,
         height: 630,
         alt: 'Meathill LLC',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     creator: '@meathill1',
     title: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
     description: '20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
-    images: ['/og-image.png'],
+    images: ['/api/og/home'],
   },
   robots: {
     index: true,
