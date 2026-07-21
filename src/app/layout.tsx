@@ -1,53 +1,20 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import ThirdPartyScripts from '@/components/ThirdPartyScripts';
-
-export const metadata: Metadata = {
-  title: {
-    default: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
-    template: '%s | Meathill LLC',
-  },
-  description:
-    'Meathill LLC：20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈架构与迁移、AI 应用与计费系统、React Native 跨端开发。',
-  keywords: ['Meathill LLC', '全栈开发', 'Cloudflare', 'Next.js', 'AI 应用', '计费系统', 'React Native', '远程开发'],
-  authors: [{ name: 'Meathill', url: 'https://meathill.com' }],
-  creator: 'Meathill',
-  metadataBase: new URL('https://meathill.com'),
-  openGraph: {
-    type: 'website',
-    locale: 'zh_CN',
-    url: 'https://meathill.com',
-    siteName: 'Meathill LLC',
-    title: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
-    description: '20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
-    images: [
-      {
-        url: '/api/og/home',
-        width: 1200,
-        height: 630,
-        alt: 'Meathill LLC',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    creator: '@meathill1',
-    title: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
-    description: '20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
-    images: ['/api/og/home'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
-
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getLocale, getMessages } from 'next-intl/server';
+import { Inter } from 'next/font/google';
+import { buildRootMetadata } from '@/lib/seo/root-metadata';
+
+// 根 layout 在 [locale] 段之外，params 拿不到 locale（恒 undefined），
+// 必须用 getLocale()（读取 middleware 写入的 X-NEXT-INTL-LOCALE 头）
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return buildRootMetadata(locale);
+}
 
 // 客户端只需要这些 namespace，其余仅服务端使用
 const CLIENT_NAMESPACES = ['LocaleSwitcher'] as const;
-import { Inter } from 'next/font/google';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -57,12 +24,10 @@ const inter = Inter({
 
 export default async function RootLayout({
   children,
-  params,
 }: Readonly<{
   children: React.ReactNode;
-  params: Promise<{ locale?: string }>;
 }>) {
-  const { locale } = await params;
+  const locale = await getLocale();
   const allMessages = await getMessages();
   // 只传客户端需要的 namespace，减少 hydration payload
   const messages = Object.fromEntries(
@@ -70,7 +35,7 @@ export default async function RootLayout({
   );
 
   return (
-    <html lang={locale || 'zh'}>
+    <html lang={locale}>
       <head>
         <link rel="icon" href="/favicon.webp" type="image/webp" />
         <link rel="apple-touch-icon" href="/favicon.webp" />

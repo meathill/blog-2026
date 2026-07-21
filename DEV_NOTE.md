@@ -226,6 +226,7 @@ return new Response(transformed.image(), {
 - **IndexNow**：发文/改文后手动 `pnpm indexnow -- /posts/{category}/{slug}`，或 `pnpm indexnow -- --since 3` 按 sitemap lastmod 批量提交。key 文件在 `public/<key>.txt`，按协议本就公开、不进 .env；key 常量在 `scripts/indexnow-submit.ts` 顶部，与文件漂移会报错。
 - **站点级 OG 图**：`/api/og/home`（英文文案——Satori 默认字体无 CJK 字形），根 layout 的 openGraph/twitter 引用它；文章页仍走 `/api/og/post`。
 - **localeCookie 已关**（`src/i18n/routing.ts`）：`localeDetection: false` 下 NEXT_LOCALE cookie 无用途，且 set-cookie 会让响应 `no-store`——边缘缓存失效 + bfcache 被禁。语言切换纯 URL 驱动，勿再引入 cookie。
+- **根 layout 取 locale 必须用 `getLocale()`**：`src/app/layout.tsx` 在 `[locale]` 段之外，`params.locale` 恒为 undefined（曾导致 /en 全站 `<html lang="zh">` + 根 metadata 恒中文）。next-intl v4 的 `getLocale()`/`getMessages()` 读 middleware 写入的 `X-NEXT-INTL-LOCALE` 头，在根 layout 可用；根 metadata 按 locale 生成，见 `src/lib/seo/root-metadata.ts`，回归测试 `tests/unit/root-layout.test.tsx`。
 - **正文更新链路**：整篇替换走 `scripts/seo/content/<slug>.html` + `apply-content.php`（守卫见 `scripts/seo/README.md`）；批量 title/excerpt 走 `export-meta.php` → `analyze-meta.ts` → `meta-manifest.json` → `apply-meta.php`。
 
 ## TiDB 降载与 blog.meathill.com 边缘收口（2026-06-11）
