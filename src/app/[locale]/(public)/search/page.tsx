@@ -35,8 +35,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
         title,
         description,
         url: canonical,
-      type: 'website',
-      images: [DEFAULT_OG_IMAGE],
+        type: 'website',
+        images: [DEFAULT_OG_IMAGE],
       },
     };
   }

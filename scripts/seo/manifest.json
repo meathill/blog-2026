@@ -70,10 +70,7 @@
           "a": "若主要诉求是降低带宽成本、或想用 Workers/R2/D1 等一体化生态，迁移收益明显，且 OpenNext 成熟后迁移成本已大幅下降；若重度依赖 Vercel 专有特性或团队协作流程，则建议留在 Vercel，等特性追平后再评估。"
         }
       ],
-      "related": [
-        "migrate-next-js-from-vercel-to-cloudflare",
-        "best-practice-for-nextjs-on-cloudflare-worker-2026"
-      ]
+      "related": ["migrate-next-js-from-vercel-to-cloudflare", "best-practice-for-nextjs-on-cloudflare-worker-2026"]
     },
     "upload-file-via-cloudflare-r2": {
       "category": "infra",
@@ -166,10 +163,7 @@
           "a": "用 tools.meathill.com 的 OG 校验工具或社交平台 debugger 检查 og:image 尺寸、可访问性与缓存头。"
         }
       ],
-      "related": [
-        "best-practice-for-nextjs-on-cloudflare-worker-2026",
-        "upload-file-via-cloudflare-r2"
-      ]
+      "related": ["best-practice-for-nextjs-on-cloudflare-worker-2026", "upload-file-via-cloudflare-r2"]
     }
   }
 }

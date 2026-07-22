@@ -113,12 +113,21 @@ describe('Sitemap Generator', () => {
       ]),
     );
 
+    // /en 页面可索引，需作为主条目出现（Ahrefs: indexable page not in sitemap）
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ url: `${SITE_URL}/en/posts/cat-1/post-1` }),
+        expect.objectContaining({ url: `${SITE_URL}/en/category/cat-1` }),
+        expect.objectContaining({ url: `${SITE_URL}/en` }),
+      ]),
+    );
+
     // post lastModified 使用 post.modified（新鲜度信号）
     const post1 = result.find((item) => item.url === `${SITE_URL}/posts/cat-1/post-1`);
     expect(post1?.lastModified).toEqual(new Date('2023-02-01'));
 
-    // Validate count: static(5) + posts(3) + category(1) + app(1) + skill(1) = 11（标签已移除）
-    expect(result.length).toBe(11);
+    // Validate count: (static(5) + posts(3) + category(1) + app(1) + skill(1)) × zh/en = 22（标签已移除）
+    expect(result.length).toBe(22);
 
     // Check categories
     expect(result).toEqual(
@@ -198,8 +207,8 @@ describe('Sitemap Generator', () => {
 
     const result = await sitemap();
 
-    // Should distinctively return just static pages + mocked skills (which is 1 skill)
-    expect(result.length).toBe(6); // 5 static pages defined in sitemap.ts + 1 skill page
+    // Should distinctively return just static pages + mocked skills (which is 1 skill), ×2 (zh + en)
+    expect(result.length).toBe(12); // (5 static pages defined in sitemap.ts + 1 skill page) × zh/en
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: SITE_URL })]));
   });
 });

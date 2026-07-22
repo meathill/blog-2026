@@ -15,6 +15,20 @@ function safeDate(date: unknown): Date {
   return d;
 }
 
+/**
+ * 为声明了 en alternate 的条目补一条 /en 主条目。
+ * Ahrefs：/en 页面可索引却只作为 alternate 出现，被记为 "not in sitemap" ×877。
+ */
+function expandEnEntries(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
+  return entries.flatMap((entry) => {
+    const en = entry.alternates?.languages?.en;
+    if (typeof en !== 'string' || en === entry.url) {
+      return [entry];
+    }
+    return [entry, { ...entry, url: en }];
+  });
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://meathill.com';
   // 静态页面
@@ -24,18 +38,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
+      alternates: {
+        languages: {
+          zh: SITE_URL,
+          en: `${SITE_URL}/en`,
+        },
+      },
     },
     {
       url: `${SITE_URL}/posts`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/posts`,
+          en: `${SITE_URL}/en/posts`,
+        },
+      },
     },
     {
       url: `${SITE_URL}/app`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/app`,
+          en: `${SITE_URL}/en/app`,
+        },
+      },
     },
     {
       url: `${SITE_URL}/skills`,
@@ -55,6 +87,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.5,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/about`,
+          en: `${SITE_URL}/en/about`,
+        },
+      },
     },
   ];
 
@@ -150,6 +188,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: safeDate(app.updatedAt),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/app/${app.slug}`,
+          en: `${SITE_URL}/en/app/${app.slug}`,
+        },
+      },
     }));
   } catch (error) {
     console.warn('Failed to fetch apps for sitemap, skipping...', error);
@@ -179,5 +223,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn('Failed to read skills for sitemap, skipping...', error);
   }
 
-  return [...staticPages, ...postPages, ...categoryPages, ...appPages, ...skillPages];
+  return expandEnEntries([...staticPages, ...postPages, ...categoryPages, ...appPages, ...skillPages]);
 }
