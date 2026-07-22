@@ -11,7 +11,7 @@
 
 - [ ] 评估搜索方案升级（站内索引/离线索引）
 - [ ] 增加 e2e 冒烟测试（关键页面 + 同步入口）
-- [ ] Ahrefs 遗留（其他仓库）：tools.meathill.com image-converter 页 13 个格式转换死链（webp-to-jpg 等，全 locale ×7）+ 全站结构化数据 Google 富结果校验错误 ×50+；hsm/muiad SoftwareApplication 结构化数据错误。需在各自仓库修复。
+- [ ] Ahrefs 遗留（已在各仓库开 issue）：[evertools#1 死链](https://github.com/meathill/evertools/issues/1)、[evertools#2 结构化数据](https://github.com/meathill/evertools/issues/2)、[hsm#1](https://github.com/meathill/hsm/issues/1)、[mui-ad#2](https://github.com/meathill/mui-ad/issues/2)
 - [ ] Ahrefs 复查（7-27 定时爬取后）：确认 hreflang 两大项清零、sitemap /en 条目生效（部署后 24h 内 ISR 自愈）、404/redirect 明显下降。
 
 ## P3
