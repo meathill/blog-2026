@@ -1,6 +1,5 @@
 import { cache } from 'react';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import slugify from 'slugify';
 import { wpFetch, getAccessHeaders, getBasicAuthHeader } from './client';
 import { WPPost } from './types';
 
@@ -270,29 +269,4 @@ export function calculateReadingTime(content: string): number {
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toISOString().split('T')[0];
-}
-
-export function processContent(html: string): string {
-  return (
-    html
-      .replace(/href="https?:\/\/blog\.meathill\.com\/[^"]*?(#[^"]+)"/g, 'href="$1"')
-      .replace(/href="https?:\/\/blog\.meathill\.com\/([^"#]+)\.html"/g, 'href="/posts/$1"')
-      // BlockNote 把 code block 里的换行序列化成 <br>，导致 <pre> 里看不到换行，
-      // highlight.js 走 textContent 时也会丢行。统一替回 \n。
-      .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/g, (match) => match.replace(/<br\s*\/?>/gi, '\n'))
-      .replace(/<h([2-4])([^>]*)>(.*?)<\/h[2-4]>/g, (match, level, attrs, content) => {
-        // Check if id already exists
-        if (attrs.includes('id=')) {
-          return match;
-        }
-
-        // Generate id from content
-        // 1. Remove HTML tags from content
-        const text = content.replace(/<[^>]*>/g, '').trim();
-        // 2. Generate safe id
-        const id = slugify(text, { lower: true, remove: /[^\u4e00-\u9fa5a-zA-Z0-9\s-_]/g });
-
-        return `<h${level}${attrs} id="${id}">${content}</h${level}>`;
-      })
-  );
 }
