@@ -212,7 +212,7 @@ return new Response(transformed.image(), {
 - **新鲜度**：`WPPost.modified`（WP REST 默认返回）驱动 sitemap `lastModified`、文章页「更新于」（晚于发布 1 天才显示）、OG `modifiedTime`、JSON-LD `dateModified`。
 - **noindex 策略**：tag / 作者归档 / search / 分页归档（`/page/N`）/ 分类分页一律 `robots: { index:false, follow:true }`；分类首页、`/posts` 归档首页保留索引。
 - **attachment**：`/posts/.../attachment/...` **301 到父文**（不再渲染可索引页）；blog 源站 Caddy/nginx/htaccess 对 `*.html/attachment*` 同样 301 到父文路径。
-- **meta description**：`buildPostDescription` **优先非空 excerpt**（≥20 字即可），截断 160；勿再要求 ≥110，否则 SEO 摘要会被正文开头顶掉。
+- **meta description**：`buildPostDescription` 目标 **110–160 字符**（2026-07 Ahrefs 复查修订）：excerpt ≥110 原样优先；20–109 时以 excerpt 开头拼接正文补足（保 CTR 又达长度下限）；<20 或 WP 自动摘要（正文开头）直接用正文去重。
 - **站内文章链**：列表/卡片用 `getPostPath(post)` → `/posts/{category}/{slug}`，与 canonical/sitemap 一致。
 - **sitemap 收口**：`src/app/sitemap.ts` 不再收录 tag 页（薄内容）；robots 额外 disallow `/search`。
 - **内容日历**：`docs/blog-topics-2026-q3.md`（一周两篇 + 直播联动）。
@@ -228,6 +228,15 @@ return new Response(transformed.image(), {
 - **localeCookie 已关**（`src/i18n/routing.ts`）：`localeDetection: false` 下 NEXT_LOCALE cookie 无用途，且 set-cookie 会让响应 `no-store`——边缘缓存失效 + bfcache 被禁。语言切换纯 URL 驱动，勿再引入 cookie。
 - **根 layout 取 locale 必须用 `getLocale()`**：`src/app/layout.tsx` 在 `[locale]` 段之外，`params.locale` 恒为 undefined（曾导致 /en 全站 `<html lang="zh">` + 根 metadata 恒中文）。next-intl v4 的 `getLocale()`/`getMessages()` 读 middleware 写入的 `X-NEXT-INTL-LOCALE` 头，在根 layout 可用；根 metadata 按 locale 生成，见 `src/lib/seo/root-metadata.ts`，回归测试 `tests/unit/root-layout.test.tsx`。
 - **正文更新链路**：整篇替换走 `scripts/seo/content/<slug>.html` + `apply-content.php`（守卫见 `scripts/seo/README.md`）；批量 title/excerpt 走 `export-meta.php` → `analyze-meta.ts` → `meta-manifest.json` → `apply-meta.php`。
+
+### Ahrefs Site Audit 修复（2026-07-22）
+
+- **未知单段旧 slug**：middleware 不再盲跳 `/category/{slug}`（旧行为把 `/img_0224` 等附件 slug 跳到不存在的分类页 → broken redirect）。现 301 → `/posts/{slug}`，由 `posts/[...slug]` 依次回退：文章 → 分类（`getCategoryBySlug`）→ 附件父文（`getMediaBySlug` + `getPostById`）→ 404。legacy 跳转统一 301/permanentRedirect。
+- **正文净化在 `src/lib/wordpress/content.ts` `processContent`**（从 posts.ts 抽出）：死链解链（旧附件页 / qiniu·serial·demo·works·minesweeper 死子域名 / wp-admin / blog 子域 wp-content 媒体直链）、http→https、裸域名 href 补协议、`/wp-content/uploads` 图片统一走 `/cdn-cgi/image` 管线。正文在 WP 库里，仓库无从修改，只能渲染时重写。
+- **og:image/og:type**：Next.js `openGraph` 不与父级深合并——子页声明 openGraph 就必须自带 `type` + `images`（默认图 `DEFAULT_OG_IMAGE` 在 `@/lib/constants`；勿从 root-metadata 引入，会把 next-intl 拖进测试环境）。
+- **sitemap /en 条目**：`expandEnEntries` 为声明 en alternate 的条目生成 /en 主条目；新增页面记得带 zh/en alternates。
+- **无标题旧文**：15 篇数字 slug 旧文标题已由 `scripts/seo/titles-manifest.json` + `apply-titles.php` 补齐（2026-07-22 已执行；脚本幂等，仅填空标题）。
+- **不修的**：tag 页 noindex（by design）、500×3（瞬时）、Slow page、tools/hsm/muiad 子站问题（各自仓库）。
 
 ## TiDB 降载与 blog.meathill.com 边缘收口（2026-06-11）
 
