@@ -245,18 +245,26 @@ export function stripHtml(html: string): string {
     .trim();
 }
 
-// SEO/OG 描述目标长度：最多 160 字符（OG/Twitter 卡片常见上限）。
-// 有非空 excerpt 时始终优先使用（中文 90 字摘要已足够）；仅极短/空时才用正文兜底。
-// 见 issue #4：旧逻辑要求 ≥110 导致 SEO 摘要被正文开头顶掉、CTR 受损。
+// SEO/OG 描述目标长度：110–160 字符（Ahrefs/搜索引擎摘要下限 110，OG 卡片上限 160）。
+// issue #4 曾决策 excerpt 一律优先、不凑长度；2026-07 Ahrefs 复查发现 1458 个可索引页
+// 描述过短，修订为：excerpt ≥110 仍原样优先；不足 110 时以 excerpt 开头拼接正文补足，
+// 保住手写摘要的 CTR 又满足长度下限。极短（<20）视为无摘要，直接用正文。
 export function buildPostDescription(post: WPPost): string {
   const TARGET_MAX = 160;
+  const MIN_LENGTH = 110;
   const EXCERPT_MIN_USABLE = 20;
   const excerpt = stripHtml(post.excerpt?.rendered ?? '');
-  if (excerpt.length >= EXCERPT_MIN_USABLE) {
+  const body = stripHtml(post.content?.rendered ?? '');
+
+  if (excerpt.length >= MIN_LENGTH) {
     return excerpt.slice(0, TARGET_MAX);
   }
-  const body = stripHtml(post.content?.rendered ?? '');
-  return body.slice(0, TARGET_MAX) || excerpt;
+  // 无摘要 / 极短摘要 / WP 自动摘要（即正文开头）：直接用正文，避免开头重复
+  if (excerpt.length < EXCERPT_MIN_USABLE || body.startsWith(excerpt.slice(0, EXCERPT_MIN_USABLE))) {
+    return body.slice(0, TARGET_MAX) || excerpt;
+  }
+  const glue = /[。.!?！？…]$/.test(excerpt) ? '' : '。';
+  return `${excerpt}${glue}${body}`.slice(0, TARGET_MAX);
 }
 
 export function calculateReadingTime(content: string): number {

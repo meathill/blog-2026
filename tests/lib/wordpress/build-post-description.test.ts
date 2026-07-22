@@ -18,7 +18,7 @@ function makePost(partial: { excerpt?: string; content?: string }): WPPost {
 }
 
 describe('buildPostDescription', () => {
-  it('90 字 SEO 摘要应优先使用（不再要求 ≥110）', () => {
+  it('短于 110 的手写摘要以摘要开头、拼接正文补足长度（2026-07 修订 #4 决策）', () => {
     const excerpt =
       'Vercel 与 Cloudflare 部署网站怎么选？从价格、冷启动、带宽费用、函数运行时到 Next.js 支持全面对比，给出不同项目规模与预算下的选型建议（2026 更新）。';
     expect(excerpt.length).toBeLessThan(110);
@@ -32,8 +32,27 @@ describe('buildPostDescription', () => {
       }),
     );
 
-    expect(desc).toBe(excerpt);
-    expect(desc.startsWith('随着 Vibe coding')).toBe(false);
+    // 摘要在前保住 CTR，正文补足到 110–160
+    expect(desc.startsWith(excerpt)).toBe(true);
+    expect(desc.length).toBeGreaterThanOrEqual(110);
+    expect(desc.length).toBeLessThanOrEqual(160);
+    expect(desc).toContain('随着 Vibe coding');
+  });
+
+  it('达到 110 的摘要原样优先，不拼接正文', () => {
+    const excerpt = `本文对比 Vercel 与 Cloudflare 的价格、冷启动、带宽费用、函数运行时与 Next.js 支持，${'补充说明'.repeat(15)}`;
+    expect(excerpt.length).toBeGreaterThanOrEqual(110);
+
+    const desc = buildPostDescription(makePost({ excerpt: `<p>${excerpt}</p>`, content: '<p>正文开头</p>' }));
+    expect(desc).toBe(excerpt.slice(0, 160));
+    expect(desc).not.toContain('正文开头');
+  });
+
+  it('WP 自动摘要（正文开头截取）不重复拼接', () => {
+    const body = '这是一段正文开头，WordPress 会自动截取它作为摘要，后面还有更多内容继续展开细节。'.repeat(3);
+    const autoExcerpt = `${body.slice(0, 55)}…`;
+    const desc = buildPostDescription(makePost({ excerpt: `<p>${autoExcerpt}</p>`, content: `<p>${body}</p>` }));
+    expect(desc).toBe(body.slice(0, 160));
   });
 
   it('超长 excerpt 截断到 160', () => {
