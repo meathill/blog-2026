@@ -15,7 +15,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getAboutContent } from '@/actions/about';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { marked } from 'marked';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -38,6 +38,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title: t('about_title'),
       description: t('about_og_description'),
       url: canonicalUrl,
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

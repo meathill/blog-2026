@@ -8,7 +8,7 @@ import { PostListItem } from '@/components/posts/post-list-item';
 import { getTagBySlug, getPostsByTag, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { resolveBySlugWithNormalizedFallback } from '@/lib/tag-slug';
 import { getPostPath } from '@/lib/post-utils';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 interface TagPageProps {
   params: Promise<{ locale: string; slug: string; num: string }>;
@@ -46,6 +46,8 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
       title,
       description,
       url: canonical,
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

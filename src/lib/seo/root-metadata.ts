@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { routing } from '@/i18n/routing';
 
 export type SupportedLocale = (typeof routing.locales)[number];
@@ -68,14 +68,7 @@ export function buildRootMetadata(locale: string | undefined): Metadata {
       siteName: 'Meathill LLC',
       title: text.title,
       description: text.ogDescription,
-      images: [
-        {
-          url: '/api/og/home',
-          width: 1200,
-          height: 630,
-          alt: 'Meathill LLC',
-        },
-      ],
+      images: [DEFAULT_OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',

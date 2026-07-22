@@ -8,7 +8,7 @@ import { PostListItem } from '@/components/posts/post-list-item';
 import { getCategoryBySlug, getPostsByCategory, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { parseCategorySlug } from '@/lib/category-slug';
 import { getPostPath } from '@/lib/post-utils';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 interface CategoryPageProps {
   params: Promise<{ locale: string; slug: string[] }>;
@@ -58,6 +58,8 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
       title,
       description,
       url: canonical,
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

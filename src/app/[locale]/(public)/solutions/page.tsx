@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { getAllSolutions, localize } from '@/lib/solutions';
 import SolutionCard from '@/components/SolutionCard';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       url: canonical,
       type: 'website',
       locale: locale === 'en' ? 'en_US' : 'zh_CN',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

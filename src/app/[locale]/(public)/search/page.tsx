@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { SearchIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { SearchResultsClient } from '@/components/search/search-results-client';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -35,6 +35,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
         title,
         description,
         url: canonical,
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
       },
     };
   }
@@ -57,6 +59,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       title: t('search_title'),
       description: t('search_description'),
       url: canonical,
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

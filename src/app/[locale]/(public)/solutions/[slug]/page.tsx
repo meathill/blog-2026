@@ -6,7 +6,7 @@ import { Link, routing } from '@/i18n/routing';
 import { getAllSolutions, getSolutionBySlug, localize } from '@/lib/solutions';
 import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
 import PostCard from '@/components/PostCard';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -47,6 +47,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: canonical,
       type: 'article',
       locale: locale === 'en' ? 'en_US' : 'zh_CN',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getPosts, getCategories, getUserBySlug } from '@/lib/wordpress';
 import { PostList } from '@/components/posts/post-list';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 const POSTS_PER_PAGE = 20;
 
@@ -44,6 +44,8 @@ export async function generateMetadata({ params }: AuthorPageNumProps): Promise<
       title,
       description,
       url: canonical,
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

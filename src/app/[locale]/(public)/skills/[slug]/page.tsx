@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link, routing } from '@/i18n/routing';
 import { Github, TagIcon } from 'lucide-react';
 import { getAllSkills, getLocalizedDescription, getSkillBySlug, getSkillSourceUrl } from '@/lib/skills';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -53,6 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'article',
       locale: locale === 'en' ? 'en_US' : 'zh_CN',
       alternateLocale: locale === 'en' ? 'zh_CN' : 'en_US',
+      images: [DEFAULT_OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',

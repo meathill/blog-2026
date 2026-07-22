@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { PostList } from '@/components/posts/post-list';
 import TagCloud from '@/components/home/TagCloud';
 import { getPosts, getCategories } from '@/lib/wordpress';
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 const POSTS_PER_PAGE = 20;
 
@@ -28,6 +28,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title: t('posts_title'),
       description: t('posts_description'),
       url: canonical,
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

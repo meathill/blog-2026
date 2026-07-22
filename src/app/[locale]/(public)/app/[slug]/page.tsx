@@ -12,7 +12,7 @@ import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
 import PostCard from '@/components/PostCard';
 import { getTranslations } from 'next-intl/server';
 
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +58,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: name,
       description: description || '',
       url: canonical,
-      images: app.icon ? [app.icon] : [],
+      type: 'website',
+      images: app.icon ? [app.icon] : [DEFAULT_OG_IMAGE],
     },
   };
 }

@@ -7,7 +7,7 @@ import { getAppCoverMap, getPublicAppTagsMap, type PublicAppCardData, type Publi
 import { Link } from '@/i18n/routing';
 import { getTranslations } from 'next-intl/server';
 
-import { SITE_URL } from '@/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +32,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title: t('title'),
       description: t('subtitle_page'),
       url: canonical,
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }
