@@ -85,19 +85,20 @@ export default async function middleware(req: NextRequest) {
   if (rootSegment === 'author' && contentSegments.length === 4 && contentSegments[2] === 'page') {
     return NextResponse.redirect(
       buildLegacyRedirectUrl(req, `${prefix}/posts/author/${contentSegments[1]}/page/${contentSegments[3]}`),
+      301,
     );
   }
 
   // Redirect /tags/xxx -> /tag/xxx
   if (rootSegment === 'tags' && contentSegments.length >= 2) {
     const pathContent = contentSegments.slice(1).join('/');
-    return NextResponse.redirect(buildLegacyRedirectUrl(req, `/${locale}/tag/${pathContent}`));
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `/${locale}/tag/${pathContent}`), 301);
   }
 
   // Redirect /page/xxx -> /posts/page/xxx
   if (rootSegment === 'page' && contentSegments.length >= 2) {
     const pathContent = contentSegments.join('/');
-    return NextResponse.redirect(buildLegacyRedirectUrl(req, `${prefix}/posts/${pathContent}`));
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `${prefix}/posts/${pathContent}`), 301);
   }
 
   // Handle non-top-level routes (e.g. legacy WP paths)
@@ -106,14 +107,15 @@ export default async function middleware(req: NextRequest) {
     const pathContent = contentSegments.join('/');
     const url = buildLegacyRedirectUrl(req, pathname);
 
-    // If it's a pagination or a single segment (likely a category), redirect to /category/
-    if (pageNum > 1 || contentSegments.length === 1) {
+    // 分页形态（/js/page/2）仍视作分类归档；其余（含单段旧 slug，如 /img_0224）
+    // 一律交给 /posts/[...slug] 解析——未命中文章时该页会回退到分类/附件（见对应 page.tsx），
+    // 避免把附件 slug 误跳到不存在的 /category/{slug}
+    if (pageNum > 1) {
       url.pathname = `${prefix}/category/${pathContent}`;
     } else {
-      // Otherwise assume it's a post
       url.pathname = `${prefix}/posts/${pathContent}`;
     }
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(url, 301);
   }
 
   return intlMiddleware(req);

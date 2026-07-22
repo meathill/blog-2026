@@ -1,6 +1,15 @@
 import { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
-import { getPost, stripHtml, getCategories, buildPostDescription } from '@/lib/wordpress';
+import { notFound, permanentRedirect } from 'next/navigation';
+import {
+  getPost,
+  getPostById,
+  stripHtml,
+  getCategories,
+  getCategoryBySlug,
+  getMediaBySlug,
+  buildPostDescription,
+  WPPost,
+} from '@/lib/wordpress';
 import PostView from '@/views/PostView';
 import { routing } from '@/i18n/routing';
 import '@/app/post-content.css';
@@ -19,6 +28,17 @@ function cleanParentPathSegments(segments: string[]): string[] {
     }
     return segment;
   });
+}
+
+async function resolvePrimaryCategorySlug(post: WPPost): Promise<string> {
+  if (post.categories?.length) {
+    const allCategories = await getCategories();
+    const cat = allCategories.find((c) => c.id === post.categories[0]);
+    if (cat) {
+      return decodeURIComponent(cat.slug);
+    }
+  }
+  return 'uncategorized';
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
@@ -63,15 +83,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     type: 'image/jpeg',
   };
 
-  // Determine primary category for canonical URL
-  let primaryCategorySlug = 'uncategorized';
-  if (post.categories && post.categories.length > 0) {
-    const allCategories = await getCategories();
-    const cat = allCategories.find((c) => c.id === post.categories[0]);
-    if (cat) {
-      primaryCategorySlug = decodeURIComponent(cat.slug);
-    }
-  }
+  const primaryCategorySlug = await resolvePrimaryCategorySlug(post);
 
   const basePath = `/posts/${primaryCategorySlug}/${cleanSlug}`;
   const zhUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${basePath}`;
@@ -115,26 +127,19 @@ export default async function PostPage({ params }: PostPageProps) {
   if (slug.length >= 2 && slug[slug.length - 2] === 'attachment') {
     const parentSegments = cleanParentPathSegments(slug.slice(0, slug.length - 2));
     if (parentSegments.length === 0) {
-      redirect(`${prefix}/posts`);
+      permanentRedirect(`${prefix}/posts`);
     }
 
     // 仅 post slug 时尝试解析主分类，跳到规范路径
     if (parentSegments.length === 1) {
       const parentPost = await getPost(parentSegments[0]);
       if (parentPost) {
-        let primaryCategorySlug = 'uncategorized';
-        if (parentPost.categories?.length) {
-          const allCategories = await getCategories();
-          const cat = allCategories.find((c) => c.id === parentPost.categories[0]);
-          if (cat) {
-            primaryCategorySlug = decodeURIComponent(cat.slug);
-          }
-        }
-        redirect(`${prefix}/posts/${primaryCategorySlug}/${parentPost.slug}`);
+        const primaryCategorySlug = await resolvePrimaryCategorySlug(parentPost);
+        permanentRedirect(`${prefix}/posts/${primaryCategorySlug}/${parentPost.slug}`);
       }
     }
 
-    redirect(`${prefix}/posts/${parentSegments.join('/')}`);
+    permanentRedirect(`${prefix}/posts/${parentSegments.join('/')}`);
   }
 
   const lastSegment = slug[slug.length - 1];
@@ -143,25 +148,31 @@ export default async function PostPage({ params }: PostPageProps) {
   const post = await getPost(cleanSlug);
 
   if (!post) {
+    // 旧站单段 URL 兜底（middleware 把未知顶层 slug 301 到 /posts/{slug}）：
+    // 先试旧分类外链（/js、/life），再试附件 slug（/img_0224 → 父文）
+    if (slug.length === 1) {
+      const category = await getCategoryBySlug(cleanSlug);
+      if (category) {
+        permanentRedirect(`${prefix}/category/${decodeURIComponent(category.slug)}`);
+      }
+      const media = await getMediaBySlug(cleanSlug);
+      if (media?.post) {
+        const parentPost = await getPostById(media.post);
+        if (parentPost) {
+          const primaryCategorySlug = await resolvePrimaryCategorySlug(parentPost);
+          permanentRedirect(`${prefix}/posts/${primaryCategorySlug}/${parentPost.slug}`);
+        }
+      }
+    }
     notFound();
   }
 
-  // Determine canonical category
-  let primaryCategorySlug = 'uncategorized';
-  if (post.categories && post.categories.length > 0) {
-    const allCategories = await getCategories();
-    // Prefer matching category if present in URL, otherwise first one
-    const cat = allCategories.find((c) => c.id === post.categories[0]);
-    if (cat) {
-      primaryCategorySlug = decodeURIComponent(cat.slug);
-    }
-  }
+  const primaryCategorySlug = await resolvePrimaryCategorySlug(post);
 
   const expectedPath = `${primaryCategorySlug}/${cleanSlug}`;
   const currentPath = slug.join('/');
   if (currentPath !== expectedPath && decodeURIComponent(currentPath) !== decodeURIComponent(expectedPath)) {
-    const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
-    redirect(`${prefix}/posts/${expectedPath}`);
+    permanentRedirect(`${prefix}/posts/${expectedPath}`);
   }
 
   return <PostView post={post} locale={locale} />;

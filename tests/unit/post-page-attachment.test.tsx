@@ -4,7 +4,10 @@ import * as wordpress from '../../src/lib/wordpress';
 
 vi.mock('../../src/lib/wordpress', () => ({
   getPost: vi.fn(),
+  getPostById: vi.fn(),
   getCategories: vi.fn(),
+  getCategoryBySlug: vi.fn(),
+  getMediaBySlug: vi.fn(),
   stripHtml: vi.fn((str: string) => str),
   buildPostDescription: vi.fn(() => 'desc'),
 }));
@@ -16,6 +19,9 @@ vi.mock('../../src/views/PostView', () => ({
 vi.mock('next/navigation', () => ({
   notFound: vi.fn(),
   redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  }),
+  permanentRedirect: vi.fn((url: string) => {
     throw new Error(`REDIRECT:${url}`);
   }),
 }));

@@ -58,7 +58,7 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/en/tech/article', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/posts/tech/article`);
   });
 
@@ -66,7 +66,7 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/tech/article', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
   });
 
@@ -100,7 +100,7 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/tags/memory', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/zh/tag/memory`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
@@ -109,7 +109,7 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/en/tags/memory', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/tag/memory`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
@@ -124,7 +124,7 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/page/3', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/page/3`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
@@ -142,7 +142,7 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/author/meathill/page/24', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/author/meathill/page/24`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
@@ -151,7 +151,7 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/author/meathill/page/64?ak_action=reject_mobile', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/author/meathill/page/64`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
@@ -160,7 +160,7 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/page/54?callback=ngg-ajax', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/page/54`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
@@ -190,34 +190,34 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/tech/page/22', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/category/tech/page/22`);
   });
 
-  it('should redirect single-segment /tech to /category/tech', async () => {
+  // 单段旧 slug 交给 /posts/[...slug] 解析（其内部会回退到分类/附件），
+  // 不再盲跳 /category/{slug}（Ahrefs：附件 slug 曾被误跳到不存在的分类页产生 404）
+  it('should redirect single-segment /tech to /posts/tech', async () => {
     const req = new NextRequest(new URL('/tech', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/category/tech`);
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech`);
   });
 
   it('should still redirect /tech/article to /posts/tech/article', async () => {
     const req = new NextRequest(new URL('/tech/article', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
+    expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
   });
 
-  // --- 新增用例：410 Gone (Updated to Category) ---
-
-  it('should redirect single-segment unknown paths like /img_0226 to /category/img_0226', async () => {
+  it('should redirect single-segment unknown paths like /img_0226 to /posts/img_0226', async () => {
     const req = new NextRequest(new URL('/img_0226', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(307);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/category/img_0226`);
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/img_0226`);
   });
 
   // --- 新增用例：attachment_id ---
