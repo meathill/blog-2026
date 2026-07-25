@@ -75,5 +75,14 @@
     "CRON_SECRET": "meathill-2026",
     "WORDPRESS_API_URL": "https://blog.meathill.com/wp-json/wp/v2",
     "CF_ZONE_ID": "4fcd4be90a03cfd52b317514268d9cf4"
+  },
+  "secrets": {
+    "required": [
+      "CF_ACCESS_CLIENT_ID",
+      "CF_ACCESS_CLIENT_SECRET",
+      "BETTER_AUTH_SECRET",
+      "WP_USERNAME",
+      "WP_APP_PASSWORD"
+    ]
   }
 }
