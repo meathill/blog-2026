@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../_shared.css" />
+    <style>
+      .layers {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1.15fr 0.95fr;
+        gap: 18px;
+      }
+      .stack {
+        display: grid;
+        grid-template-rows: 1fr 1fr 1fr;
+        gap: 12px;
+      }
+      .layer {
+        border: var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px 18px;
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+      .layer.kv {
+        background: #fff6d8;
+      }
+      .layer.do {
+        background: var(--danger-bg);
+      }
+      .layer.d1 {
+        background: var(--info-bg);
+      }
+      .layer .name {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+      .layer .role {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--mute);
+        margin-bottom: 6px;
+      }
+      .layer h3 {
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+      .layer p {
+        font-size: 14px;
+        color: var(--ink-soft);
+        line-height: 1.4;
+      }
+      .side {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .side .card {
+        flex: 1;
+      }
+      .formula {
+        font-family: var(--mono);
+        font-size: 13px;
+        background: var(--fluff);
+        border: 1.5px solid var(--ink);
+        border-radius: 6px;
+        padding: 10px 12px;
+        line-height: 1.5;
+      }
+      .big {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <header class="header">
+        <div>
+          <div class="kicker">Serverless DB · 分层（MuiRouter 样本）</div>
+          <h1>选了 D1 不等于万事大吉：热路径还要分层</h1>
+        </div>
+        <div class="badge">SQL 放擅长的层<br />权威账本别只靠读改写</div>
+      </header>
+
+      <div class="layers">
+        <div class="stack">
+          <div class="layer kv">
+            <div>
+              <div class="name">KV</div>
+              <div class="role">热读镜像</div>
+            </div>
+            <div>
+              <h3>展示镜像 · Key 索引 · 全局配置</h3>
+              <p>
+                <span class="mono">user:{id}</span> 只读展示；
+                <span class="mono">apikey:{hash}</span> 映射；亚 60ms 心智。
+              </p>
+              <div class="tag-row" style="margin-top: 8px">
+                <span class="pill warn">禁止业务旁路整条覆盖写</span>
+              </div>
+            </div>
+          </div>
+          <div class="layer do">
+            <div>
+              <div class="name">DO</div>
+              <div class="role">权威串行</div>
+            </div>
+            <div>
+              <h3>WalletDO · ConcurrencyLimiterDO</h3>
+              <p>
+                同用户串行：余额 / 免费额度 / 预占 / 并发 lease。
+                <strong>唯一写者</strong>用入口收敛，不要靠注释。
+              </p>
+              <div class="tag-row" style="margin-top: 8px">
+                <span class="pill danger">读-改-写并发 = 少扣钱</span>
+                <span class="pill ok">blockConcurrencyWhile 包 storage 段</span>
+              </div>
+            </div>
+          </div>
+          <div class="layer d1">
+            <div>
+              <div class="name">D1</div>
+              <div class="role">可查询持久</div>
+            </div>
+            <div>
+              <h3>账户 · usage 日志 · 定价 · OAuth</h3>
+              <p>要 SQL、聚合、审计时用 D1。Sessions 读复制可接受短暂延迟的统计场景。</p>
+              <div class="tag-row" style="margin-top: 8px">
+                <span class="pill info">审计 / 配置 / 模型目录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="side">
+          <div class="card">
+            <div class="title">为什么不「一张表搞定余额」</div>
+            <p class="big">
+              限流允许每用户多请求并行时，KV/SQL 读改写会出现后写覆盖 →
+              余额虚高（少扣钱），静默漏收。
+            </p>
+            <div class="formula" style="margin-top: 10px">
+              权威：WalletDO storage<br />
+              镜像：KV user:&#123;id&#125;（只读）<br />
+              流水：D1 usage_logs
+            </div>
+          </div>
+          <div class="card">
+            <div class="title">和文 A 的关系</div>
+            <ul class="list">
+              <li>平台闭环 → 优先 D1，不是 Postgres</li>
+              <li>正确性边界 → DO 补强，不是换库</li>
+              <li>Hyperdrive 解决「连存量库」；分层解决「钱与并发」</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>meathill.com · Serverless DB 2026</span>
+        <strong>图 3 / 4 · 存储分层：KV 镜像 · DO 权威 · D1 审计</strong>
+      </footer>
+    </div>
+  </body>
+</html>

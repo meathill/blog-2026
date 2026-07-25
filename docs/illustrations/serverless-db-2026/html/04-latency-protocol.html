@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../_shared.css" />
+    <style>
+      .cols {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .col {
+        border: var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        background: var(--paper);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .col head,
+      .col .top {
+        background: var(--corgi);
+        border-bottom: 2px solid var(--ink);
+        padding: 14px 16px;
+      }
+      .col .top h2 {
+        font-size: 20px;
+        font-weight: 900;
+      }
+      .col .top p {
+        font-size: 13px;
+        color: var(--ink-soft);
+        margin-top: 4px;
+      }
+      .col .body {
+        padding: 14px 16px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+      }
+      .metric {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .metric div {
+        background: var(--fluff);
+        border: 1.5px solid var(--ink);
+        border-radius: 6px;
+        padding: 10px;
+        text-align: center;
+      }
+      .metric b {
+        display: block;
+        font-size: 22px;
+        font-weight: 900;
+      }
+      .metric span {
+        font-size: 12px;
+        color: var(--mute);
+        font-weight: 700;
+      }
+      .proto {
+        border: 2px dashed var(--ink);
+        border-radius: var(--radius);
+        background: var(--warn-bg);
+        padding: 12px 16px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .proto .step h3 {
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+      .proto .step p {
+        font-size: 13px;
+        color: var(--ink-soft);
+        line-height: 1.35;
+      }
+      .n {
+        display: inline-grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: var(--cream);
+        font-size: 12px;
+        font-weight: 800;
+        margin-right: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <header class="header">
+        <div>
+          <div class="kicker">Serverless DB · 延迟手测协议</div>
+          <h1>别只看榜单：同 Worker 里测 p50 / p95</h1>
+        </div>
+        <div class="badge">直播可复用 · 固定协议才可对比</div>
+      </header>
+
+      <div class="proto">
+        <div class="step">
+          <h3><span class="n">1</span>冷/热各 50 次</h3>
+          <p><span class="mono">SELECT 1</span> 与按主键读一行，区分冷启动后首次与稳态。</p>
+        </div>
+        <div class="step">
+          <h3><span class="n">2</span>写后读</h3>
+          <p>插入一行再读回，验证一致性预期（Sessions / 副本 / 缓存绕过）。</p>
+        </div>
+        <div class="step">
+          <h3><span class="n">3</span>业务查询</h3>
+          <p>真实索引 + LIMIT，不要只测玩具 SQL。</p>
+        </div>
+        <div class="step">
+          <h3><span class="n">4</span>报 p50 / p95</h3>
+          <p>平均值会骗人；区域与同 Worker 条件要写进备注。</p>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div class="col">
+          <div class="top">
+            <h2>D1 binding</h2>
+            <p>同平台 · 原生绑定</p>
+          </div>
+          <div class="body">
+            <div class="metric">
+              <div><b>稳态</b><span>通常最省心</span></div>
+              <div><b>Sessions</b><span>注意瞬时断连</span></div>
+            </div>
+            <ul class="list">
+              <li>适合读多写少应用库</li>
+              <li><span class="mono">Network connection lost</span> 用白名单重试</li>
+              <li>不要把错误字面当「过载」结论</li>
+            </ul>
+            <div class="pill ok">CF 全家桶默认首选测点</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="top">
+            <h2>Hyperdrive</h2>
+            <p>池化 · 源库地理仍在</p>
+          </div>
+          <div class="body">
+            <div class="metric">
+              <div><b>握手税</b><span>可被池消掉</span></div>
+              <div><b>下限</b><span>受源库位置约束</span></div>
+            </div>
+            <ul class="list">
+              <li>对比「直连 vs Hyperdrive」才有意义</li>
+              <li>Query Cache 只帮可缓存读</li>
+              <li>本地 6543 与线上 5432 勿混测</li>
+            </ul>
+            <div class="pill warn">测的是接入层 + 源库，不是边缘库</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="top">
+            <h2>Turso</h2>
+            <p>边缘副本 · 多运行时</p>
+          </div>
+          <div class="body">
+            <div class="metric">
+              <div><b>边缘读</b><span>好时像本地文件</span></div>
+              <div><b>写后读</b><span>先定一致性模型</span></div>
+            </div>
+            <ul class="list">
+              <li>多云 / 非 CF 运行时再认真测</li>
+              <li>副本拓扑要写进测试说明</li>
+              <li>与 D1 比的是产品路径，不只是 SQL</li>
+            </ul>
+            <div class="pill info">本文作对照测点，非生产主路径</div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>meathill.com · Serverless DB 2026</span>
+        <strong>图 4 / 4 · 延迟手测：协议 + 三测点预期</strong>
+      </footer>
+    </div>
+  </body>
+</html>

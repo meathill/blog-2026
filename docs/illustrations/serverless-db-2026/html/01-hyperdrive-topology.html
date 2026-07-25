@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../_shared.css" />
+    <style>
+      .flow {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 48px 1fr 48px 1.15fr 48px 1.2fr;
+        align-items: stretch;
+        gap: 0;
+      }
+      .node {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .node .box {
+        flex: 1;
+        background: var(--paper);
+        border: var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 18px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .node .box.accent {
+        background: #fff6d8;
+      }
+      .node .box.db {
+        background: var(--success-bg);
+      }
+      .step-num {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 2px solid var(--ink);
+        background: var(--corgi);
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 14px;
+      }
+      .node h3 {
+        font-size: 20px;
+        font-weight: 800;
+      }
+      .node p {
+        font-size: 14px;
+        color: var(--ink-soft);
+        line-height: 1.45;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .note {
+        border: 2px dashed var(--ink);
+        border-radius: var(--radius);
+        background: var(--warn-bg);
+        padding: 12px 14px;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .note strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 15px;
+      }
+      .callouts {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr;
+        gap: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <header class="header">
+        <div>
+          <div class="kicker">Serverless DB · 拓扑</div>
+          <h1>Hyperdrive 怎么接 Supabase：线上直连，本地 pooler</h1>
+        </div>
+        <div class="badge">核心原则：Hyperdrive 自己就是连接池<br />不要再套一层 pooler</div>
+      </header>
+
+      <div class="flow">
+        <div class="node">
+          <div class="box">
+            <div class="step-num">1</div>
+            <h3>Cloudflare Worker</h3>
+            <p>Serverless 实例随时创建销毁，没有常驻连接池。</p>
+            <div class="tag-row">
+              <span class="pill">OpenNext / Hono</span>
+              <span class="pill mono">env.HYPERDRIVE</span>
+            </div>
+          </div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <div class="box accent">
+            <div class="step-num">2</div>
+            <h3>CF 内网接入点</h3>
+            <p>Worker 连的是 Cloudflare 网络内的 Hyperdrive，不是直接穿公网握手云库。</p>
+            <div class="tag-row"><span class="pill ok">低延迟内网路径</span></div>
+          </div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <div class="box accent">
+            <div class="step-num">3</div>
+            <h3>Hyperdrive 连接池</h3>
+            <p>在靠近数据库一侧维护长连接；可选缓存可缓存读查询。</p>
+            <ul class="list">
+              <li>TCP / TLS / 认证只在补池时付一次</li>
+              <li>写操作与事务始终直达源库</li>
+            </ul>
+          </div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <div class="box db">
+            <div class="step-num">4</div>
+            <h3>Supabase Postgres</h3>
+            <p><strong>线上必须用 Direct Connection</strong></p>
+            <p class="mono">db.xxx.supabase.co:5432</p>
+            <div class="tag-row">
+              <span class="pill ok">Hyperdrive 用 5432</span>
+              <span class="pill danger">不要用 6543 套 pooler</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callouts">
+        <div class="note">
+          <strong>本地开发例外（故意不同）</strong>
+          本机够不到 CF 内网 Hyperdrive。常用 Supavisor Transaction Mode：
+          <span class="mono">…:6543</span>。两套连接串是架构结果，不是临时补丁。
+        </div>
+        <div class="card">
+          <div class="title">坑：prepared statements</div>
+          <p style="font-size:14px;line-height:1.45;color:var(--ink-soft)">
+            本地 6543 transaction mode 对 prepared statement 支持受限 →「本地玄学报错、线上正常」。本地关
+            <span class="mono">prepare</span>。
+          </p>
+        </div>
+        <div class="card">
+          <div class="title">Hyperdrive 缓存边界</div>
+          <p style="font-size:14px;line-height:1.45;color:var(--ink-soft)">
+            只缓存可缓存读。写、事务、含易变函数的查询直达数据库，一致性不用靠猜。
+          </p>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>meathill.com · Serverless DB 2026</span>
+        <strong>图 1 / 4 · 拓扑：Worker → Hyperdrive → Postgres 直连</strong>
+      </footer>
+    </div>
+  </body>
+</html>

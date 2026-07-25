@@ -1,0 +1,210 @@
+/* Meathill studio — infographic shared styles */
+:root {
+  --fluff: #fbf1d8;
+  --corgi: #f3c574;
+  --yellow: #e6c34a;
+  --yellow-deep: #b3851c;
+  --cream: #fdfaf2;
+  --paper: #f6efde;
+  --paper-deep: #ede2c5;
+  --ink: #3a2e23;
+  --ink-soft: #5a4938;
+  --mute: #8a7660;
+  --rule: #e0d3b8;
+  --rule-strong: #c9b790;
+  --success: #4f8a3a;
+  --success-bg: #e7eed1;
+  --danger: #c44a32;
+  --danger-bg: #fadfd5;
+  --info: #3b6f9a;
+  --info-bg: #dceaf4;
+  --warn: #c9892b;
+  --warn-bg: #f9ecc6;
+  --radius: 8px;
+  --border: 2px solid var(--ink);
+  --shadow: 0 3px 0 0 var(--ink);
+  --font: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.canvas {
+  width: 1600px;
+  height: 900px;
+  padding: 36px 44px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--cream);
+  position: relative;
+  overflow: hidden;
+}
+
+.canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--rule) 1px, transparent 1px);
+  background-size: 22px 22px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.canvas > * {
+  position: relative;
+  z-index: 1;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 12px;
+}
+
+.kicker {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+h1 {
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+
+.badge {
+  flex-shrink: 0;
+  background: var(--corgi);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 320px;
+  line-height: 1.35;
+}
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--mute);
+  border-top: 1px solid var(--rule-strong);
+  padding-top: 10px;
+}
+
+.footer strong {
+  color: var(--ink-soft);
+}
+
+.card {
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+}
+
+.card h2,
+.card .title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.card .sub {
+  font-size: 13px;
+  color: var(--mute);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--fluff);
+}
+
+.pill.warn {
+  background: var(--warn-bg);
+}
+.pill.ok {
+  background: var(--success-bg);
+}
+.pill.danger {
+  background: var(--danger-bg);
+}
+.pill.info {
+  background: var(--info-bg);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--yellow-deep);
+  flex-shrink: 0;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list li {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.list li::before {
+  content: "▸";
+  color: var(--yellow-deep);
+  font-weight: 800;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

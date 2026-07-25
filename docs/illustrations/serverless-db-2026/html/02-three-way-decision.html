@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../_shared.css" />
+    <style>
+      .grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 140px 1fr 1fr 1fr;
+        grid-template-rows: auto repeat(6, 1fr);
+        gap: 8px;
+      }
+      .hcell,
+      .lcell,
+      .cell {
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        line-height: 1.35;
+      }
+      .hcell {
+        background: var(--corgi);
+        font-weight: 800;
+        font-size: 16px;
+        justify-content: center;
+        text-align: center;
+        box-shadow: var(--shadow);
+        flex-direction: column;
+        gap: 4px;
+      }
+      .hcell small {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink-soft);
+      }
+      .lcell {
+        background: var(--paper-deep);
+        font-weight: 800;
+        font-size: 13px;
+        justify-content: flex-start;
+      }
+      .cell {
+        background: var(--paper);
+      }
+      .cell.best {
+        background: var(--success-bg);
+        font-weight: 700;
+      }
+      .cell.warn {
+        background: var(--warn-bg);
+      }
+      .tree {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 14px;
+      }
+      .tree .card {
+        min-height: 0;
+      }
+      .tree pre {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        color: var(--ink-soft);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <header class="header">
+        <div>
+          <div class="kicker">Serverless DB · 选型对照</div>
+          <h1>Hyperdrive + Postgres vs D1 vs Turso：一张表对齐</h1>
+        </div>
+        <div class="badge">2026 主问题不是「能不能连」<br />而是账单、一致性与运维税</div>
+      </header>
+
+      <div class="grid">
+        <div class="lcell" style="opacity: 0">维度</div>
+        <div class="hcell">Hyperdrive + Postgres<small>存量中心库加速</small></div>
+        <div class="hcell">Cloudflare D1<small>原生 SQLite</small></div>
+        <div class="hcell">Turso / libSQL<small>边缘副本 SQLite</small></div>
+
+        <div class="lcell">数据模型</div>
+        <div class="cell best">完整 Postgres / MySQL</div>
+        <div class="cell">SQLite 语义</div>
+        <div class="cell">SQLite / libSQL</div>
+
+        <div class="lcell">Workers 集成</div>
+        <div class="cell">Hyperdrive 绑定 + 连接串</div>
+        <div class="cell best">原生 binding，零外部 VPC</div>
+        <div class="cell warn">HTTP / 客户端，非 CF 原生绑定</div>
+
+        <div class="lcell">单库体量</div>
+        <div class="cell best">GB～TB 级可行</div>
+        <div class="cell">Paid ≈ 10GB / 库</div>
+        <div class="cell">按套餐，多库友好</div>
+
+        <div class="lcell">全球读</div>
+        <div class="cell">池化 + 可选读缓存</div>
+        <div class="cell best">读复制 / Sessions</div>
+        <div class="cell best">边缘副本是卖点</div>
+
+        <div class="lcell">账单结构</div>
+        <div class="cell warn">云库 + Hyperdrive + 流量</div>
+        <div class="cell best">含在 CF 用量</div>
+        <div class="cell warn">独立供应商账单</div>
+
+        <div class="lcell">我用在哪</div>
+        <div class="cell">存量 Supabase 业务迁移</div>
+        <div class="cell best">blog / MuiRouter / free-ai-api</div>
+        <div class="cell">对照选项，非主路径</div>
+      </div>
+
+      <div class="tree">
+        <div class="card">
+          <div class="title">30 秒决策树</div>
+          <pre>
+已有 Postgres 且迁移贵？ → Hyperdrive（线上 5432 直连）
+否则 100% 在 Cloudflare？
+  ├─ 读多写少、&lt;~10GB、SQLite 够 → D1
+  │    热路径强一致再叠 DO / KV
+  └─ 否（多运行时）→ Turso 或托管 Postgres
+          </pre>
+        </div>
+        <div class="card">
+          <div class="title">三票否决</div>
+          <ul class="list">
+            <li>重 Postgres 扩展 / 分析 → 别硬扛 D1/Turso</li>
+            <li>金融级串行余额 → 不要只靠 SQL 行锁幻想</li>
+            <li>团队只会一种 SQL 方言 → 把「人」算进成本</li>
+          </ul>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>meathill.com · Serverless DB 2026</span>
+        <strong>图 2 / 4 · 三列决策：模型 · 集成 · 体量 · 账单</strong>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../_shared.css" />
+    <style>
+      .body {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1.25fr 0.9fr;
+        gap: 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+      th,
+      td {
+        border-bottom: 1.5px solid var(--rule-strong);
+        border-right: 1.5px solid var(--rule-strong);
+        padding: 14px 12px;
+        text-align: center;
+        font-size: 14px;
+      }
+      th:last-child,
+      td:last-child {
+        border-right: none;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      th {
+        background: var(--corgi);
+        font-weight: 900;
+        font-size: 15px;
+      }
+      th.corner {
+        background: var(--paper-deep);
+        text-align: left;
+        width: 28%;
+      }
+      td.rowhead {
+        text-align: left;
+        font-weight: 800;
+        background: var(--fluff);
+      }
+      td.mono {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--ink-soft);
+      }
+      .side {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .side .card {
+        flex: 1;
+      }
+      .formula {
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.55;
+        background: #fff6d8;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 12px 14px;
+      }
+      .formula b {
+        color: var(--danger);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <header class="header">
+        <div>
+          <div class="kicker">MuiRouter · 计费</div>
+          <h1>定价是矩阵，不是两个单价</h1>
+        </div>
+        <div class="badge">单位：美元 / 1M tokens<br />再乘 markup 与用户倍率</div>
+      </header>
+
+      <div class="body">
+        <table>
+          <thead>
+            <tr>
+              <th class="corner">token 类别</th>
+              <th>标准档 standard</th>
+              <th>长上下文档 long_context</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="rowhead">普通输入</td>
+              <td class="mono">inputPrice</td>
+              <td class="mono">longContextInputPrice</td>
+            </tr>
+            <tr>
+              <td class="rowhead">cache 命中输入</td>
+              <td class="mono">cachedInputPrice</td>
+              <td class="mono">longContextCachedInputPrice</td>
+            </tr>
+            <tr>
+              <td class="rowhead">cache 写入</td>
+              <td class="mono">cacheWritePrice</td>
+              <td class="mono">longContextCacheWritePrice</td>
+            </tr>
+            <tr>
+              <td class="rowhead">输出</td>
+              <td class="mono">outputPrice</td>
+              <td class="mono">longContextOutputPrice</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="side">
+          <div class="card">
+            <div class="title">档位怎么判</div>
+            <p style="font-size: 14px; line-height: 1.45; color: var(--ink-soft)">
+              <span class="mono">contextSize</span> =
+              input + cachedInput + cacheWrite。超过
+              <span class="mono">longContextThresholdTokens</span> 走长上下文档，否则标准档。
+            </p>
+            <div class="tag-row" style="margin-top: 10px">
+              <span class="pill warn">缺省字段回退同名标准价</span>
+              <span class="pill warn">cache 价缺省 → inputPrice</span>
+            </div>
+          </div>
+          <div class="formula">
+            rawCost = Σ(token × 单价) / 1e6<br />
+            cost = rawCost × markupRate × userRateMultiplier<br />
+            <b>chargedCost = max(0, cost − freeQuota)</b><br />
+            钱包只扣 chargedCost · D1 记全量 cost + 四类 token
+          </div>
+          <div class="card">
+            <div class="title">特殊计量仍进同一管道</div>
+            <ul class="list">
+              <li>Grok 图片 ticks → 内部 token 再走 markup</li>
+              <li>视频：预占 reservation → 终态按实际结算</li>
+              <li>幂等：reservation id + usage_logs.id + billed_at</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>meathill.com · MuiRouter 架构</span>
+        <strong>图 3 / 3 · 定价矩阵与扣费公式</strong>
+      </footer>
+    </div>
+  </body>
+</html>

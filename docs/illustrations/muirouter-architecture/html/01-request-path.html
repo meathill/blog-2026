@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../_shared.css" />
+    <style>
+      .swim {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        grid-template-rows: repeat(6, 1fr);
+        gap: 8px 12px;
+      }
+      .lane-label {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 8px;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--mute);
+        text-align: right;
+      }
+      .lane {
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        background: var(--paper);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        box-shadow: 0 2px 0 0 var(--ink);
+      }
+      .lane .idx {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: 2px solid var(--ink);
+        background: var(--corgi);
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+        flex-shrink: 0;
+      }
+      .lane .main {
+        flex: 1;
+        min-width: 0;
+      }
+      .lane h3 {
+        font-size: 17px;
+        font-weight: 800;
+      }
+      .lane p {
+        font-size: 13px;
+        color: var(--ink-soft);
+        line-height: 1.35;
+        margin-top: 2px;
+      }
+      .lane.async {
+        background: #fff6d8;
+        border-style: dashed;
+      }
+      .lane.async .idx {
+        background: var(--warn-bg);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-left: auto;
+        max-width: 42%;
+        justify-content: flex-end;
+      }
+      .note-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+      }
+      .note-row .card {
+        padding: 12px 14px;
+      }
+      .note-row h3 {
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+      .note-row p {
+        font-size: 13px;
+        color: var(--ink-soft);
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <header class="header">
+        <div>
+          <div class="kicker">MuiRouter · 请求路径</div>
+          <h1>从 sk-gw- 到扣费：一条 Chat Completions 怎么走</h1>
+        </div>
+        <div class="badge">响应与计费解耦<br />流式必须 tee</div>
+      </header>
+
+      <div class="swim">
+        <div class="lane-label">Client</div>
+        <div class="lane">
+          <div class="idx">0</div>
+          <div class="main">
+            <h3>POST /v1/chat/completions</h3>
+            <p>Authorization: Bearer sk-gw-… 或 OAuth access token</p>
+          </div>
+          <div class="chips"><span class="pill mono">OpenAI 兼容</span></div>
+        </div>
+
+        <div class="lane-label">鉴权</div>
+        <div class="lane">
+          <div class="idx">1</div>
+          <div class="main">
+            <h3>authMiddleware</h3>
+            <p>校验 PAT / OAuth；解析 userId。兼容 Anthropic 风格 x-api-key 头。</p>
+          </div>
+          <div class="chips">
+            <span class="pill">sk-gw-</span>
+            <span class="pill">mr_at_</span>
+          </div>
+        </div>
+
+        <div class="lane-label">并发</div>
+        <div class="lane">
+          <div class="idx">2</div>
+          <div class="main">
+            <h3>ConcurrencyLimiterDO</h3>
+            <p>按用户申请 lease；超限 429。防止一把钥匙打爆上游与钱包。</p>
+          </div>
+          <div class="chips"><span class="pill warn">默认有限并发</span></div>
+        </div>
+
+        <div class="lane-label">路由</div>
+        <div class="lane">
+          <div class="idx">3</div>
+          <div class="main">
+            <h3>model 解析 → Provider 分发</h3>
+            <p>Gateway Stored Keys / 直连 secrets / env.AI / 原生透传，按 provider 策略分流。</p>
+          </div>
+          <div class="chips">
+            <span class="pill info">OpenAI</span>
+            <span class="pill info">Claude</span>
+            <span class="pill info">Grok</span>
+            <span class="pill info">MiMo…</span>
+          </div>
+        </div>
+
+        <div class="lane-label">响应</div>
+        <div class="lane">
+          <div class="idx">4</div>
+          <div class="main">
+            <h3>上游 body</h3>
+            <p>非流式抽 JSON usage；流式 <span class="mono">tee()</span>：一份给客户端，一份给计费。</p>
+          </div>
+          <div class="chips"><span class="pill ok">先给用户 token 流</span></div>
+        </div>
+
+        <div class="lane-label">异步</div>
+        <div class="lane async">
+          <div class="idx">5</div>
+          <div class="main">
+            <h3>waitUntil 计费管道</h3>
+            <p>calculateCost → WalletDO 扣费 → D1 usage_logs → 告警；最后释放 lease。</p>
+          </div>
+          <div class="chips"><span class="pill danger">计费失败不回滚已生成内容</span></div>
+        </div>
+      </div>
+
+      <div class="note-row">
+        <div class="card">
+          <h3>为什么不先扣再生成</h3>
+          <p>降低流式首字延迟；用日志与告警接受「偶发计费失败需对账」。</p>
+        </div>
+        <div class="card">
+          <h3>为什么必须 tee</h3>
+          <p>只读客户端支路可能永远抽不到 usage；全量缓冲再转发延迟与内存都不可接受。</p>
+        </div>
+        <div class="card">
+          <h3>Unified Billing 白名单</h3>
+          <p>仅 Claude 允许代付；默认未知 provider 自付，防新模型静默烧 credits。</p>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>meathill.com · MuiRouter 架构</span>
+        <strong>图 1 / 3 · 泳道：鉴权 → 并发 → 路由 → tee → waitUntil</strong>
+      </footer>
+    </div>
+  </body>
+</html>

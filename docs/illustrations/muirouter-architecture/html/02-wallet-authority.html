@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../_shared.css" />
+    <style>
+      .layout {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1.15fr 0.95fr;
+        gap: 16px;
+      }
+      .center {
+        border: var(--border);
+        border-radius: 10px;
+        background: var(--danger-bg);
+        box-shadow: var(--shadow);
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .center h2 {
+        font-size: 24px;
+        font-weight: 900;
+      }
+      .tri {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        flex: 1;
+      }
+      .box {
+        background: var(--paper);
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .box h3 {
+        font-size: 15px;
+        font-weight: 900;
+      }
+      .box p {
+        font-size: 13px;
+        color: var(--ink-soft);
+        line-height: 1.35;
+      }
+      .box.auth {
+        background: #fff6d8;
+        grid-column: 1 / -1;
+      }
+      .right {
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 12px;
+      }
+      .incident {
+        border: var(--border);
+        border-radius: 8px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
+      }
+      .incident h3 {
+        font-size: 16px;
+        font-weight: 900;
+        margin-bottom: 8px;
+      }
+      .incident .row {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        gap: 8px;
+        font-size: 13px;
+        line-height: 1.4;
+        margin-bottom: 6px;
+      }
+      .incident .row b {
+        color: var(--danger);
+      }
+      .fix {
+        border: var(--border);
+        border-radius: 8px;
+        background: var(--success-bg);
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
+      }
+      .fix h3 {
+        font-size: 16px;
+        font-weight: 900;
+        margin-bottom: 8px;
+      }
+      .arrow-note {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink-soft);
+        text-align: center;
+        padding: 4px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <header class="header">
+        <div>
+          <div class="kicker">MuiRouter · 账本正确性</div>
+          <h1>KV 镜像 vs WalletDO 权威 vs D1 审计</h1>
+        </div>
+        <div class="badge">「唯一写者」必须用结构保证<br />注释挡不住旁路覆盖</div>
+      </header>
+
+      <div class="layout">
+        <div class="center">
+          <h2>WalletDO = 余额唯一写者</h2>
+          <p style="font-size: 14px; color: var(--ink-soft); line-height: 1.4">
+            按 <span class="mono">idFromName(userId)</span> 分区。读 storage → 变更 → 写 storage 整段包进
+            <span class="mono">blockConcurrencyWhile</span>（段内无外部 I/O）；KV 镜像同步放锁外。
+          </p>
+          <div class="tri">
+            <div class="box auth">
+              <h3>权威账本 · Durable Object storage</h3>
+              <p>余额 / 免费额度已用 / 暂停状态 / 视频预占 reservation。所有扣费与充值只进这里。</p>
+              <div class="tag-row">
+                <span class="pill danger">唯一写入口</span>
+                <span class="pill ok">同用户串行</span>
+              </div>
+            </div>
+            <div class="box">
+              <h3>KV · 只读镜像</h3>
+              <p><span class="mono">user:&#123;id&#125;</span> 给热路径展示与鉴权辅助。任何「只改一个字段」的读改写 = 整条覆盖。</p>
+            </div>
+            <div class="box">
+              <h3>D1 · 流水审计</h3>
+              <p><span class="mono">usage_logs</span> / recharge / 定价 / OAuth。可查、可聚合，不是钱包真相。</p>
+            </div>
+            <div class="box">
+              <h3>ConcurrencyLimiterDO</h3>
+              <p>只管 lease。并发数字段也走 WalletDO <span class="mono">/set-concurrency</span>，禁止碰余额键。</p>
+            </div>
+          </div>
+          <div class="arrow-note">app Worker 与 dashboard Worker 都通过 DO 绑定写钱包 · 本地双 dev 进程无跨 Worker 绑定属工具链限制</div>
+        </div>
+
+        <div class="right">
+          <div class="incident">
+            <h3>事故 2026-07-21：充值「未到账」</h3>
+            <div class="row"><b>现象</b><span>Stripe +$20 已进 WalletDO，界面余额不动</span></div>
+            <div class="row">
+              <b>根因</b
+              ><span>限流器为改 concurrency 对 user KV 整条读改写；alarm 用旧镜像盖回充值前 balance</span>
+            </div>
+            <div class="row"><b>影响</b><span>权威正确、展示脏；无后续钱包变动则永不自愈</span></div>
+          </div>
+          <div class="fix">
+            <h3>修复清单</h3>
+            <ul class="list">
+              <li>并发字段改走 WalletDO，限流器不再写 user KV</li>
+              <li>镜像 put single-flight，避免乱序</li>
+              <li>运维 <span class="mono">/sync-mirror</span> 强制刷回权威</li>
+              <li>并发正确性用真实 DO 运行时测，不靠 mock</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>meathill.com · MuiRouter 架构</span>
+        <strong>图 2 / 3 · 权威账本与镜像污染事故</strong>
+      </footer>
+    </div>
+  </body>
+</html>

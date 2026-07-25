@@ -1,0 +1,58 @@
+[
+  {
+    "article": "serverless-db-2026",
+    "file": "01-hyperdrive-topology.html",
+    "png": "/Users/meathill/Documents/GitHub/blog-2026/docs/illustrations/serverless-db-2026/01-hyperdrive-topology.png",
+    "ok": true,
+    "status": 0,
+    "stderr": ".cc:680] https://docs.google.com/document/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21\nTrying to load the allocator multiple times. This is *not* supported.\n"
+  },
+  {
+    "article": "serverless-db-2026",
+    "file": "02-three-way-decision.html",
+    "png": "/Users/meathill/Documents/GitHub/blog-2026/docs/illustrations/serverless-db-2026/02-three-way-decision.png",
+    "ok": true,
+    "status": 0,
+    "stderr": "5:ERROR:chrome/browser/web_applications/externally_managed_app_manager.cc:680] https://docs.google.com/document/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21\n"
+  },
+  {
+    "article": "serverless-db-2026",
+    "file": "03-storage-layers.html",
+    "png": "/Users/meathill/Documents/GitHub/blog-2026/docs/illustrations/serverless-db-2026/03-storage-layers.png",
+    "ok": true,
+    "status": 0,
+    "stderr": "5:ERROR:chrome/browser/web_applications/externally_managed_app_manager.cc:680] https://docs.google.com/document/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21\n"
+  },
+  {
+    "article": "serverless-db-2026",
+    "file": "04-latency-protocol.html",
+    "png": "/Users/meathill/Documents/GitHub/blog-2026/docs/illustrations/serverless-db-2026/04-latency-protocol.png",
+    "ok": true,
+    "status": 0,
+    "stderr": "56210:ERROR:chrome/browser/web_applications/externally_managed_app_manager.cc:680] https://mail.google.com/mail/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21\n"
+  },
+  {
+    "article": "muirouter-architecture",
+    "file": "01-request-path.html",
+    "png": "/Users/meathill/Documents/GitHub/blog-2026/docs/illustrations/muirouter-architecture/01-request-path.png",
+    "ok": true,
+    "status": 0,
+    "stderr": "65364:ERROR:chrome/browser/web_applications/externally_managed_app_manager.cc:680] https://mail.google.com/mail/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21\n"
+  },
+  {
+    "article": "muirouter-architecture",
+    "file": "02-wallet-authority.html",
+    "png": "/Users/meathill/Documents/GitHub/blog-2026/docs/illustrations/muirouter-architecture/02-wallet-authority.png",
+    "ok": true,
+    "status": 0,
+    "stderr": "6:ERROR:chrome/browser/web_applications/externally_managed_app_manager.cc:680] https://docs.google.com/document/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21\n"
+  },
+  {
+    "article": "muirouter-architecture",
+    "file": "03-pricing-matrix.html",
+    "png": "/Users/meathill/Documents/GitHub/blog-2026/docs/illustrations/muirouter-architecture/03-pricing-matrix.png",
+    "ok": true,
+    "status": 0,
+    "stderr": "7:ERROR:chrome/browser/web_applications/externally_managed_app_manager.cc:680] https://docs.google.com/document/installwebapp?usp=chrome_default from install source 1 failed to install with reason 21\n"
+  }
+]

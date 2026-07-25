@@ -20,17 +20,17 @@ Issue #4 内容轨。数据依据：GSC（2026-04～07）+ Bing 评论快照（2
 
 | 槽 | 题目 | 主词 | 文源 | 直播 | 状态 |
 |----|------|------|------|------|------|
-| A | TiDB 账单爆炸之后 | TiDB RU、serverless 账单、WP 对象缓存 | `docs/blog-draft-tidb-ru-optimization.md` | 复盘 RU 曲线 / APCu | draft（FAQ/互链已齐，待配图发布） |
-| B | OG 图在 CF Workers + 2026 预热 | nextjs og cloudflare | `docs/blog-draft-og-image-2026-refresh.md` + manifest | 短录屏：snippet + 预热 | draft（snippet 已入 manifest） |
+| A | TiDB 账单爆炸之后 | TiDB RU、serverless 账单、WP 对象缓存 | （已发布，草稿已清理） | 复盘 RU 曲线 / APCu | **published** |
+| B | OG 图在 CF Workers + 2026 预热 | nextjs og cloudflare | manifest + 线上正文 | 短录屏：snippet + 预热 | **published** |
 
-并行：SEO 技术债 A1–A3 代码收口（description / attachment 301 / 规范内链）。
+并行：SEO 技术债 A1–A3 代码收口（description / attachment 301 / 规范内链）——已完成。
 
 ## 第 2 周（07-21 ~ 07-27）
 
 | 槽 | 题目 | 主词 | 文源 | 直播 | 状态 |
 |----|------|------|------|------|------|
-| A | Serverless DB 2026：Hyperdrive+Supabase vs D1 vs Turso | hyperdrive、d1、turso | Hyperdrive 旧文 + free-ai-api / mui-api D1 | 三种存储延迟手测 | planned |
-| B | OpenAI 兼容计费网关：MuiRouter 架构复盘 | AI gateway、token 计费 | `../mui-api` | 请求到扣费路径 | planned |
+| A | Serverless DB 2026：Hyperdrive+Supabase vs D1 vs Turso | hyperdrive、d1、turso | `docs/blog-draft-serverless-db-2026.md` | 三种存储延迟手测 | **draft** |
+| B | OpenAI 兼容计费网关：MuiRouter 架构复盘 | AI gateway、token 计费 | `docs/blog-draft-muirouter-architecture.md` + `../mui-api` | 请求到扣费路径 | **draft** |
 
 ## 第 3 周（07-28 ~ 08-03）
 
@@ -78,18 +78,36 @@ Issue #4 内容轨。数据依据：GSC（2026-04～07）+ Bing 评论快照（2
 
 ## 第 1 周执行清单
 
-### 文 A（TiDB）
+### 文 A（TiDB）— published
 
-- [ ] 补齐草稿中 `[图:...]` 截图  
-- [ ] 核对 DEV_NOTE 最终结论（平台内部开销 / 迁本地 MariaDB 选项）  
-- [ ] 加 FAQ + 延伸阅读（Workers / Hyperdrive / R2）  
-- [ ] 排直播档期；发布后嵌回放链接  
+- [x] 草稿 + FAQ + 互链  
+- [x] 发布（草稿文件已从仓库移除）  
 
-### 文 B（OG）
+### 文 B（OG）— published
 
-- [ ] 部署本仓库 description 修复后，用 `scripts/seo` 对 `nextjs-cloudflare-workers-og-image` 跑 apply（manifest 已写 title/excerpt/FAQ）  
-- [ ] 可选：正文开头补 2026 预热缓存 1～2 段  
-- [ ] URL Inspection  
+- [x] manifest title/excerpt/FAQ + 2026 预热叙事  
+
+## 第 2 周执行清单（2026-07-25）
+
+### 文 A（Serverless DB）
+
+- [x] 草稿：`docs/blog-draft-serverless-db-2026.md`（决策树 + 三项目对照 + FAQ）  
+- [x] MCP 入箱：id `52660a07-2b9e-4c24-ab18-ce557b20f47e`，slug `serverless-db-2026-hyperdrive-d1-turso`  
+- [x] 信息图 4 张已插入（拓扑 / 三列决策 / 存储分层 / 延迟手测）  
+
+- [ ] 与第 1 周 TiDB 文、Hyperdrive 旧文规范路径互链  
+- [ ] 直播：三存储延迟手测；发布后嵌回放  
+- [ ] URL Inspection + purge-on-publish  
+
+### 文 B（MuiRouter）
+
+- [x] 草稿：`docs/blog-draft-muirouter-architecture.md`（路径图 + WalletDO + 定价矩阵 + 事故复盘）  
+- [x] MCP 入箱：id `744d4140-072c-4188-badd-1058c2b2f68f`，slug `muirouter-openai-compatible-billing-gateway`  
+- [x] 信息图 3 张已插入（请求泳道 / 账本权威 / 定价矩阵）；脱敏无真实 key  
+
+- [ ] 与文 A、产品页 `/app` 或 muirouter.com 互链  
+- [ ] 直播：请求到扣费走读；发布后嵌回放  
+- [ ] URL Inspection + purge-on-publish  
 
 ## 每周五检查
 
