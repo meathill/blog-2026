@@ -1,12 +1,24 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   buildBlogExcerptFallback,
   detectAiProvider,
   extractJsonObject,
+  generateBlogMetadataSuggestion,
   normalizeBlogMetadataSuggestion,
   parseBlogMetadataResponse,
   resolveBlogMetadataAiConfig,
 } from '@/lib/blog-ai';
+
+const mockGenerateContent = vi.fn();
+vi.mock('@google/genai', () => {
+  return {
+    GoogleGenAI: class MockGoogleGenAI {
+      models = {
+        generateContent: (...args: unknown[]) => mockGenerateContent(...args),
+      };
+    },
+  };
+});
 
 describe('blog-ai', () => {
   describe('detectAiProvider', () => {
@@ -170,6 +182,37 @@ console.log('hello');
 - 列表项
         `),
       ).toBe('标题 这是第一段。 列表项');
+    });
+  });
+
+  describe('generateBlogMetadataSuggestion with Gemini', () => {
+    it('应该能正确调用 GoogleGenAI 并解析返回结果', async () => {
+      mockGenerateContent.mockResolvedValueOnce({
+        text: '{"slug":"gemini-test","excerpt":"Gemini 测试摘要","tags":["gemini","ai"]}',
+      });
+
+      const res = await generateBlogMetadataSuggestion(
+        {
+          AI_MODEL: 'gemini-2.5-flash',
+          GEMINI_API_KEY: 'test-api-key',
+        },
+        {
+          locale: 'zh',
+          title: 'Gemini Test Title',
+          markdown: 'Gemini content markdown',
+        },
+      );
+
+      expect(res).toEqual({
+        slug: 'gemini-test',
+        excerpt: 'Gemini 测试摘要',
+        tags: ['gemini', 'ai'],
+      });
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-2.5-flash',
+        }),
+      );
     });
   });
 });
