@@ -1,12 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { SITE_URL } from '@/lib/constants';
 import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
   buildFaqJsonLd,
+  buildItemListJsonLd,
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
 } from '@/lib/seo/jsonld';
-import { SITE_URL } from '@/lib/constants';
 
 describe('seo/jsonld', () => {
   describe('buildArticleJsonLd', () => {
@@ -94,6 +95,51 @@ describe('seo/jsonld', () => {
 
     it('en locale 输出 en-US', () => {
       expect(buildWebSiteJsonLd('en').inLanguage).toBe('en-US');
+    });
+  });
+
+  describe('buildItemListJsonLd', () => {
+    it('生成 ItemList，与 solutions 列表页原内联结构一致', () => {
+      const baseUrl = SITE_URL;
+      const result = buildItemListJsonLd({
+        name: 'Solutions 标题',
+        description: 'Solutions 简介',
+        items: [
+          { url: `${baseUrl}/solutions/foo`, name: 'Foo 方案' },
+          { url: `${baseUrl}/solutions/bar`, name: 'Bar 方案' },
+        ],
+      });
+      expect(result).toEqual({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: 'Solutions 标题',
+        description: 'Solutions 简介',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, url: `${baseUrl}/solutions/foo`, name: 'Foo 方案' },
+          { '@type': 'ListItem', position: 2, url: `${baseUrl}/solutions/bar`, name: 'Bar 方案' },
+        ],
+      });
+    });
+
+    it('生成 ItemList，与 skills 列表页原内联结构一致', () => {
+      const baseUrl = SITE_URL;
+      const result = buildItemListJsonLd({
+        name: 'Skills 标题',
+        description: 'Skills 简介',
+        items: [{ url: `${baseUrl}/skills/foo`, name: 'Foo Skill' }],
+      });
+      expect(result).toEqual({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: 'Skills 标题',
+        description: 'Skills 简介',
+        itemListElement: [{ '@type': 'ListItem', position: 1, url: `${baseUrl}/skills/foo`, name: 'Foo Skill' }],
+      });
+    });
+
+    it('空 items 时 itemListElement 为空数组', () => {
+      const result = buildItemListJsonLd({ name: 'Empty', description: 'Empty desc', items: [] });
+      expect(result.itemListElement).toEqual([]);
     });
   });
 

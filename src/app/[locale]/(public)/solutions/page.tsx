@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { getAllSolutions, localize } from '@/lib/solutions';
 import SolutionCard from '@/components/SolutionCard';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
+import { buildItemListJsonLd } from '@/lib/seo/jsonld';
+import { getAllSolutions, localize } from '@/lib/solutions';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -33,18 +34,14 @@ export default async function SolutionsListPage({ params }: { params: Promise<{ 
   const t = await getTranslations({ locale, namespace: 'Solutions' });
   const solutions = getAllSolutions();
   const baseUrl = locale === 'en' ? `${SITE_URL}/en` : SITE_URL;
-  const itemListJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
+  const itemListJsonLd = buildItemListJsonLd({
     name: t('title'),
     description: t('subtitle'),
-    itemListElement: solutions.map((solution, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
+    items: solutions.map((solution) => ({
       url: `${baseUrl}/solutions/${solution.slug}`,
       name: localize(solution.title, locale),
     })),
-  };
+  });
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">

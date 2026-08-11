@@ -100,6 +100,36 @@ export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
   };
 }
 
+interface ItemListEntry {
+  name: string;
+  url: string;
+}
+
+interface ItemListJsonLdInput {
+  name: string;
+  description: string;
+  items: ItemListEntry[];
+}
+
+/**
+ * 构造列表页 ItemList 结构化数据（如 solutions/skills 列表）。
+ */
+export function buildItemListJsonLd(input: ItemListJsonLdInput) {
+  const { name, description, items } = input;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    description,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: item.url,
+      name: item.name,
+    })),
+  };
+}
+
 /**
  * 构造 FAQ 富结果 FAQPage 结构化数据；无 Q&A 时返回 null（不应注入空 schema）。
  */

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { getAllSkills, getSkillGroups } from '@/lib/skills';
 import SkillCard from '@/components/SkillCard';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
+import { buildItemListJsonLd } from '@/lib/seo/jsonld';
+import { getAllSkills, getSkillGroups } from '@/lib/skills';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -52,18 +53,14 @@ export default async function SkillsListPage({ params }: { params: Promise<{ loc
       return fallback;
     }
   }
-  const itemListJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
+  const itemListJsonLd = buildItemListJsonLd({
     name: t('title'),
     description: t('subtitle'),
-    itemListElement: skills.map((skill, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
+    items: skills.map((skill) => ({
       url: `${baseUrl}/skills/${skill.slug}`,
       name: skill.name,
     })),
-  };
+  });
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
