@@ -207,7 +207,7 @@ return new Response(transformed.image(), {
 
 ## SEO 约定（Issue #4）
 
-- **结构化数据**：`src/lib/seo/jsonld.ts` 提供 `buildArticleJsonLd`(BlogPosting) / `buildBreadcrumbJsonLd` / `buildFaqJsonLd`，在 `PostView` 以 `<script type="application/ld+json">` 注入（写法对齐 skills 详情页）。JSON-LD 的 `url`/面包屑须与页面 canonical 一致（按 `post.categories[0]` 取主分类）。
+- **结构化数据**：`src/lib/seo/jsonld.ts` 提供 `buildArticleJsonLd`(BlogPosting) / `buildBreadcrumbJsonLd` / `buildItemListJsonLd` / `buildFaqJsonLd`，在 `PostView` 以 `<script type="application/ld+json">` 注入（写法对齐 skills 详情页）。JSON-LD 的 `url`/面包屑须与页面 canonical 一致（按 `post.categories[0]` 取主分类）。两个列表类 builder 会过滤 `name` 为空的条目并重排 position——2026-08 曾因 15 篇无标题旧文（slug=WP post ID）输出 `"name":""` 触发 GSC「应指定 name 或 item.name」报错，WP 端回写标题 + 代码防御双修。
 - **FAQ 富结果约定**：文章正文里 `<h2>常见问题（FAQ）</h2>` + 若干 `<h3>`问 `<p>`答，会被 `extractFaq`（`src/lib/post-utils.ts`）解析成 FAQPage；无该区块则不注入。写文案时遵守此结构即可自动出富结果。
 - **新鲜度**：`WPPost.modified`（WP REST 默认返回）驱动 sitemap `lastModified`、文章页「更新于」（晚于发布 1 天才显示）、OG `modifiedTime`、JSON-LD `dateModified`。
 - **noindex 策略**：tag / 作者归档 / search / 分页归档（`/page/N`）/ 分类分页一律 `robots: { index:false, follow:true }`；分类首页、`/posts` 归档首页保留索引。

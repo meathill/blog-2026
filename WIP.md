@@ -30,3 +30,12 @@
 ### 遗留
 - [x] 生产导航同步:已用 SQL 直接更新 D1 navigation_configs(zh/en,保留自定义项),线上已验证
 - [ ] 按 docs/tech-content-plan.md 逐篇写作(建议先写 Hyperdrive 详解、Claude Code Skills 实战、Skills 对比)
+
+## GSC 面包屑 name 缺失修复(2026-08-11)
+
+背景:`/posts/tech/1074` 等 15 篇无标题旧文(slug=WP post ID)在 7-22 回写标题前,面包屑输出 `"name":""`,GSC 报「应指定 name 或 item.name」。WP 端已修,本次做代码防御防复发。
+
+- [x] jsonld.ts:buildBreadcrumbJsonLd / buildItemListJsonLd 过滤空 name 条目并重排 position
+- [x] 单测覆盖空 name 过滤(position 连续、全空输出空数组)
+- [x] 全量回归(format/typecheck/build)
+- [ ] GSC 点「验证修复」(手动)

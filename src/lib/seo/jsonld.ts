@@ -86,12 +86,14 @@ export function buildWebSiteJsonLd(locale: string) {
 
 /**
  * 构造面包屑 BreadcrumbList 结构化数据。
+ * 过滤 name 为空/空白 的条目（如无标题旧文曾输出 ""，触发 GSC 报错），并重排 position。
  */
 export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
+  const validItems = items.filter((item) => item.name.trim());
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, index) => ({
+    itemListElement: validItems.map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       name: item.name,
@@ -113,6 +115,7 @@ interface ItemListJsonLdInput {
 
 /**
  * 构造列表页 ItemList 结构化数据（如 solutions/skills 列表）。
+ * 过滤 name 为空/空白 的条目，并重排 position。
  */
 export function buildItemListJsonLd(input: ItemListJsonLdInput) {
   const { name, description, items } = input;
@@ -121,12 +124,14 @@ export function buildItemListJsonLd(input: ItemListJsonLdInput) {
     '@type': 'ItemList',
     name,
     description,
-    itemListElement: items.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      url: item.url,
-      name: item.name,
-    })),
+    itemListElement: items
+      .filter((item) => item.name.trim())
+      .map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: item.url,
+        name: item.name,
+      })),
   };
 }
 

@@ -69,6 +69,23 @@ describe('seo/jsonld', () => {
       expect(result.itemListElement[0]).toEqual({ '@type': 'ListItem', position: 1, name: '首页', item: SITE_URL });
       expect(result.itemListElement[2].position).toBe(3);
     });
+
+    it('过滤 name 为空/空白的条目并重排 position', () => {
+      const result = buildBreadcrumbJsonLd([
+        { name: '首页', url: SITE_URL },
+        { name: '', url: `${SITE_URL}/category/empty` },
+        { name: '   ', url: `${SITE_URL}/category/blank` },
+        { name: '文章标题', url: `${SITE_URL}/posts/x` },
+      ]);
+      expect(result.itemListElement).toHaveLength(2);
+      expect(result.itemListElement.map((item) => item.position)).toEqual([1, 2]);
+      expect(result.itemListElement[1]).toEqual({
+        '@type': 'ListItem',
+        position: 2,
+        name: '文章标题',
+        item: `${SITE_URL}/posts/x`,
+      });
+    });
   });
 
   describe('buildOrganizationJsonLd', () => {
@@ -139,6 +156,35 @@ describe('seo/jsonld', () => {
 
     it('空 items 时 itemListElement 为空数组', () => {
       const result = buildItemListJsonLd({ name: 'Empty', description: 'Empty desc', items: [] });
+      expect(result.itemListElement).toEqual([]);
+    });
+
+    it('过滤 name 为空的条目并重排 position', () => {
+      const result = buildItemListJsonLd({
+        name: '列表',
+        description: 'desc',
+        items: [
+          { url: `${SITE_URL}/solutions/foo`, name: 'Foo 方案' },
+          { url: `${SITE_URL}/solutions/empty`, name: '' },
+          { url: `${SITE_URL}/solutions/bar`, name: 'Bar 方案' },
+        ],
+      });
+      expect(result.itemListElement).toHaveLength(2);
+      expect(result.itemListElement.map((item) => item.position)).toEqual([1, 2]);
+      expect(result.itemListElement[1]).toEqual({
+        '@type': 'ListItem',
+        position: 2,
+        url: `${SITE_URL}/solutions/bar`,
+        name: 'Bar 方案',
+      });
+    });
+
+    it('全部 name 为空时 itemListElement 为空数组', () => {
+      const result = buildItemListJsonLd({
+        name: 'Empty',
+        description: 'desc',
+        items: [{ url: `${SITE_URL}/x`, name: '  ' }],
+      });
       expect(result.itemListElement).toEqual([]);
     });
   });
