@@ -13,9 +13,15 @@ export const getPosts = cache(
     search?: string;
     embed?: boolean;
     fields?: string[];
+    slug?: string[];
   }): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
+    // 显式传入空数组即视为白名单为空，直接返回空结果，不发请求
+    if (params?.slug && params.slug.length === 0) {
+      return { posts: [], total: 0, totalPages: 0 };
+    }
+
     const searchParams = new URLSearchParams();
-    const { embed = true, fields, ...rest } = params || {};
+    const { embed = true, fields } = params || {};
 
     if (embed) {
       searchParams.set('_embed', 'true');
@@ -23,7 +29,12 @@ export const getPosts = cache(
     if (fields && fields.length > 0) {
       searchParams.set('_fields', fields.join(','));
     }
-    searchParams.set('per_page', String(params?.perPage || 10));
+    if (params?.slug?.length) {
+      searchParams.set('slug', params.slug.join(','));
+    }
+    // 未显式传 perPage 时，按 slug 数量拉取（上限 100，WP per_page 最大值），避免默认分页截断白名单
+    const defaultPerPage = params?.slug?.length ? Math.min(params.slug.length, 100) : 10;
+    searchParams.set('per_page', String(params?.perPage || defaultPerPage));
     searchParams.set('page', String(params?.page || 1));
 
     if (params?.categories?.length) {

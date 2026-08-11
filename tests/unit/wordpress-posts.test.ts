@@ -98,6 +98,66 @@ describe('WordPress Posts Module', () => {
       const url = (global.fetch as any).mock.calls[0][0];
       expect(url).toContain('_fields=id%2Cslug');
     });
+
+    it('should join slug list into the slug query param', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [],
+        headers: { get: () => '0' },
+      });
+
+      await getPosts({ slug: ['a', 'b', 'c'] });
+
+      const url = (global.fetch as any).mock.calls[0][0];
+      expect(url).toContain('slug=a%2Cb%2Cc');
+    });
+
+    it('should default perPage to slug count when perPage is not explicit', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [],
+        headers: { get: () => '0' },
+      });
+
+      await getPosts({ slug: ['a', 'b', 'c'] });
+
+      const url = (global.fetch as any).mock.calls[0][0];
+      expect(url).toContain('per_page=3');
+    });
+
+    it('should cap the slug-derived perPage default at 100', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [],
+        headers: { get: () => '0' },
+      });
+
+      const slugs = Array.from({ length: 150 }, (_, i) => `slug-${i}`);
+      await getPosts({ slug: slugs });
+
+      const url = (global.fetch as any).mock.calls[0][0];
+      expect(url).toContain('per_page=100');
+    });
+
+    it('should let an explicit perPage take priority over the slug count default', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [],
+        headers: { get: () => '0' },
+      });
+
+      await getPosts({ slug: ['a', 'b', 'c'], perPage: 5 });
+
+      const url = (global.fetch as any).mock.calls[0][0];
+      expect(url).toContain('per_page=5');
+    });
+
+    it('should return an empty result without fetching when slug is an empty array', async () => {
+      const result = await getPosts({ slug: [] });
+
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(result).toEqual({ posts: [], total: 0, totalPages: 0 });
+    });
   });
 
   describe('getPost', () => {
