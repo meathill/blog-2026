@@ -217,8 +217,8 @@ return new Response(transformed.image(), {
 - **sitemap 收口**：`src/app/sitemap.ts` 不再收录 tag 页（薄内容）；robots 额外 disallow `/search`。
 - **内容日历**：`docs/blog-topics-2026-q3.md`（一周两篇 + 直播联动）。
 - **内容文案更新链路**：历史文章在 WordPress，用 `scripts/seo/`（wp-cli `eval-file`，幂等、dry-run、不改 slug）在服务器更新 title/excerpt + 插入 FAQ/延伸阅读。meta description 来自 `post.excerpt`（`buildPostDescription`）。
-- ⚠️ **`blog.meathill.com` 双角色**：既是历史公开站，又是 meathill.com 的 REST API 后端 + 媒体源。做旧站收敛（301/410/noindex，见 `scripts/seo/server/` 与 `docs/seo-gsc-cleanup.md`）时必须保留 `/wp-json/`、`/wp-admin/`、`/wp-content/`。
-- **GSC 清理**：GSC MCP 只能 list/submit、不能删 sitemap；历史 sitemap 退役按 `docs/seo-gsc-cleanup.md` 手动执行。
+- ⚠️ **`blog.meathill.com` 双角色**：既是历史公开站，又是 meathill.com 的 REST API 后端 + 媒体源。做旧站收敛（301/410/noindex，见 `scripts/seo/server/` 与 `docs/seo-sitemap-cleanup-2026-08.md`）时必须保留 `/wp-json/`、`/wp-admin/`、`/wp-content/`。
+- **GSC 清理**：GSC MCP 只能 list/submit、不能删 sitemap；历史 sitemap 退役策略见 `docs/seo-sitemap-cleanup-2026-08.md`(301 归一/DNS 消亡淡出,Bing 侧主动删)。
 
 ### Issue #5 增补
 
