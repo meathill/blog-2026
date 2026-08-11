@@ -5,20 +5,20 @@
 ## 任务分解 (TODO)
 
 ### Part 0 基线
-- [ ] chore(deps): next 升级到 16.3,全量验证(test/typecheck/build)
+- [x] chore(deps): next 升级到 16.3,全量验证(test/typecheck/build);顺带修复 cf-typegen strict-vars 既有类型错误,新增 typecheck script
 
 ### Part 1 — #8 区域缓存
-- [ ] perf(cloudflare): open-next.config.ts 用 withRegionalCache 包装 R2(long-lived + lazy update),不配 cachePurge(free plan 无 tag purge)
+- [x] perf(cloudflare): open-next.config.ts 用 withRegionalCache 包装 R2(long-lived + lazy update),不配 cachePurge(free plan 无 tag purge)
 
 ### Part 2 — #6 /tech 内容中心
-- [ ] feat(middleware): 放行 /tech 与 4 个 section,保留其余 /tech/* legacy 301
-- [ ] feat(seo): 抽取 buildItemListJsonLd,重构 solutions/skills 列表页
-- [ ] feat(wordpress): getPosts 支持 slug 数组批量查询
-- [ ] feat(tech): 策展数据层 tech.ts / tech-posts.ts + messages + 测试
-- [ ] feat(tech): /tech hub 页 + [section] 分类页 + TechSectionCard
-- [ ] feat(seo): sitemap 收录 /tech 5 个页面
-- [ ] feat(nav): 主导航接入 /tech(注意 D1 navigation_configs 覆盖,部署后需 admin 同步)
-- [ ] docs: docs/tech-content-plan.md 全量首批选题大纲(10-12 篇,query-to-page 映射)
+- [x] feat(middleware): 放行 /tech 与 4 个 section,保留其余 /tech/* legacy 301
+- [x] feat(seo): 抽取 buildItemListJsonLd,重构 solutions/skills 列表页
+- [x] feat(wordpress): getPosts 支持 slug 数组批量查询
+- [x] feat(tech): 策展数据层 tech.ts / tech-posts.ts + messages + 测试
+- [x] feat(tech): /tech hub 页 + [section] 分类页 + TechSectionCard
+- [x] feat(seo): sitemap 收录 /tech 5 个页面
+- [x] feat(nav): 主导航接入 /tech(注意 D1 navigation_configs 覆盖,部署后需 admin 同步)
+- [x] docs: docs/tech-content-plan.md 全量首批选题大纲(12 篇,query-to-page 映射)
 
 ### Part 3 — #7 sitemap 清理(外部运维,每步向用户确认)
 - [ ] 盘点:GSC/Bing sitemap 清单 + curl 旧入口现状,产出 docs/seo-sitemap-cleanup-2026-08.md,修 DEV_NOTE 悬空引用
