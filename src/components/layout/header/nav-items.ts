@@ -7,6 +7,11 @@ interface HeaderNavLabels {
   solutions: string;
   tools: string;
   tech: string;
+  techOverview: string;
+  techCompare: string;
+  techPlatforms: string;
+  techStacks: string;
+  techGuides: string;
   works: string;
   resources: string;
 }
@@ -23,8 +28,11 @@ export function getHeaderNavItems(labels: HeaderNavLabels): NavItem[] {
       href: '/tech',
       label: labels.tech,
       children: [
-        { href: '/category/js', label: 'JavaScript' },
-        { href: '/category/ai', label: 'AI' },
+        { href: '/tech', label: labels.techOverview },
+        { href: '/tech/compare', label: labels.techCompare },
+        { href: '/tech/platforms', label: labels.techPlatforms },
+        { href: '/tech/stacks', label: labels.techStacks },
+        { href: '/tech/guides', label: labels.techGuides },
         {
           href: 'https://github.com/meathill/gitbook-design-patterns-in-jquery',
           label: '从 jQuery 里学习设计模式',

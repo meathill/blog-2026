@@ -8,6 +8,11 @@ interface HeaderNavLabels {
   solutions: string;
   tools: string;
   tech: string;
+  techOverview: string;
+  techCompare: string;
+  techPlatforms: string;
+  techStacks: string;
+  techGuides: string;
   works: string;
   resources: string;
 }
@@ -35,6 +40,11 @@ const DEFAULT_LABELS_BY_LOCALE: Record<string, HeaderNavLabels> = {
     solutions: '方案',
     tools: '工具',
     tech: '技术',
+    techOverview: '总览',
+    techCompare: '对比选型',
+    techPlatforms: '平台详解',
+    techStacks: '技术栈方案',
+    techGuides: '入门指南',
     works: '作品',
     resources: '资源',
   },
@@ -45,6 +55,11 @@ const DEFAULT_LABELS_BY_LOCALE: Record<string, HeaderNavLabels> = {
     solutions: 'Solutions',
     tools: 'Tools',
     tech: 'Tech',
+    techOverview: 'Overview',
+    techCompare: 'Compare',
+    techPlatforms: 'Platforms',
+    techStacks: 'Stacks',
+    techGuides: 'Guides',
     works: 'Works',
     resources: 'Resources',
   },
