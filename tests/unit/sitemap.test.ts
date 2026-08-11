@@ -126,8 +126,41 @@ describe('Sitemap Generator', () => {
     const post1 = result.find((item) => item.url === `${SITE_URL}/posts/cat-1/post-1`);
     expect(post1?.lastModified).toEqual(new Date('2023-02-01'));
 
-    // Validate count: (static(5) + posts(3) + category(1) + app(1) + skill(1)) × zh/en = 22（标签已移除）
-    expect(result.length).toBe(22);
+    // Validate count: (static(10, 含 /tech + 4 个 section) + posts(3) + category(1) + app(1) + skill(1)) × zh/en = 32（标签已移除）
+    expect(result.length).toBe(32);
+
+    // /tech 频道页应出现在 sitemap 中，带正确 zh/en alternates
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          url: `${SITE_URL}/tech`,
+          alternates: {
+            languages: {
+              zh: `${SITE_URL}/tech`,
+              en: `${SITE_URL}/en/tech`,
+            },
+          },
+        }),
+      ]),
+    );
+
+    // /tech/compare 子栏目应出现
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          url: `${SITE_URL}/tech/compare`,
+          alternates: {
+            languages: {
+              zh: `${SITE_URL}/tech/compare`,
+              en: `${SITE_URL}/en/tech/compare`,
+            },
+          },
+        }),
+      ]),
+    );
+
+    // /en/tech 应由 expandEnEntries 自动补出主条目
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/en/tech` })]));
 
     // Check categories
     expect(result).toEqual(
@@ -208,7 +241,7 @@ describe('Sitemap Generator', () => {
     const result = await sitemap();
 
     // Should distinctively return just static pages + mocked skills (which is 1 skill), ×2 (zh + en)
-    expect(result.length).toBe(12); // (5 static pages defined in sitemap.ts + 1 skill page) × zh/en
+    expect(result.length).toBe(22); // (10 static pages defined in sitemap.ts, 含 /tech + 4 个 section + 1 skill page) × zh/en
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: SITE_URL })]));
   });
 });

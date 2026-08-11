@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getAllSkills } from '@/lib/skills';
+import { TECH_SECTION_SLUGS } from '@/lib/tech-sections';
 
 export const revalidate = 86400; // 1 day
 
@@ -82,6 +83,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
       },
     },
+    {
+      url: `${SITE_URL}/tech`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/tech`,
+          en: `${SITE_URL}/en/tech`,
+        },
+      },
+    },
+    ...TECH_SECTION_SLUGS.map((slug) => ({
+      url: `${SITE_URL}/tech/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/tech/${slug}`,
+          en: `${SITE_URL}/en/tech/${slug}`,
+        },
+      },
+    })),
     {
       url: `${SITE_URL}/about`,
       lastModified: new Date(),
