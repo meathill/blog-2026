@@ -1,15 +1,13 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import cloudflareImageLoader, { buildCloudflareImageUrl } from '../image-loader';
 
 describe('image-loader', () => {
-  const originalNodeEnv = process.env.NODE_ENV;
-
   afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv;
+    vi.unstubAllEnvs();
   });
 
   it('开发环境应直接返回原始 src', () => {
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
 
     expect(
       cloudflareImageLoader({
@@ -21,7 +19,7 @@ describe('image-loader', () => {
   });
 
   it('生产环境应为站内相对路径生成 Cloudflare Transform URL', () => {
-    process.env.NODE_ENV = 'production';
+    vi.stubEnv('NODE_ENV', 'production');
 
     expect(
       cloudflareImageLoader({

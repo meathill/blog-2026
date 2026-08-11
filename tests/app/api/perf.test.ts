@@ -8,6 +8,11 @@ vi.mock('@opennextjs/cloudflare', () => ({
 import { POST } from '@/app/api/perf/route';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
+// /api/perf 响应体固定为 { ok: boolean }
+interface PerfApiResponse {
+  ok: boolean;
+}
+
 function createRequest(body: unknown): Request {
   return new Request('http://localhost/api/perf', {
     method: 'POST',
@@ -41,7 +46,7 @@ describe('/api/perf', () => {
     });
 
     const response = await POST(request as any);
-    const json = await response.json();
+    const json = (await response.json()) as PerfApiResponse;
 
     expect(json.ok).toBe(true);
     expect(mockKvPut).toHaveBeenCalledTimes(2); // langs + paths
@@ -73,7 +78,7 @@ describe('/api/perf', () => {
     });
 
     const response = await POST(request as any);
-    expect((await response.json()).ok).toBe(true);
+    expect(((await response.json()) as PerfApiResponse).ok).toBe(true);
 
     const langsCall = mockKvPut.mock.calls.find((c: string[]) => c[0] === 'hl:langs');
     const langsData = JSON.parse(langsCall![1]);
@@ -97,7 +102,7 @@ describe('/api/perf', () => {
     });
 
     const response = await POST(request as any);
-    expect((await response.json()).ok).toBe(true);
+    expect(((await response.json()) as PerfApiResponse).ok).toBe(true);
     expect(mockKvPut).not.toHaveBeenCalled();
   });
 

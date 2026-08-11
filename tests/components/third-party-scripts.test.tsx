@@ -34,8 +34,6 @@ import ThirdPartyScripts, {
 } from '@/components/ThirdPartyScripts';
 
 describe('ThirdPartyScripts', () => {
-  const originalAdsenseId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
-
   beforeEach(() => {
     vi.useFakeTimers();
     currentPathname = '/en/posts/css/example';
@@ -61,11 +59,7 @@ describe('ThirdPartyScripts', () => {
     document.head.innerHTML = '';
     vi.clearAllTimers();
     vi.useRealTimers();
-    if (originalAdsenseId) {
-      process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID = originalAdsenseId;
-    } else {
-      delete process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
-    }
+    vi.unstubAllEnvs();
   });
 
   it('应正确判断 admin / 首页 / 广告投放路径', () => {
@@ -102,7 +96,7 @@ describe('ThirdPartyScripts', () => {
 
   it('博客页用户交互后应同时加载 GA 与 Adsense', () => {
     currentPathname = '/en/posts/css/example';
-    process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID = 'ca-pub-test';
+    vi.stubEnv('NEXT_PUBLIC_GOOGLE_ADSENSE_ID', 'ca-pub-test');
     render(<ThirdPartyScripts />);
 
     act(() => {
@@ -132,7 +126,7 @@ describe('ThirdPartyScripts', () => {
 
   it('首页应加载 GA 但不投放 Adsense', () => {
     currentPathname = '/';
-    process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID = 'ca-pub-test';
+    vi.stubEnv('NEXT_PUBLIC_GOOGLE_ADSENSE_ID', 'ca-pub-test');
     render(<ThirdPartyScripts />);
 
     act(() => {
@@ -146,7 +140,7 @@ describe('ThirdPartyScripts', () => {
 
   it('公司站页面（如 /en/about）应加载 GA 但不投放 Adsense', () => {
     currentPathname = '/en/about';
-    process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID = 'ca-pub-test';
+    vi.stubEnv('NEXT_PUBLIC_GOOGLE_ADSENSE_ID', 'ca-pub-test');
     render(<ThirdPartyScripts />);
 
     act(() => {

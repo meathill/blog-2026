@@ -243,13 +243,9 @@ describe('Middleware', () => {
   });
 
   it('should redirect for ?attachment_id when API returns source_url', async () => {
-    const originalClientId = process.env.CF_ACCESS_CLIENT_ID;
-    const originalClientSecret = process.env.CF_ACCESS_CLIENT_SECRET;
-    const originalWordPressApiUrl = process.env.WORDPRESS_API_URL;
-
-    process.env.CF_ACCESS_CLIENT_ID = 'test-client-id';
-    process.env.CF_ACCESS_CLIENT_SECRET = 'test-client-secret';
-    process.env.WORDPRESS_API_URL = 'https://blog.meathill.com/wp-json/wp/v2';
+    vi.stubEnv('CF_ACCESS_CLIENT_ID', 'test-client-id');
+    vi.stubEnv('CF_ACCESS_CLIENT_SECRET', 'test-client-secret');
+    vi.stubEnv('WORDPRESS_API_URL', 'https://blog.meathill.com/wp-json/wp/v2');
 
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify({ source_url: 'https://blog.meathill.com/uploads/img.jpg' }), {
@@ -272,24 +268,7 @@ describe('Middleware', () => {
       }),
     });
 
-    if (originalClientId) {
-      process.env.CF_ACCESS_CLIENT_ID = originalClientId;
-    } else {
-      delete process.env.CF_ACCESS_CLIENT_ID;
-    }
-
-    if (originalClientSecret) {
-      process.env.CF_ACCESS_CLIENT_SECRET = originalClientSecret;
-    } else {
-      delete process.env.CF_ACCESS_CLIENT_SECRET;
-    }
-
-    if (originalWordPressApiUrl) {
-      process.env.WORDPRESS_API_URL = originalWordPressApiUrl;
-    } else {
-      delete process.env.WORDPRESS_API_URL;
-    }
-
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 });
