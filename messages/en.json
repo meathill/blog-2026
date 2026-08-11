@@ -123,6 +123,15 @@
     "not_found_title": "App Not Found",
     "not_found_desc": "The app you are looking for does not exist or has been moved."
   },
+  "Tech": {
+    "title": "Tech Stack Picker",
+    "subtitle": "A tech-stack picker for indie developers and small teams: compare writeups, platform notes, stack blueprints, and vibe coding guides to help you decide fast.",
+    "viewAll": "View All",
+    "emptyTitle": "Coming Soon",
+    "emptyDescription": "No posts in this category yet — we're working on it, check back soon.",
+    "browsePosts": "Browse All Posts",
+    "postsCount": "{count} posts"
+  },
   "Metadata": {
     "posts_title": "Tech Insights",
     "posts_description": "Articles from Meathill LLC: hands-on notes on Cloudflare full-stack, AI apps & billing, and cross-platform development.",

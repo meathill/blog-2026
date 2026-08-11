@@ -123,6 +123,15 @@
     "not_found_title": "应用未找到",
     "not_found_desc": "无法找到该应用，可能已被删除或移动。"
   },
+  "Tech": {
+    "title": "技术选型",
+    "subtitle": "技术选型内容中心，面向独立开发者、小团队和技术小白：对比选型（Vercel vs Cloudflare、数据库迁移）、Cloudflare Workers 等平台生产实践、Next.js 全栈技术栈方案，以及 vibe coding、Claude Code skills 入门指南，帮你少踩坑、快速定型技术栈。",
+    "viewAll": "查看全部",
+    "emptyTitle": "内容筹备中",
+    "emptyDescription": "这个分类还没有文章，我们正在整理相关内容，敬请期待。",
+    "browsePosts": "去看全部文章",
+    "postsCount": "{count} 篇文章"
+  },
   "Metadata": {
     "posts_title": "技术洞察",
     "posts_description": "Meathill LLC 的技术文章：Cloudflare 全栈、AI 应用与计费、跨端开发的实践与踩坑笔记。",
