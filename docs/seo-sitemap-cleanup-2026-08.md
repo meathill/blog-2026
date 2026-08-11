@@ -9,6 +9,7 @@
 |---|---|---|
 | meathill.com | 主站(Workers/OpenNext) | **唯一正式 sitemap 入口** `https://meathill.com/sitemap.xml` |
 | tools.meathill.com | 独立子站 | 保留自己的 sitemap |
+| muimemo.meathill.com / muiad.meathill.com | 运营中产品子站 | 保留自己的 sitemap(Bing 侧 Discovered) |
 | blog.meathill.com | **双角色**:历史公开站 + 主站 REST API/媒体源 | 仅 `/wp-json/`(CF Access 后,匿名 401 属预期)、`/wp-content/`(uploads)、`/feed` 放行;其余在 **Cloudflare 边缘 301** 到 meathill.com |
 | www.meathill.com | 历史别名 | 边缘 301 → meathill.com |
 | seo.meathill.com / shop.meathill.com | 已消亡 | **DNS 记录已删除**(1.1.1.1 NXDOMAIN),任何抓取永久失败 |
@@ -36,11 +37,13 @@
 4. **Bing Webmaster 侧主动清理**:Bing UI 支持删除 sitemap,删除除主站/tools 外的全部历史条目(见下)。
 5. **仓库清理**:`scripts/seo/server/` 中 `blog-redirect.nginx.conf`、`blog-redirect.htaccess`、`blog-noindex.conf` 从未在服务器应用(服务器只跑 Caddy,实测 0 个 nginx/apache 进程),删除;`blog-redirect.Caddyfile` 与服务器 `/etc/caddy/Caddyfile` 保持同步,保留。
 
-## Bing Webmaster 清理清单
+## Bing Webmaster 现状与结论(2026-08-11 实操核实)
 
-保留:`https://meathill.com/sitemap.xml`、`https://tools.meathill.com/sitemap.xml`。
-删除:blog(http/https)、news-sitemap、shop、seo、www、其余 http 变体。
-(执行记录见本文末尾追加。)
+当前 9 条:meathill.com(**唯一 Submitted**)、tools、muimemo、muiad(运营中,保留)+ www(http/https)、blog(http/https)、seo 共 5 条历史条目。
+
+**Bing 对「Discovered」类型的 sitemap 不提供删除入口**(行操作菜单只有 Re-submit,且置灰)——能删的只有自己 Submitted 的条目,而那条恰是要保留的主站入口。5 条历史条目无法主动清除,依靠 301 归一 / DNS 失效由 Bing 自行淡出,无需(也无法)进一步操作。原 issue 记录的 http://blog.meathill.com/sitemap.xml「905 discovered URLs」现已收敛为 420(跟随 301 读到的主站内容)。
+
+补充:muimemo.meathill.com、muiad.meathill.com 为运营中产品子站,列入白名单。
 
 ## 验收核对
 
