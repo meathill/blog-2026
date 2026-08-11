@@ -27,6 +27,6 @@
 - [x] 删除 scripts/seo/server 未应用的 nginx/htaccess/noindex 片段
 - [x] 附带修复:非法 locale 段软 404(任意 .xml 路径曾以 200 渲染首页)
 
-### 遗留(用户手动)
-- [ ] **admin 导航编辑器同步 /tech 新下拉结构**(生产导航被 D1 navigation_configs 覆盖,代码默认值不生效;新结构见 nav-items.ts:总览+4分类+2外链)
+### 遗留
+- [x] 生产导航同步:已用 SQL 直接更新 D1 navigation_configs(zh/en,保留自定义项),线上已验证
 - [ ] 按 docs/tech-content-plan.md 逐篇写作(建议先写 Hyperdrive 详解、Claude Code Skills 实战、Skills 对比)
