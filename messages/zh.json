@@ -130,7 +130,10 @@
     "emptyTitle": "内容筹备中",
     "emptyDescription": "这个分类还没有文章，我们正在整理相关内容，敬请期待。",
     "browsePosts": "去看全部文章",
-    "postsCount": "{count} 篇文章"
+    "postsCount": "{count} 篇文章",
+    "home": "首页",
+    "notFoundTitle": "未找到该分类",
+    "moreSections": "看看其他分类"
   },
   "Metadata": {
     "posts_title": "技术洞察",

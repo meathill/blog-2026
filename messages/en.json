@@ -130,7 +130,10 @@
     "emptyTitle": "Coming Soon",
     "emptyDescription": "No posts in this category yet — we're working on it, check back soon.",
     "browsePosts": "Browse All Posts",
-    "postsCount": "{count} posts"
+    "postsCount": "{count} posts",
+    "home": "Home",
+    "notFoundTitle": "Section Not Found",
+    "moreSections": "Browse other sections"
   },
   "Metadata": {
     "posts_title": "Tech Insights",

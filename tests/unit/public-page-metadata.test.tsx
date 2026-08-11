@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { SITE_URL } from '../../src/lib/constants';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '../../src/lib/constants';
 import enMessages from '../../messages/en.json';
 import zhMessages from '../../messages/zh.json';
 
@@ -53,6 +53,8 @@ import { generateMetadata as aboutMetadata } from '../../src/app/[locale]/(publi
 import { generateMetadata as categoryMetadata } from '../../src/app/[locale]/(public)/category/[...slug]/page';
 import { generateMetadata as tagMetadata } from '../../src/app/[locale]/(public)/tag/[slug]/page';
 import { generateMetadata as authorMetadata } from '../../src/app/[locale]/(public)/posts/author/[slug]/page';
+import { generateMetadata as techHubMetadata } from '../../src/app/[locale]/(public)/tech/page';
+import { generateMetadata as techSectionMetadata } from '../../src/app/[locale]/(public)/tech/[section]/page';
 
 function params<T extends Record<string, unknown>>(value: T) {
   return { params: Promise.resolve(value) };
@@ -170,5 +172,59 @@ describe('tag / author 页 metadata', () => {
     const metadata = await authorMetadata(params({ locale: 'en', slug: 'meathill' }));
     expect(metadata.title).toBe('Posts by Meathill');
     expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/posts/author/meathill`);
+  });
+});
+
+describe('tech hub 页 metadata', () => {
+  it('zh 返回中文文案，canonical 指向 /tech，hreflang 含 x-default，openGraph 自带 type/images', async () => {
+    const metadata = await techHubMetadata(params({ locale: 'zh' }));
+    expect(metadata.title).toBe('技术选型');
+    expect(metadata.description).toMatch(/技术选型内容中心/);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/tech`);
+    expect(metadata.alternates?.languages).toEqual({
+      zh: `${SITE_URL}/tech`,
+      en: `${SITE_URL}/en/tech`,
+      'x-default': `${SITE_URL}/tech`,
+    });
+    expect(metadata.openGraph).toMatchObject({
+      type: 'website',
+      images: [DEFAULT_OG_IMAGE],
+      url: `${SITE_URL}/tech`,
+    });
+  });
+
+  it('en 返回英文文案，canonical 指向 /en/tech', async () => {
+    const metadata = await techHubMetadata(params({ locale: 'en' }));
+    expect(metadata.title).toBe('Tech Stack Picker');
+    expect(metadata.description).toMatch(/tech-stack picker/);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/tech`);
+    expect(metadata.openGraph).toMatchObject({ type: 'website', images: [DEFAULT_OG_IMAGE] });
+  });
+});
+
+describe('tech 分类页 metadata', () => {
+  it('zh 分类页 title/description 取自 tech.ts 的 Localized 字段，零 WP 依赖', async () => {
+    const metadata = await techSectionMetadata(params({ locale: 'zh', section: 'compare' }));
+    expect(metadata.title).toBe('对比选型');
+    expect(metadata.description).toMatch(/技术选型最怕道听途说|技术对比选型/);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/tech/compare`);
+    expect(metadata.alternates?.languages).toEqual({
+      zh: `${SITE_URL}/tech/compare`,
+      en: `${SITE_URL}/en/tech/compare`,
+      'x-default': `${SITE_URL}/tech/compare`,
+    });
+    expect(metadata.openGraph).toMatchObject({ type: 'website', images: [DEFAULT_OG_IMAGE] });
+  });
+
+  it('en 分类页 title/description 为英文，canonical 带 /en', async () => {
+    const metadata = await techSectionMetadata(params({ locale: 'en', section: 'platforms' }));
+    expect(metadata.title).toBe('Platforms');
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/tech/platforms`);
+    expect(metadata.openGraph).toMatchObject({ url: `${SITE_URL}/en/tech/platforms` });
+  });
+
+  it('未知 section 返回 notFoundTitle 兜底文案', async () => {
+    const metadata = await techSectionMetadata(params({ locale: 'zh', section: 'not-a-real-section' }));
+    expect(metadata.title).toBe('未找到该分类');
   });
 });
