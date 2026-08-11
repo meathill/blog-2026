@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TOP_LEVEL_ROUTES, getLocaleAndContent } from '@/lib/middleware-helpers';
 import { parseCategorySlug } from '@/lib/category-slug';
 import { getWordPressAccessHeaders, getWordPressApiUrl } from '@/lib/wordpress/access';
+import { isTechSectionSlug } from '@/lib/tech-sections';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -16,6 +17,22 @@ function buildLegacyRedirectUrl(req: NextRequest, pathname: string) {
   url.pathname = pathname;
   url.search = '';
   return url;
+}
+
+// 分页形态（/js/page/2）仍视作分类归档；其余（含单段旧 slug，如 /img_0224）
+// 一律交给 /posts/[...slug] 解析——未命中文章时该页会回退到分类/附件（见对应 page.tsx），
+// 避免把附件 slug 误跳到不存在的 /category/{slug}
+function redirectLegacyContentPath(req: NextRequest, prefix: string, contentSegments: string[]) {
+  const { pageNum } = parseCategorySlug(contentSegments);
+  const pathContent = contentSegments.join('/');
+  const url = buildLegacyRedirectUrl(req, req.nextUrl.pathname);
+
+  if (pageNum > 1) {
+    url.pathname = `${prefix}/category/${pathContent}`;
+  } else {
+    url.pathname = `${prefix}/posts/${pathContent}`;
+  }
+  return NextResponse.redirect(url, 301);
 }
 
 export default async function middleware(req: NextRequest) {
@@ -101,21 +118,20 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(buildLegacyRedirectUrl(req, `${prefix}/posts/${pathContent}`), 301);
   }
 
+  // `tech` 既是产品栏目根路径（/tech、/tech/{compare|platforms|stacks|guides}），
+  // 又是 WP 现存分类，旧文章链接 /tech/{slug} 必须保留 legacy 301。
+  // 因此单独特判：非「根路径」也非「恰好两段的合法子栏目」时，按通用 legacy 逻辑处理。
+  if (rootSegment === 'tech') {
+    const isTechRoot = contentSegments.length === 1;
+    const isTechSection = contentSegments.length === 2 && isTechSectionSlug(contentSegments[1]);
+    if (!isTechRoot && !isTechSection) {
+      return redirectLegacyContentPath(req, prefix, contentSegments);
+    }
+  }
+
   // Handle non-top-level routes (e.g. legacy WP paths)
   if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment)) {
-    const { pageNum } = parseCategorySlug(contentSegments);
-    const pathContent = contentSegments.join('/');
-    const url = buildLegacyRedirectUrl(req, pathname);
-
-    // 分页形态（/js/page/2）仍视作分类归档；其余（含单段旧 slug，如 /img_0224）
-    // 一律交给 /posts/[...slug] 解析——未命中文章时该页会回退到分类/附件（见对应 page.tsx），
-    // 避免把附件 slug 误跳到不存在的 /category/{slug}
-    if (pageNum > 1) {
-      url.pathname = `${prefix}/category/${pathContent}`;
-    } else {
-      url.pathname = `${prefix}/posts/${pathContent}`;
-    }
-    return NextResponse.redirect(url, 301);
+    return redirectLegacyContentPath(req, prefix, contentSegments);
   }
 
   return intlMiddleware(req);

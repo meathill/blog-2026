@@ -13,6 +13,7 @@ export const TOP_LEVEL_ROUTES = [
   'api',
   '_next',
   'admin',
+  'tech',
 ];
 
 /**

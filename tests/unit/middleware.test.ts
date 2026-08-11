@@ -194,14 +194,11 @@ describe('Middleware', () => {
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/category/tech/page/22`);
   });
 
-  // 单段旧 slug 交给 /posts/[...slug] 解析（其内部会回退到分类/附件），
-  // 不再盲跳 /category/{slug}（Ahrefs：附件 slug 曾被误跳到不存在的分类页产生 404）
-  it('should redirect single-segment /tech to /posts/tech', async () => {
+  // /tech 是产品栏目根路径，交给 intlMiddleware 正常渲染，不再重定向
+  it('should NOT redirect /tech (top-level route, renders normally)', async () => {
     const req = new NextRequest(new URL('/tech', BASE_URL));
-    const res = await middleware(req);
-
-    expect(res?.status).toBe(301);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech`);
+    await middleware(req);
+    expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 
   it('should still redirect /tech/article to /posts/tech/article', async () => {
@@ -210,6 +207,29 @@ describe('Middleware', () => {
 
     expect(res?.status).toBe(301);
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
+  });
+
+  // --- 新增用例：/tech 子栏目放行 ---
+
+  it('should NOT redirect /tech/compare (valid tech section)', async () => {
+    const req = new NextRequest(new URL('/tech/compare', BASE_URL));
+    await middleware(req);
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
+
+  it('should NOT redirect /en/tech/guides (valid tech section with locale prefix)', async () => {
+    const req = new NextRequest(new URL('/en/tech/guides', BASE_URL));
+    await middleware(req);
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+  });
+
+  it('should redirect /tech/compare/foo (3 segments) to /posts/tech/compare/foo', async () => {
+    const req = new NextRequest(new URL('/tech/compare/foo', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/compare/foo`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
   it('should redirect single-segment unknown paths like /img_0226 to /posts/img_0226', async () => {
