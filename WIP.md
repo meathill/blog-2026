@@ -20,11 +20,13 @@
 - [x] feat(nav): 主导航接入 /tech(注意 D1 navigation_configs 覆盖,部署后需 admin 同步)
 - [x] docs: docs/tech-content-plan.md 全量首批选题大纲(12 篇,query-to-page 映射)
 
-### Part 3 — #7 sitemap 清理(外部运维,每步向用户确认)
-- [ ] 盘点:GSC/Bing sitemap 清单 + curl 旧入口现状,产出 docs/seo-sitemap-cleanup-2026-08.md,修 DEV_NOTE 悬空引用
-- [ ] 源站:核对/应用 Caddy sitemap 410 规则(放行 /wp-json 等),验证各 host 301
-- [ ] Bing UI 删除旧 sitemap;GSC 记录淡出策略
-- [ ] 评估删除 scripts/seo/server 未用的 nginx/htaccess 片段
+### Part 3 — #7 sitemap 清理
+- [x] 盘点:GSC 8 条 / Bing 9 条 sitemap 实测,产出 docs/seo-sitemap-cleanup-2026-08.md,修 DEV_NOTE 悬空引用
+- [x] 源站:确认 Cloudflare 边缘 301 在 Caddy 之前,410 方案不可达,维持 301 归一(不改源站);seo/shop DNS 已消亡
+- [x] Bing:实操核实 Discovered 条目无删除入口,靠淡出;GSC 无删除入口,记录策略
+- [x] 删除 scripts/seo/server 未应用的 nginx/htaccess/noindex 片段
+- [x] 附带修复:非法 locale 段软 404(任意 .xml 路径曾以 200 渲染首页)
 
-### 收尾
-- [ ] 全量回归 + push master + 线上抽查 + 三个 issue 留言
+### 遗留(用户手动)
+- [ ] **admin 导航编辑器同步 /tech 新下拉结构**(生产导航被 D1 navigation_configs 覆盖,代码默认值不生效;新结构见 nav-items.ts:总览+4分类+2外链)
+- [ ] 按 docs/tech-content-plan.md 逐篇写作(建议先写 Hyperdrive 详解、Claude Code Skills 实战、Skills 对比)
