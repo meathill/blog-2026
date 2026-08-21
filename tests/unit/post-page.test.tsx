@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import PostPage from '../../src/app/[locale]/(public)/posts/[...slug]/page';
+import PostPage, { generateStaticParams } from '../../src/app/[locale]/(public)/posts/[...slug]/page';
 import * as navigation from 'next/navigation';
 import * as wordpress from '../../src/lib/wordpress';
 
@@ -7,6 +7,7 @@ import * as wordpress from '../../src/lib/wordpress';
 vi.mock('../../src/lib/wordpress', () => ({
   getPost: vi.fn(),
   getPostById: vi.fn(),
+  getPosts: vi.fn(),
   getCategories: vi.fn(),
   getCategoryBySlug: vi.fn(),
   getMediaBySlug: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('../../src/i18n/routing', () => ({
   routing: {
+    locales: ['zh', 'en'],
     defaultLocale: 'zh',
   },
 }));
@@ -179,5 +181,57 @@ describe('PostPage', () => {
     await PostPage({ params });
 
     expect(navigation.permanentRedirect).not.toHaveBeenCalled();
+  });
+
+  describe('generateStaticParams', () => {
+    it('should generate params for all locales and posts with primary category slug', async () => {
+      (wordpress.getCategories as any).mockResolvedValue([
+        { id: 10, slug: 'tech' },
+        { id: 20, slug: 'ai' },
+      ]);
+      (wordpress.getPosts as any).mockResolvedValue({
+        posts: [
+          { slug: 'post-1', categories: [10] },
+          { slug: 'post-2', categories: [20] },
+          { slug: 'post-uncategorized', categories: [] },
+        ],
+        totalPages: 1,
+      });
+
+      const params = await generateStaticParams();
+      expect(params).toHaveLength(6); // 3 posts * 2 locales
+      expect(params).toContainEqual({ locale: 'zh', slug: ['tech', 'post-1'] });
+      expect(params).toContainEqual({ locale: 'en', slug: ['tech', 'post-1'] });
+      expect(params).toContainEqual({ locale: 'zh', slug: ['ai', 'post-2'] });
+      expect(params).toContainEqual({ locale: 'en', slug: ['ai', 'post-2'] });
+      expect(params).toContainEqual({ locale: 'zh', slug: ['uncategorized', 'post-uncategorized'] });
+      expect(params).toContainEqual({ locale: 'en', slug: ['uncategorized', 'post-uncategorized'] });
+    });
+
+    it('should handle pagination when totalPages > 1', async () => {
+      (wordpress.getCategories as any).mockResolvedValue([{ id: 10, slug: 'tech' }]);
+      (wordpress.getPosts as any)
+        .mockResolvedValueOnce({
+          posts: [{ slug: 'post-page-1', categories: [10] }],
+          totalPages: 2,
+        })
+        .mockResolvedValueOnce({
+          posts: [{ slug: 'post-page-2', categories: [10] }],
+          totalPages: 2,
+        });
+
+      const params = await generateStaticParams();
+      expect(params).toHaveLength(4); // 2 posts * 2 locales
+      expect(params).toContainEqual({ locale: 'zh', slug: ['tech', 'post-page-1'] });
+      expect(params).toContainEqual({ locale: 'zh', slug: ['tech', 'post-page-2'] });
+    });
+
+    it('should return empty array on failure without throwing', async () => {
+      (wordpress.getCategories as any).mockRejectedValue(new Error('Network failure'));
+      (wordpress.getPosts as any).mockRejectedValue(new Error('Network failure'));
+
+      const params = await generateStaticParams();
+      expect(params).toEqual([]);
+    });
   });
 });

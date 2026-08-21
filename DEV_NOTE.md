@@ -238,6 +238,15 @@ return new Response(transformed.image(), {
 - **无标题旧文**：15 篇数字 slug 旧文标题已由 `scripts/seo/titles-manifest.json` + `apply-titles.php` 补齐（2026-07-22 已执行；脚本幂等，仅填空标题）。
 - **不修的**：tag 页 noindex（by design）、500×3（瞬时）、Slow page、tools/hsm/muiad 子站问题（各自仓库）。
 
+### Issue #10 增补（SEO 词矩阵、Ahrefs 抓取放行与 SSG 性能优化，2026-08-21）
+
+- **Ahrefs 抓取拦截修复**：`src/app/robots.ts` 中同时声明 `AhrefsSiteAudit` 和 `AhrefsBot` 允许抓取主站（`allow: '/'`），同时继续禁爬 `/tag/` 与 `/en/tag/` 避免 3000+ noindex 页消耗每月 1 万次免费 crawl credits。
+- **文章页 SSG 预渲染（降低 TTFB/FCP）**：`src/app/[locale]/(public)/posts/[...slug]/page.tsx` 导出 `generateStaticParams`，构建期预先拉取全部公开文章为 `zh` 与 `en` 生成静态页面。配合 OpenNext R2 regional cache 与 `revalidate = 86400`，首屏未命中时的冷启动回源时延从 1.8s+ 降低为边缘直接命中。
+- **对比文章与富文本表格**：`src/app/post-content.css` 中为 `.wp-block-table` 和 `prose table` 增加了横向自适应滚动容器、边框/斑马纹及深色模式样式，提升 Vercel vs Cloudflare 对比文章在移动端与宽屏下的阅读体验与富文本表现。
+- **多语言工具矩阵与分仓约定**：
+  - 工具独立站代码位于 `../evertools` 仓库（部署在 `tools.meathill.com`），工具本身的交互与单页 SEO 由其独立维护。
+  - 本项目（`blog-2026`）在 `src/lib/tools.ts` 中维护多语言索引与关键词映射（支持 `zh` / `en` / `ja` / `es` 回退），覆盖 GSC 曝光的日语 PDF 编辑词（`pdf テキスト エディタ オンライン`、`無料オンラインpdfテキストエディタ`）与西语/英语图片格式转换词矩阵（`convertir bmp a jpg`、`webp to jpg`、`avif to webp`）。
+
 ## TiDB 降载与 blog.meathill.com 边缘收口（2026-06-11）
 
 WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单见 `scripts/cloudflare/README.md`。

@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import {
   getPost,
   getPostById,
+  getPosts,
   stripHtml,
   getCategories,
   getCategoryBySlug,
@@ -18,6 +19,50 @@ export const revalidate = 86400;
 
 interface PostPageProps {
   params: Promise<{ slug: string[]; locale: string }>;
+}
+
+export async function generateStaticParams() {
+  try {
+    const [allCategories, firstPage] = await Promise.all([
+      getCategories().catch(() => []),
+      getPosts({ perPage: 100, embed: false, fields: ['slug', 'categories'] }),
+    ]);
+
+    const categoryMap = new Map<number, string>();
+    allCategories.forEach((cat) => categoryMap.set(cat.id, decodeURIComponent(cat.slug)));
+
+    const posts = [...(firstPage?.posts || [])];
+    if (firstPage?.totalPages && firstPage.totalPages > 1) {
+      const remainingPages = Array.from({ length: firstPage.totalPages - 1 }, (_, i) => i + 2);
+      const results = await Promise.all(
+        remainingPages.map((page) =>
+          getPosts({ page, perPage: 100, embed: false, fields: ['slug', 'categories'] }).catch(() => ({
+            posts: [],
+            total: 0,
+            totalPages: 0,
+          })),
+        ),
+      );
+      results.forEach((res) => posts.push(...res.posts));
+    }
+
+    const params: { locale: string; slug: string[] }[] = [];
+    for (const locale of routing.locales) {
+      for (const post of posts) {
+        if (!post.slug) continue;
+        const catId = post.categories?.[0];
+        const categorySlug = catId ? categoryMap.get(catId) || 'uncategorized' : 'uncategorized';
+        params.push({
+          locale,
+          slug: [categorySlug, post.slug],
+        });
+      }
+    }
+    return params;
+  } catch (error) {
+    console.warn('[generateStaticParams] Failed to preload posts static params:', error);
+    return [];
+  }
 }
 
 /** 去掉路径末段可能残留的 `.html`，供 attachment 父文重定向使用。 */

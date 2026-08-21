@@ -178,3 +178,58 @@ pre[data-filename]::before,
   max-width: 100%;
   height: auto;
 }
+
+/* Gutenberg 表格 / 对比表格响应式与现代排版（如 Vercel vs Cloudflare 对比表） */
+.prose .wp-block-table,
+.wp-block-table {
+  width: 100%;
+  margin: 1.75rem 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius);
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+  background-color: var(--surface, rgba(255, 255, 255, 0.02));
+}
+
+.prose .wp-block-table table,
+.wp-block-table table {
+  width: 100%;
+  min-width: 540px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.prose .wp-block-table thead,
+.wp-block-table thead {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-bottom: 2px solid var(--surface-border, rgba(255, 255, 255, 0.12));
+}
+
+.prose .wp-block-table th,
+.wp-block-table th {
+  padding: 0.875rem 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  white-space: nowrap;
+}
+
+.prose .wp-block-table td,
+.wp-block-table td {
+  padding: 0.875rem 1rem;
+  color: var(--text-secondary, #cbd5e1);
+  border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.06));
+  vertical-align: top;
+}
+
+.prose .wp-block-table tbody tr:last-child td,
+.wp-block-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prose .wp-block-table tbody tr:hover,
+.wp-block-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}

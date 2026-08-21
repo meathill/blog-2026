@@ -31,11 +31,14 @@
 - [x] 生产导航同步:已用 SQL 直接更新 D1 navigation_configs(zh/en,保留自定义项),线上已验证
 - [ ] 按 docs/tech-content-plan.md 逐篇写作(建议先写 Hyperdrive 详解、Claude Code Skills 实战、Skills 对比)
 
-## GSC 面包屑 name 缺失修复(2026-08-11)
 
-背景:`/posts/tech/1074` 等 15 篇无标题旧文(slug=WP post ID)在 7-22 回写标题前,面包屑输出 `"name":""`,GSC 报「应指定 name 或 item.name」。WP 端已修,本次做代码防御防复发。
+## Issue #10: 日语 PDF 编辑词曝光、图片格式转换词矩阵与 Ahrefs 抓取拦截修复 (2026-08-21)
 
-- [x] jsonld.ts:buildBreadcrumbJsonLd / buildItemListJsonLd 过滤空 name 条目并重排 position
-- [x] 单测覆盖空 name 过滤(position 连续、全空输出空数组)
-- [x] 全量回归(format/typecheck/build)
-- [ ] GSC 点「验证修复」(手动)
+- [x] Part 1: 多语言工具元数据扩展 (`src/lib/tools.ts` 支持 ja/es 多语言回退，补齐 PDF 编辑词与图片转换格式矩阵)
+- [x] Part 2: Ahrefs 抓取拦截修复 (`src/app/robots.ts` 同时支持 AhrefsBot 与 AhrefsSiteAudit)
+- [x] Part 3: 文章页前端排版与比较表格优化 (`src/app/post-content.css` 支持 table 横向自适应滚动与深色模式样式)
+- [x] Part 4: CWV 性能与 TTFB 优化 (`src/app/[locale]/(public)/posts/[...slug]/page.tsx` 添加 `generateStaticParams` 实现 SSG 静态预渲染)
+- [x] Part 5: 编写/更新单元测试，确保全部测试通过
+- [x] Part 6: 代码格式化、类型检查与全量构建验证
+- [x] Part 7: 更新开发笔记 `DEV_NOTE.md`
+
