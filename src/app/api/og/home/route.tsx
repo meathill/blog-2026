@@ -25,7 +25,7 @@ function renderHome(): ImageResponse {
           textShadow: '0 2px 10px rgba(0,0,0,0.35)',
         }}
       >
-        Meathill LLC
+        Meathill Studio
       </div>
       <div
         style={{

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { routing } from '@/i18n/routing';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 
 export type SupportedLocale = (typeof routing.locales)[number];
 
@@ -15,21 +15,31 @@ interface RootMetadataText {
 
 const ROOT_METADATA_TEXT: Record<SupportedLocale, RootMetadataText> = {
   zh: {
-    title: 'Meathill LLC — 全栈工程 · Cloudflare · AI 应用',
+    title: 'Meathill Studio｜全栈工程 · Cloudflare · AI 应用',
     description:
-      'Meathill LLC：20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈架构与迁移、AI 应用与计费系统、React Native 跨端开发。',
+      'Meathill Studio 是由 Meathill LLC 运营的一人工作室，拥有 20+ 年全栈开发经验。专注 Cloudflare 全栈架构、AI 应用与计费系统、React Native 跨端开发。',
     ogDescription: '20+ 年全栈开发经验的一人公司，远程交付。专注 Cloudflare 全栈、AI 应用与计费、跨端开发。',
-    keywords: ['Meathill LLC', '全栈开发', 'Cloudflare', 'Next.js', 'AI 应用', '计费系统', 'React Native', '远程开发'],
+    keywords: [
+      'Meathill Studio',
+      'Meathill LLC',
+      '全栈开发',
+      'Cloudflare',
+      'Next.js',
+      'AI 应用',
+      '计费系统',
+      'React Native',
+    ],
     ogLocale: 'zh_CN',
     url: SITE_URL,
   },
   en: {
-    title: 'Meathill LLC — Full-stack Engineering · Cloudflare · AI Apps',
+    title: 'Meathill Studio | Full-stack Engineering · Cloudflare · AI Apps',
     description:
-      'Meathill LLC: a solo studio with 20+ years of full-stack experience, delivering remotely. Focused on Cloudflare architecture and migration, AI apps and billing systems, and React Native cross-platform development.',
+      'Meathill Studio is a solo product and engineering studio operated by Meathill LLC, with 20+ years of full-stack experience across Cloudflare architecture, AI apps and billing, and React Native development.',
     ogDescription:
       'A solo studio with 20+ years of full-stack experience, delivering remotely. Cloudflare, AI apps & billing, cross-platform development.',
     keywords: [
+      'Meathill Studio',
       'Meathill LLC',
       'full-stack development',
       'Cloudflare',
@@ -54,7 +64,7 @@ export function buildRootMetadata(locale: string | undefined): Metadata {
   return {
     title: {
       default: text.title,
-      template: '%s | Meathill LLC',
+      template: '%s | Meathill Studio',
     },
     description: text.description,
     keywords: text.keywords,
@@ -65,7 +75,7 @@ export function buildRootMetadata(locale: string | undefined): Metadata {
       type: 'website',
       locale: text.ogLocale,
       url: text.url,
-      siteName: 'Meathill LLC',
+      siteName: 'Meathill Studio',
       title: text.title,
       description: text.ogDescription,
       images: [DEFAULT_OG_IMAGE],

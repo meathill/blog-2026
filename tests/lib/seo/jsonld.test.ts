@@ -93,6 +93,8 @@ describe('seo/jsonld', () => {
       const result = buildOrganizationJsonLd();
       expect(result['@type']).toBe('Organization');
       expect(result['@id']).toBe(`${SITE_URL}/#organization`);
+      expect(result.name).toBe('Meathill Studio');
+      expect(result.legalName).toBe('Meathill LLC');
       expect(result.url).toBe(SITE_URL);
       expect(result.logo).toBe(`${SITE_URL}/favicon.webp`);
       expect(result.sameAs).toContain('https://github.com/meathill');

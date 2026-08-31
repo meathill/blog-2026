@@ -9,5 +9,5 @@ export const DEFAULT_OG_IMAGE = {
   url: '/api/og/home',
   width: 1200,
   height: 630,
-  alt: 'Meathill LLC',
+  alt: 'Meathill Studio',
 };

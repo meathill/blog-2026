@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { renderToStaticMarkup } from 'react-dom/server';
 import type { ReactNode } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
 import { SITE_URL } from '../../src/lib/constants';
 import { buildRootMetadata } from '../../src/lib/seo/root-metadata';
 
@@ -44,7 +44,7 @@ describe('RootLayout generateMetadata', () => {
   it('en 请求返回英文 title/description，OG locale 为 en_US、url 为 /en', async () => {
     getLocaleMock.mockResolvedValue('en');
     const metadata = await generateMetadata();
-    expect(metadata.title).toMatchObject({ template: '%s | Meathill LLC' });
+    expect(metadata.title).toMatchObject({ template: '%s | Meathill Studio' });
     expect((metadata.title as { default: string }).default).toMatch(/Full-stack Engineering/);
     expect(metadata.description).toMatch(/20\+ years of full-stack experience/);
     expect(metadata.openGraph?.locale).toBe('en_US');

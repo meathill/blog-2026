@@ -1,8 +1,9 @@
+import { brandCatalog } from 'meathill-brand';
 import { SITE_URL } from '@/lib/constants';
 
-const SITE_NAME = 'Meathill LLC';
+const SITE_NAME = brandCatalog.organization.name;
 const AUTHOR_NAME = 'meathill';
-const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+const ORGANIZATION_ID = brandCatalog.organization.id;
 // 与 Footer.tsx 的社交链接保持一致
 const SOCIAL_PROFILES = ['https://github.com/meathill', 'https://youtube.com/@meathill', 'https://x.com/meathill1'];
 
@@ -39,7 +40,7 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput) {
     datePublished,
     dateModified: dateModified || datePublished,
     author: { '@type': 'Person', name: AUTHOR_NAME, url: SITE_URL },
-    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    publisher: { '@id': ORGANIZATION_ID },
     ...(image ? { image: [image] } : {}),
     ...(keywords && keywords.length ? { keywords } : {}),
   };
@@ -59,6 +60,7 @@ export function buildOrganizationJsonLd() {
     '@type': 'Organization',
     '@id': ORGANIZATION_ID,
     name: SITE_NAME,
+    legalName: brandCatalog.organization.legalName,
     url: SITE_URL,
     logo: `${SITE_URL}/favicon.webp`,
     sameAs: SOCIAL_PROFILES,

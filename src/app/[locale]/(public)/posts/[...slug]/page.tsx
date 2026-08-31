@@ -1,18 +1,18 @@
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
+import { routing } from '@/i18n/routing';
 import {
+  buildPostDescription,
+  getCategories,
+  getCategoryBySlug,
+  getMediaBySlug,
   getPost,
   getPostById,
   getPosts,
   stripHtml,
-  getCategories,
-  getCategoryBySlug,
-  getMediaBySlug,
-  buildPostDescription,
   WPPost,
 } from '@/lib/wordpress';
 import PostView from '@/views/PostView';
-import { routing } from '@/i18n/routing';
 import '@/app/post-content.css';
 
 export const revalidate = 86400;
@@ -149,7 +149,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       title,
       description,
       url: canonicalUrl,
-      siteName: 'Meathill LLC',
+      siteName: 'Meathill Studio',
       type: 'article',
       publishedTime: post.date,
       modifiedTime: post.modified,
