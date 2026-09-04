@@ -16,7 +16,7 @@ const SKILLS: Skill[] = [
     package: 'meathill-coding-skills',
     description: {
       zh: '周期性代码库维护与卫生：清理文档、补测试、抽取公共代码、拆分超大文件、用成熟库替换手写工具、消除重复代码。当我说"维护一下"、"清理"、"refactor"、"DRY 一下"时触发。',
-      en: 'Periodic codebase maintenance and hygiene — clean up docs, add tests, extract shared code, split large files, replace hand-rolled utilities, consolidate duplicates. Triggers on "maintain", "clean up", "refactor", "tidy up", "DRY up".',
+      en: 'Periodic codebase maintenance: clean docs, add tests, extract shared code, split large files, remove duplication.',
     },
     tags: ['code', 'maintenance', 'refactor'],
   },
@@ -46,7 +46,7 @@ const SKILLS: Skill[] = [
     package: 'meathill-coding-skills',
     description: {
       zh: '从运营/客户视角对公开网站和配套 CMS 做浏览器人工测试（不是 e2e）。列测试用例、跑真实业务流、记问题、清测试数据，再整理成 WIP / 报告 / GitHub issue。',
-      en: 'Browser-driven manual QA from an operator/client perspective on a live site and its CMS — not e2e. Lists cases, walks real business flows, logs issues, cleans test data, then writes up a WIP / report / GitHub issue.',
+      en: "Manual QA of a live site and its CMS from an operator's view: test cases, real business flows, issue logs, cleanup.",
     },
     tags: ['qa', 'manual-test', 'cms'],
   },
@@ -56,7 +56,7 @@ const SKILLS: Skill[] = [
     package: 'video-skills',
     description: {
       zh: '把直播录像（或任意未剪辑的长视频）处理成可上传 B 站 / YouTube / 小宇宙 的成片：需求澄清 → 音频诊断 → Whisper 转写定位裁剪点 → ffmpeg 管线试制 → 硬件编码 → 输出上传材料。',
-      en: 'Turn a raw livestream recording into a publishable podcast/video cut: requirements → audio diagnostics → Whisper-based cut points → ffmpeg pipeline A/B → hardware encode → upload metadata (title, tags, description, cover prompt).',
+      en: 'Turn a raw livestream recording into a publishable podcast/video cut: plan, transcribe, edit with ffmpeg, encode, package.',
     },
     tags: ['video', 'audio', 'ffmpeg', 'whisper'],
   },

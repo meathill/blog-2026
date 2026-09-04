@@ -35,7 +35,7 @@ const ROOT_METADATA_TEXT: Record<SupportedLocale, RootMetadataText> = {
   en: {
     title: 'Meathill Studio | Full-stack Engineering · Cloudflare · AI Apps',
     description:
-      'Meathill Studio is a solo product and engineering studio operated by Meathill LLC, with 20+ years of full-stack experience across Cloudflare architecture, AI apps and billing, and React Native development.',
+      'Solo studio with 20+ years of full-stack experience, delivering remotely. Cloudflare architecture, AI apps & billing, React Native development.',
     ogDescription:
       'A solo studio with 20+ years of full-stack experience, delivering remotely. Cloudflare, AI apps & billing, cross-platform development.',
     keywords: [

@@ -232,12 +232,76 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  it('should redirect single-segment unknown paths like /img_0226 to /posts/img_0226', async () => {
+  // Issue #11：img_* 是已删除的旧站附件残留 slug（媒体库无对应 media），直接 410，
+  // 不再 301 到 /posts/img_* 转一圈形成 broken redirect。
+  it('should return 410 for legacy attachment slugs like /img_0226', async () => {
     const req = new NextRequest(new URL('/img_0226', BASE_URL));
     const res = await middleware(req);
 
-    expect(res?.status).toBe(301);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/img_0226`);
+    expect(res?.status).toBe(410);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should return 410 for /en/img_0215, /posts/img_0224 and /en/posts/img_0224', async () => {
+    for (const path of ['/en/img_0215', '/posts/img_0224', '/en/posts/img_0224']) {
+      const req = new NextRequest(new URL(path, BASE_URL));
+      const res = await middleware(req);
+
+      expect(res?.status).toBe(410);
+    }
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  // Issue #11：已删除的 honey 旧文（拼写错误的重复文）→ 301 到同主题存活文
+  it('should 301 deleted honey legacy URLs to the surviving phu-quoc article', async () => {
+    const cases: Array<[string, string]> = [
+      ['/honey-moon-in-phu-guoc-vietenam', '/posts/travel/second-time-to-phu-quoc-island'],
+      ['/en/honey-moon-in-phu-guoc-vietenam', '/en/posts/travel/second-time-to-phu-quoc-island'],
+      ['/posts/honey-moon-in-phu-guoc-vietenam', '/posts/travel/second-time-to-phu-quoc-island'],
+      ['/en/posts/honey-moon-in-phu-guoc-vietenam', '/en/posts/travel/second-time-to-phu-quoc-island'],
+    ];
+    for (const [path, target] of cases) {
+      const req = new NextRequest(new URL(path, BASE_URL));
+      const res = await middleware(req);
+
+      expect(res?.status).toBe(301);
+      expect(res?.headers.get('Location')).toBe(`${BASE_URL}${target}`);
+    }
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  // Issue #11：已删除的 wordpressmysql8 旧文（.html / 多段 legacy / posts 内形态）→ 301 到 lnmp 存活文
+  it('should 301 deleted wordpressmysql8 legacy URLs to the surviving lnmp article', async () => {
+    const cases: Array<[string, string]> = [
+      ['/internet/wp/wordpressmysql8.html', '/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
+      ['/internet/wp/wordpressmysql8', '/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
+      ['/posts/internet/wp/wordpressmysql8', '/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
+      ['/en/internet/wp/wordpressmysql8.html', '/en/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
+    ];
+    for (const [path, target] of cases) {
+      const req = new NextRequest(new URL(path, BASE_URL));
+      const res = await middleware(req);
+
+      expect(res?.status).toBe(301);
+      expect(res?.headers.get('Location')).toBe(`${BASE_URL}${target}`);
+    }
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  // Issue #11：已删除的 gitbook 旧文无对等继任页 → 直接 410
+  it('should return 410 for deleted gitbook legacy URLs', async () => {
+    for (const path of [
+      '/gitbook-webpack-for-multi-pages',
+      '/gitbook-webpack-for-multi-pages/',
+      '/en/gitbook-webpack-for-multi-pages',
+      '/posts/gitbook-webpack-for-multi-pages',
+    ]) {
+      const req = new NextRequest(new URL(path, BASE_URL));
+      const res = await middleware(req);
+
+      expect(res?.status).toBe(410);
+    }
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
   // --- 新增用例：attachment_id ---

@@ -118,4 +118,17 @@ describe('processContent', () => {
       '<img src="/cdn-cgi/image/fit=scale-down,format=auto,width=1200,quality=65/https://blog.meathill.com/wp-content/uploads/2018/02/IMG_1853.jpg">';
     expect(processContent(input)).toBe(input);
   });
+
+  // --- Issue #11：主站 /wp-content 被 WAF 403，href 下载/原图链接改指 blog 源 ---
+  it('should rewrite meathill.com/wp-content hrefs to blog origin (WAF 403)', () => {
+    const input =
+      '<a href="/wp-content/uploads/2012/08/list.png">原图</a> ' +
+      '<a href="https://meathill.com/wp-content/uploads/2011/08/msvcr100.dll">下载补丁</a> ' +
+      '<a href="http://meathill.com/wp-content/uploads/2011/08/MG_87421.jpg">照片</a>';
+    expect(processContent(input)).toBe(
+      '<a href="https://blog.meathill.com/wp-content/uploads/2012/08/list.png">原图</a> ' +
+        '<a href="https://blog.meathill.com/wp-content/uploads/2011/08/msvcr100.dll">下载补丁</a> ' +
+        '<a href="https://blog.meathill.com/wp-content/uploads/2011/08/MG_87421.jpg">照片</a>',
+    );
+  });
 });

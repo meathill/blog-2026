@@ -32,6 +32,15 @@
 - [ ] 按 docs/tech-content-plan.md 逐篇写作(建议先写 Hyperdrive 详解、Claude Code Skills 实战、Skills 对比)
 
 
+## Issue #11：Ahrefs crawl 32 broken + 88 过长 meta（2026-09-04）
+
+- [x] 分组：本仓 5 条 meta + broken 链路；tools 站 83 条转交 evertools；2017 大图 0 引用不动；23.5K blocked 保持禁止
+- [x] Meta：`root-metadata.ts` en、`messages/en.json` about、`skills.ts` 3 条 en 改短（≤155）+ `seo-meta-length.test.ts` 守卫
+- [x] Middleware：honey/mysql8 301 到存活文，gitbook/`img_*` 直接 410（覆盖 /en、/posts/、.html 形态）
+- [x] `processContent`：wp-content href 改指 blog 源（修 3 个 403）
+- [x] 全量校验：format / typecheck / 469 测试 / build 通过
+- [ ] 待部署 24h 后手动 Ahrefs Re-crawl，按 `docs/seo-ahrefs-2026-09.md` 验收关单
+
 ## Issue #10: 日语 PDF 编辑词曝光、图片格式转换词矩阵与 Ahrefs 抓取拦截修复 (2026-08-21)
 
 - [x] Part 1: 多语言工具元数据扩展 (`src/lib/tools.ts` 支持 ja/es 多语言回退，补齐 PDF 编辑词与图片转换格式矩阵)

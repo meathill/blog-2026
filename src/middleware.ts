@@ -8,6 +8,46 @@ import { isTechSectionSlug } from '@/lib/tech-sections';
 
 const intlMiddleware = createMiddleware(routing);
 
+// Issue #11：已删除的旧内容。WP 里对应 post 已不存在（线上实测均为 404），
+// 此处在通用 legacy 301 之前拦截，避免产生 301→404 的 broken redirect 链：
+// - 有明确存活继任页的 → 301 到继任 canonical（保留外链权重，Ahrefs 两类报错同清）；
+// - 无对等继任的（gitbook 旧文、img_* 附件残留 slug）→ 直接 410 Gone，
+//   告诉爬虫是刻意删除而非故障。/en 前缀与 /posts/ 单段形态由 prefix 逻辑统一覆盖。
+const LEGACY_REDIRECT_MAP: Record<string, string> = {
+  'honey-moon-in-phu-guoc-vietenam': 'posts/travel/second-time-to-phu-quoc-island',
+  'posts/honey-moon-in-phu-guoc-vietenam': 'posts/travel/second-time-to-phu-quoc-island',
+  'internet/wp/wordpressmysql8': 'posts/serverside/setting-lnmp-on-ubuntu-16-04',
+  'posts/internet/wp/wordpressmysql8': 'posts/serverside/setting-lnmp-on-ubuntu-16-04',
+};
+
+// 精确匹配即 410 的旧 slug（无存活继任页）
+const GONE_SLUGS = new Set(['gitbook-webpack-for-multi-pages', 'posts/gitbook-webpack-for-multi-pages']);
+
+// 旧站附件残留 slug（img_0215~img_0227 等）：媒体库已无对应 media，
+// posts/[...slug] 的 getMediaBySlug 回退必然落空，直接 410 不再 301 转一圈。
+const GONE_ATTACHMENT_PATTERN = /^img_\d+$/i;
+
+function resolveDeletedLegacy(contentSegments: string[]): 'gone' | string | null {
+  const normalized = contentSegments
+    .join('/')
+    .replace(/\.html$/, '')
+    .toLowerCase();
+  if (LEGACY_REDIRECT_MAP[normalized]) {
+    return LEGACY_REDIRECT_MAP[normalized];
+  }
+  if (GONE_SLUGS.has(normalized)) {
+    return 'gone';
+  }
+  const last = contentSegments[contentSegments.length - 1];
+  if (
+    GONE_ATTACHMENT_PATTERN.test(last) &&
+    (contentSegments.length === 1 || (contentSegments.length === 2 && contentSegments[0].toLowerCase() === 'posts'))
+  ) {
+    return 'gone';
+  }
+  return null;
+}
+
 function getLocalePrefix(locale: string) {
   return locale === routing.defaultLocale ? '' : `/${locale}`;
 }
@@ -57,6 +97,20 @@ export default async function middleware(req: NextRequest) {
     }
     // API查不到或出错了，返回 404
     return new NextResponse('Not Found', { status: 404 });
+  }
+
+  // Issue #11 已删除旧内容：先于 .html/legacy 通用分支拦截，
+  // 否则会 301 到 /posts/... 再 404，形成 broken redirect。
+  {
+    const { locale: legacyLocale, content: legacyContent } = getLocaleAndContent(pathname);
+    const legacySegments = legacyContent.split('/').filter(Boolean);
+    const resolved = resolveDeletedLegacy(legacySegments);
+    if (resolved === 'gone') {
+      return new NextResponse('Gone', { status: 410 });
+    }
+    if (resolved) {
+      return NextResponse.redirect(buildLegacyRedirectUrl(req, `${getLocalePrefix(legacyLocale)}/${resolved}`), 301);
+    }
   }
 
   // Handle legacy AMP and .html paths

@@ -12,7 +12,7 @@
 - [ ] 评估搜索方案升级（站内索引/离线索引）
 - [ ] 增加 e2e 冒烟测试（关键页面 + 同步入口）
 - [ ] Ahrefs 遗留（已在各仓库开 issue）：[evertools#1 死链](https://github.com/meathill/evertools/issues/1)、[evertools#2 结构化数据](https://github.com/meathill/evertools/issues/2)、[hsm#1](https://github.com/meathill/hsm/issues/1)、[mui-ad#2](https://github.com/meathill/mui-ad/issues/2)
-- [ ] Ahrefs 复查（7-27 定时爬取后）：确认 hreflang 两大项清零、sitemap /en 条目生效（部署后 24h 内 ISR 自愈）、404/redirect 明显下降。
+- [ ] Ahrefs 复查（重跑后）：broken-redirect 清零、4xx 仅剩预期 410、本仓 meta-long 清零；tools 站 83 条跟进 evertools 侧 issue（见 `docs/seo-ahrefs-2026-09.md`）。
 
 ## P3
 

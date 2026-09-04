@@ -238,6 +238,13 @@ return new Response(transformed.image(), {
 - **无标题旧文**：15 篇数字 slug 旧文标题已由 `scripts/seo/titles-manifest.json` + `apply-titles.php` 补齐（2026-07-22 已执行；脚本幂等，仅填空标题）。
 - **不修的**：tag 页 noindex（by design）、500×3（瞬时）、Slow page、tools/hsm/muiad 子站问题（各自仓库）。
 
+### Issue #11 增补（Ahrefs 全域 crawl 分组治理，2026-09）
+
+- **先分组再修**：Ahrefs 项目是 `*.meathill.com/*` 全域，88 条 meta-long 里约 83 条属 `tools.meathill.com`（evertools 仓库模板问题，转交）；本仓只 5 条（`/en`、`en/about`、3 个 `en/skills/*`），已压到 ≤155，守卫 `tests/unit/seo-meta-length.test.ts`。文章页走 `buildPostDescription` 天然 ≤160，不在此列。
+- **已删旧文的 legacy 入口要在通用 301 之前拦截**：`middleware.ts` 的 `LEGACY_REDIRECT_MAP`（有存活继任→301，如 honey→phu-quoc 文、wordpressmysql8→lnmp 文）、`GONE_SLUGS` + `GONE_ATTACHMENT_PATTERN`（无继任→410，如 gitbook、`img_*` 附件残留），覆盖 `/en`、`/posts/`、`.html` 形态。否则通用分支先 301 到 `/posts/...` 再 404，形成 broken redirect（Ahrefs 单列一类）。
+- **`meathill.com/wp-content` 的 WAF 403 是 by design**：修引用不断链——`processContent` 把主站/相对路径的 uploads **href** 改指边缘放行的 blog 源（img src 早已走 Image Resizing 管线；blog 子域 href 仍解链）。
+- 详见 `docs/seo-ahrefs-2026-09.md`（分组表、转交 evertools 事项、重跑验收清单）。
+
 ### Issue #10 增补（SEO 词矩阵、Ahrefs 抓取放行与 SSG 性能优化，2026-08-21）
 
 - **Ahrefs 抓取拦截修复**：`src/app/robots.ts` 中同时声明 `AhrefsSiteAudit` 和 `AhrefsBot` 允许抓取主站（`allow: '/'`），同时继续禁爬 `/tag/` 与 `/en/tag/` 避免 3000+ noindex 页消耗每月 1 万次免费 crawl credits。

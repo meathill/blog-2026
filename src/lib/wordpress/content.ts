@@ -40,6 +40,14 @@ export function processContent(html: string): string {
         /src="(?:https?:\/\/(?:blog\.|www\.)?meathill\.com)?\/wp-content\/uploads\/([^"]+)"/g,
         `src="${IMAGE_PROXY_PREFIX}/https://blog.meathill.com/wp-content/uploads/$1"`,
       )
+      // <a href> 指向 uploads 的下载/原图链接：meathill.com/wp-content 同样被 WAF 403
+      // （Ahrefs issue #11：list.png、msvcr100.dll、MG_87421.jpg 三个 403），
+      // 改指到边缘放行的 blog 源站（/wp-content/uploads 例外不过 301），保留下载能力。
+      // 注意：blog.meathill.com/wp-content 的 href 仍按旧策略解链，此处只处理主站与站内相对路径。
+      .replace(
+        /href="(?:https?:\/\/(?:www\.)?meathill\.com)?\/wp-content\/uploads\/([^"]+)"/g,
+        'href="https://blog.meathill.com/wp-content/uploads/$1"',
+      )
       // BlockNote 把 code block 里的换行序列化成 <br>，导致 <pre> 里看不到换行，
       // highlight.js 走 textContent 时也会丢行。统一替回 \n。
       .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/g, (match) => match.replace(/<br\s*\/?>/gi, '\n'))
