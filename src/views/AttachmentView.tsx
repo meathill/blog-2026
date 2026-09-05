@@ -19,20 +19,24 @@ export default function AttachmentView({ media, parentPostSlug }: AttachmentView
         <div className="max-w-3xl mx-auto">
           {/* Breadcrumb */}
           <nav className="mb-8 flex items-center text-sm text-[var(--text-muted)]">
-            <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">
+            <Link prefetch={false} href="/" className="hover:text-[var(--text-primary)] transition-colors">
               首页
             </Link>
             <span className="mx-2">/</span>
             {parentPostSlug ? (
               <>
-                <Link href={`/posts/${parentPostSlug}`} className="hover:text-[var(--text-primary)] transition-colors">
+                <Link
+                  prefetch={false}
+                  href={`/posts/${parentPostSlug}`}
+                  className="hover:text-[var(--text-primary)] transition-colors"
+                >
                   返回文章
                 </Link>
                 <span className="mx-2">/</span>
               </>
             ) : (
               <>
-                <Link href="/posts" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link prefetch={false} href="/posts" className="hover:text-[var(--text-primary)] transition-colors">
                   全部文章
                 </Link>
                 <span className="mx-2">/</span>

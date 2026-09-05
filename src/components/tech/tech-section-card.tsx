@@ -21,7 +21,7 @@ export default function TechSectionCard({ section, locale, postsCountLabel }: Te
       </div>
 
       <h3 className="mb-2 text-lg font-bold text-[var(--text-primary)] group-hover:text-gradient transition-all">
-        <Link href={`/tech/${section.slug}`}>
+        <Link prefetch={false} href={`/tech/${section.slug}`}>
           <span className="absolute inset-0" />
           {localize(section.title, locale)}
         </Link>

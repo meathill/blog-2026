@@ -28,7 +28,10 @@ export default function PostCard({
   // category 为分类 slug 时拼规范路径；否则降级 /posts/{slug}（页内会 301 补全）
   const linkHref = isExternal ? slug : category ? `/posts/${category}/${slug}` : `/posts/${slug}`;
   const LinkComponent = isExternal ? 'a' : Link;
-  const linkProps = isExternal ? { href: linkHref, target: '_blank', rel: 'noopener noreferrer' } : { href: linkHref };
+  // issue #12：卡片类低意向链接关闭预取，避免 _rsc 预取放大 Worker 请求数
+  const linkProps = isExternal
+    ? { href: linkHref, target: '_blank', rel: 'noopener noreferrer' }
+    : { href: linkHref, prefetch: false as const };
 
   return (
     <article

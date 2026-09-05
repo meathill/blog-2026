@@ -21,6 +21,7 @@ export default async function RecentPosts() {
             <p className="text-sm text-[var(--text-secondary)]">{t('posts_subtitle')}</p>
           </div>
           <Link
+            prefetch={false}
             href="/posts"
             className="inline-flex items-center gap-2 text-sm font-medium text-amber-600 hover:text-amber-500 transition-all group"
           >

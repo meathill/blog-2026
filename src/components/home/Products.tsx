@@ -23,6 +23,7 @@ export default async function Products() {
           </div>
 
           <Link
+            prefetch={false}
             href="/app"
             className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:text-amber-500 transition-colors"
           >
@@ -38,6 +39,7 @@ export default async function Products() {
 
         <div className="mt-8 text-center sm:hidden">
           <Link
+            prefetch={false}
             href="/app"
             className="inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:text-amber-500 transition-colors"
           >

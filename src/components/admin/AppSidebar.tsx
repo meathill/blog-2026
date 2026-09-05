@@ -52,7 +52,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     render={
-                      <Link href={item.url}>
+                      <Link prefetch={false} href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
@@ -69,7 +69,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               render={
-                <Link href="/">
+                <Link prefetch={false} href="/">
                   <ArrowLeft />
                   <span>Back to Site</span>
                 </Link>

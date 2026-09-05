@@ -110,6 +110,7 @@ export default async function AppListPage({ params, searchParams }: AppListPageP
         {allTags.length > 0 && (
           <div className="mb-8 flex flex-wrap gap-2">
             <Link
+              prefetch={false}
               href="/app"
               className={`rounded-full border px-3 py-1 text-sm transition-colors ${
                 !activeTag
@@ -121,6 +122,7 @@ export default async function AppListPage({ params, searchParams }: AppListPageP
             </Link>
             {allTags.map((tag) => (
               <Link
+                prefetch={false}
                 key={tag.id}
                 href={`/app?tag=${tag.slug}`}
                 className={`rounded-full border px-3 py-1 text-sm transition-colors ${

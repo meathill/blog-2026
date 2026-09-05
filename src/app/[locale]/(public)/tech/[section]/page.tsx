@@ -107,11 +107,11 @@ export default async function TechSectionPage({ params }: PageProps) {
       />
 
       <nav className="mb-8 flex items-center text-sm text-muted-foreground max-w-6xl mx-auto">
-        <Link href="/" className="hover:text-foreground transition-colors">
+        <Link prefetch={false} href="/" className="hover:text-foreground transition-colors">
           {t('home')}
         </Link>
         <span className="mx-2">/</span>
-        <Link href="/tech" className="hover:text-foreground transition-colors">
+        <Link prefetch={false} href="/tech" className="hover:text-foreground transition-colors">
           {t('title')}
         </Link>
         <span className="mx-2">/</span>
@@ -137,6 +137,7 @@ export default async function TechSectionPage({ params }: PageProps) {
           <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">{t('emptyTitle')}</h2>
           <p className="text-sm text-[var(--text-secondary)] mb-6">{t('emptyDescription')}</p>
           <Link
+            prefetch={false}
             href="/posts"
             className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:bg-zinc-800 hover:-translate-y-0.5 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
           >
@@ -150,6 +151,7 @@ export default async function TechSectionPage({ params }: PageProps) {
             <div className="flex flex-wrap justify-center gap-3">
               {otherSections.map((other) => (
                 <Link
+                  prefetch={false}
                   key={other.slug}
                   href={`/tech/${other.slug}`}
                   className="text-sm font-medium text-amber-600 hover:text-amber-500 transition-colors"

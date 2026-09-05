@@ -21,6 +21,7 @@ export default async function Solutions() {
           </div>
 
           <Link
+            prefetch={false}
             href="/solutions"
             className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:text-amber-500 transition-colors"
           >
@@ -36,6 +37,7 @@ export default async function Solutions() {
 
         <div className="mt-8 text-center sm:hidden">
           <Link
+            prefetch={false}
             href="/solutions"
             className="inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:text-amber-500 transition-colors"
           >

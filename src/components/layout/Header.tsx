@@ -24,6 +24,7 @@ export default async function Header({ navItems }: HeaderProps) {
     <>
       <BrandSiteSwitcher currentSiteId="meathill" />
       <Link
+        prefetch={false}
         href="/search"
         className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-all"
         aria-label={t('search')}

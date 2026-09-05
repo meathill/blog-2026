@@ -12,6 +12,7 @@ export function PostListItem({ href, title, dateText, readingTimeText }: PostLis
   return (
     <li>
       <Link
+        prefetch={false}
         href={href}
         className="group block rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] p-4 transition-all card-hover hover:border-[var(--accent)]/30"
       >

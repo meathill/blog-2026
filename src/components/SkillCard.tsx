@@ -18,7 +18,7 @@ export default function SkillCard({ skill, locale }: SkillCardProps) {
         </div>
         <div className="min-w-0">
           <h3 className="font-bold text-lg text-foreground group-hover:text-amber-600 transition-colors truncate">
-            <Link href={`/skills/${skill.slug}`}>
+            <Link prefetch={false} href={`/skills/${skill.slug}`}>
               <span className="absolute inset-0" />
               {skill.name}
             </Link>

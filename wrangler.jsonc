@@ -41,8 +41,9 @@
       "new_sqlite_classes": ["DOQueueHandler"]
     }
   ],
+  // observability 本月额度已用完，暂时关闭以节省 Workers 请求数；需要排障时再手动打开。
   "observability": {
-    "enabled": true
+    "enabled": false
   },
   "placement": {
     "mode": "smart"

@@ -48,7 +48,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
       {/* 缩略图 */}
       {thumbnail && (
         <div className="mb-4 overflow-hidden rounded-t-xl -mx-6 -mt-6 md:-mx-8 md:-mt-8 relative h-48 md:h-64">
-          <Link href={href} className="block w-full h-full relative">
+          <Link prefetch={false} href={href} className="block w-full h-full relative">
             <Image
               src={thumbnail}
               alt={title}
@@ -67,6 +67,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
         <div className="mb-4 flex flex-wrap gap-2">
           {tags.map((tag: any) => (
             <Link
+              prefetch={false}
               key={tag.id}
               href={`/tag/${tag.slug}`}
               className="px-3 py-1 text-xs font-medium rounded-md bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 transition-colors z-10 relative"
@@ -84,7 +85,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
           featured ? 'text-xl md:text-2xl' : 'text-lg',
         )}
       >
-        <Link href={href} className="hover:no-underline text-[var(--text-primary)]">
+        <Link prefetch={false} href={href} className="hover:no-underline text-[var(--text-primary)]">
           {title}
         </Link>
       </h3>
@@ -107,6 +108,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
       {/* 悬浮时显示的阅读更多 */}
       <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
         <Link
+          prefetch={false}
           href={href}
           className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:gap-2 transition-all"
         >

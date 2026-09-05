@@ -247,12 +247,14 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
               ✉️ 聊聊合作
             </a>
             <Link
+              prefetch={false}
               href="/solutions"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all"
             >
               🧩 查看方案
             </Link>
             <Link
+              prefetch={false}
               href="/app"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all"
             >

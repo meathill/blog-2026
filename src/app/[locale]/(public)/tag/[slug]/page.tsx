@@ -67,6 +67,7 @@ export default async function TagPage({ params }: TagPageProps) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Back Link */}
         <Link
+          prefetch={false}
           href="/posts"
           className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-8"
         >

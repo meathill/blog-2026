@@ -96,11 +96,11 @@ export default async function SolutionDetailPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <nav className="mb-8 flex items-center text-sm text-muted-foreground">
-        <Link href="/" className="hover:text-foreground transition-colors">
+        <Link prefetch={false} href="/" className="hover:text-foreground transition-colors">
           {t('home')}
         </Link>
         <span className="mx-2">/</span>
-        <Link href="/solutions" className="hover:text-foreground transition-colors">
+        <Link prefetch={false} href="/solutions" className="hover:text-foreground transition-colors">
           {t('back_to_list')}
         </Link>
         <span className="mx-2">/</span>
@@ -159,6 +159,7 @@ export default async function SolutionDetailPage({ params }: PageProps) {
 
         <div className="mt-16">
           <Link
+            prefetch={false}
             href="/solutions"
             className="inline-flex items-center gap-2 text-sm font-medium text-amber-600 hover:text-amber-500"
           >

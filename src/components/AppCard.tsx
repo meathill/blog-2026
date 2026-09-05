@@ -43,7 +43,7 @@ export default function AppCard({ app, tags = [], i18n }: AppCardProps) {
           )}
           <div>
             <h3 className="font-bold text-lg text-foreground group-hover:text-amber-600 transition-colors">
-              <Link href={`/app/${app.slug}`}>
+              <Link prefetch={false} href={`/app/${app.slug}`}>
                 <span className="absolute inset-0" />
                 {app.name}
               </Link>

@@ -104,6 +104,7 @@ export default async function TechHubPage({ params }: { params: Promise<{ locale
                   <span className="text-gradient">{localize(section.title, locale)}</span>
                 </h2>
                 <Link
+                  prefetch={false}
                   href={`/tech/${section.slug}`}
                   className="inline-flex items-center gap-2 text-sm font-medium text-amber-600 hover:text-amber-500 transition-all group shrink-0"
                 >

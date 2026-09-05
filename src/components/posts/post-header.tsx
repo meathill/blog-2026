@@ -45,6 +45,7 @@ export default function PostHeader({
             <span className="inline-flex flex-wrap items-center gap-2">
               {categories.map((cat) => (
                 <Link
+                  prefetch={false}
                   key={cat.id}
                   href={`/category/${cat.slug}`}
                   className="hover:text-[var(--accent)] transition-colors"
@@ -60,7 +61,12 @@ export default function PostHeader({
             <TagIcon size={14} />
             <span className="inline-flex flex-wrap items-center gap-2">
               {tags.map((tag) => (
-                <Link href={`/tag/${tag.slug}`} key={tag.id} className="hover:text-[var(--accent)] transition-colors">
+                <Link
+                  prefetch={false}
+                  href={`/tag/${tag.slug}`}
+                  key={tag.id}
+                  className="hover:text-[var(--accent)] transition-colors"
+                >
                   {tag.name}
                 </Link>
               ))}

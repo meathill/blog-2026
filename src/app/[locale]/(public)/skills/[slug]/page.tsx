@@ -112,11 +112,11 @@ export default async function SkillDetailPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <nav className="mb-8 flex items-center text-sm text-muted-foreground">
-        <Link href="/" className="hover:text-foreground transition-colors">
+        <Link prefetch={false} href="/" className="hover:text-foreground transition-colors">
           {t('home')}
         </Link>
         <span className="mx-2">/</span>
-        <Link href="/skills" className="hover:text-foreground transition-colors">
+        <Link prefetch={false} href="/skills" className="hover:text-foreground transition-colors">
           Skills
         </Link>
         <span className="mx-2">/</span>
@@ -160,6 +160,7 @@ export default async function SkillDetailPage({ params }: PageProps) {
 
         <div className="mt-16">
           <Link
+            prefetch={false}
             href="/skills"
             className="inline-flex items-center gap-2 text-sm font-medium text-amber-600 hover:text-amber-500"
           >

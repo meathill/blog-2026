@@ -24,7 +24,7 @@ export default async function AdminDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">My Apps</h1>
           <p className="max-w-3xl text-sm text-muted-foreground">管理你的应用和项目。创建新应用后可以在前台展示。</p>
         </div>
-        <Button render={<Link href="/admin/apps/new" />}>
+        <Button render={<Link prefetch={false} href="/admin/apps/new" />}>
           <Plus className="size-4" />
           Create App
         </Button>
@@ -52,7 +52,11 @@ export default async function AdminDashboard() {
                   </div>
                 </div>
                 <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
-                  <Button variant="ghost" size="icon-sm" render={<Link href={`/admin/apps/${app.id}`} />}>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    render={<Link prefetch={false} href={`/admin/apps/${app.id}`} />}
+                  >
                     <PencilIcon className="size-4" />
                   </Button>
                 </div>

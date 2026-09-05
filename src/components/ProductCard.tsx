@@ -35,7 +35,7 @@ export default function ProductCard({ app, tags = [], i18n }: ProductCardProps) 
       {/* 正文 */}
       <div className="flex flex-1 flex-col p-6">
         <h3 className="mb-2 text-xl font-bold text-foreground group-hover:text-amber-600 transition-colors">
-          <Link href={`/app/${app.slug}`}>
+          <Link prefetch={false} href={`/app/${app.slug}`}>
             <span className="absolute inset-0" />
             {app.name}
           </Link>

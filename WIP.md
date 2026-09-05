@@ -51,3 +51,12 @@
 - [x] Part 6: 代码格式化、类型检查与全量构建验证
 - [x] Part 7: 更新开发笔记 `DEV_NOTE.md`
 
+## Issue #12：Next/OpenNext prefetch 加固 + observability 关闭 (2026-09-05)
+
+- [x] 版本：`next@16.3.4` / `@next/third-parties@16.3.4` / `@opennextjs/cloudflare@1.20.4` 已对齐
+- [x] `open-next.config.ts`：`enableCacheInterception: true` → `false`（upstream opennextjs-cloudflare#1348 / opennextjs-aws#1212）
+- [x] `wrangler.jsonc`：`observability.enabled` → `false`（本月额度用完，先关省请求数；排障时手动开）
+- [x] 次要 `<Link>` 全部 `prefetch={false}`（35 个文件，卡片/列表/分页/面包屑/搜索/关于/admin/404 等）；主导航 `HeaderNavLink` 与品牌 `/` 保留预取；`/search` 关预取；`home/PostCard` 的动态 `LinkComponent` 用 `prefetch: false` 的 `linkProps`
+- [x] 全量校验：format / typecheck / 469 测试 / build 通过
+- [ ] 待部署后验证：生产 `_rsc` 不再跑飞 + Worker 请求量回落，再关 issue
+

@@ -14,5 +14,7 @@ export default defineCloudflareConfig({
   }),
   queue: doQueue,
   tagCache: d1TagCache,
-  enableCacheInterception: true,
+  // issue #12：Next 16.3 + OpenNext `_rsc` prefetch loop 会打爆 Worker 请求数，
+  // upstream opennextjs-cloudflare#1348 / opennextjs-aws#1212，cache interception 先保持关闭。
+  enableCacheInterception: false,
 });

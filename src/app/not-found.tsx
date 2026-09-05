@@ -26,6 +26,7 @@ export default function NotFound() {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
+            prefetch={false}
             href="/"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
           >
@@ -33,6 +34,7 @@ export default function NotFound() {
             返回首页
           </Link>
           <Link
+            prefetch={false}
             href="/posts"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass text-[var(--text-primary)] font-semibold hover:bg-[var(--surface-hover)] transition-all"
           >

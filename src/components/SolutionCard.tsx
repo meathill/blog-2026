@@ -18,7 +18,7 @@ export default function SolutionCard({ solution, locale, learnMoreLabel }: Solut
       </div>
 
       <h3 className="mb-2 text-lg font-bold text-foreground group-hover:text-amber-600 transition-colors">
-        <Link href={`/solutions/${solution.slug}`}>
+        <Link prefetch={false} href={`/solutions/${solution.slug}`}>
           <span className="absolute inset-0" />
           {localize(solution.title, locale)}
         </Link>

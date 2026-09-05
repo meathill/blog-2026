@@ -124,7 +124,7 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">博客写作台</h1>
         </div>
-        <Button render={<Link href={`${getLocalePrefix(locale)}/admin/blog/new`} />}>
+        <Button render={<Link prefetch={false} href={`${getLocalePrefix(locale)}/admin/blog/new`} />}>
           <PenSquareIcon className="size-4" />
           新建文章
         </Button>
@@ -157,7 +157,11 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
               {search ? (
                 <>
                   试试其他关键词，或者{' '}
-                  <Link href={clearSearchHref} className="underline underline-offset-4 hover:text-foreground">
+                  <Link
+                    prefetch={false}
+                    href={clearSearchHref}
+                    className="underline underline-offset-4 hover:text-foreground"
+                  >
                     清除搜索条件
                   </Link>
                   查看全部文章。
@@ -187,6 +191,7 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
                   <TableCell>
                     <div className="space-y-1">
                       <Link
+                        prefetch={false}
                         href={buildBlogEditHref(locale, post.id)}
                         className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       >
@@ -241,7 +246,12 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
                           className="size-8"
                           title="预览公开页"
                           render={
-                            <Link href={buildPublicPreviewHref(locale, post.slug)} target="_blank" rel="noreferrer" />
+                            <Link
+                              prefetch={false}
+                              href={buildPublicPreviewHref(locale, post.slug)}
+                              target="_blank"
+                              rel="noreferrer"
+                            />
                           }
                         >
                           <ExternalLinkIcon className="size-4" />
@@ -264,6 +274,7 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
       {result.totalPages > 1 && (
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-xs/5">
           <Link
+            prefetch={false}
             href={previousPageHref}
             aria-disabled={result.page <= 1}
             className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${
@@ -277,6 +288,7 @@ export default async function BlogAdminPage({ params, searchParams }: BlogAdminP
             第 {result.page} / {result.totalPages} 页
           </span>
           <Link
+            prefetch={false}
             href={nextPageHref}
             aria-disabled={result.page >= result.totalPages}
             className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${

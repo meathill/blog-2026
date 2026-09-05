@@ -21,6 +21,7 @@ export default async function TagCloud() {
         <div className="flex flex-wrap justify-center items-center gap-3">
           {tags.map((tag) => (
             <Link
+              prefetch={false}
               key={tag.id}
               href={`/tag/${tag.slug}`}
               className={`

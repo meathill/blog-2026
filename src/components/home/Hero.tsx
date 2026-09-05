@@ -68,6 +68,7 @@ export default async function Hero() {
             <ArrowRightIcon size={18} className="group-hover:translate-x-1 transition-transform" />
           </a>
           <Link
+            prefetch={false}
             href="/solutions"
             className="inline-flex items-center gap-2 rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] px-8 py-4 font-semibold text-[var(--text-primary)] transition-all hover:bg-[var(--surface-hover)]"
           >

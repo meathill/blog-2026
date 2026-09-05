@@ -148,6 +148,7 @@ function SearchResultItem({ query, result }: SearchResultItemProps) {
   return (
     <li>
       <Link
+        prefetch={false}
         href={getSearchResultHref(result)}
         onClick={handleClick}
         className="group block rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] p-5 transition-all card-hover hover:border-[var(--accent)]/30"

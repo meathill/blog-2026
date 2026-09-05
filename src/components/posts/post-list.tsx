@@ -97,6 +97,7 @@ export function PostList({
           <nav className="mt-12 flex items-center justify-center gap-2">
             {currentPage > 1 ? (
               <Link
+                prefetch={false}
                 href={currentPage === 2 ? basePath : `${basePath}/page/${currentPage - 1}`}
                 className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface)] border border-[var(--surface-border)] text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all"
               >
@@ -116,6 +117,7 @@ export function PostList({
 
             {currentPage < totalPages ? (
               <Link
+                prefetch={false}
                 href={`${basePath}/page/${currentPage + 1}`}
                 className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface)] border border-[var(--surface-border)] text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all"
               >

@@ -99,11 +99,11 @@ export default async function AppDetailPage({ params }: PageProps) {
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
       <nav className="mb-8 flex items-center text-sm text-muted-foreground">
-        <Link href="/" className="hover:text-foreground transition-colors">
+        <Link prefetch={false} href="/" className="hover:text-foreground transition-colors">
           {t('home')}
         </Link>
         <span className="mx-2">/</span>
-        <Link href="/app" className="hover:text-foreground transition-colors">
+        <Link prefetch={false} href="/app" className="hover:text-foreground transition-colors">
           Apps
         </Link>
         <span className="mx-2">/</span>
