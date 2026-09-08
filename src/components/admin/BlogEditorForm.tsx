@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import BlogEditorSidebar from '@/components/admin/BlogEditorSidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { routing } from '@/i18n/routing';
+import { buildBlogEditHref, buildPublicPreviewHref } from '@/lib/blog-admin-paths';
 import { parseBlogStringListInput } from '@/lib/blog-post';
 
 interface BlogEditorFormData {
@@ -148,7 +148,7 @@ export default function BlogEditorForm({
 
     if (result.status === 'published') {
       setStatus('published');
-      setPreviewPath(buildPublicPreviewPath(locale, result.slug));
+      setPreviewPath(buildPublicPreviewHref(locale, result.slug));
     }
 
     if (intent === 'save') {
@@ -175,7 +175,7 @@ export default function BlogEditorForm({
     }
 
     if (postId !== result.id) {
-      router.replace(buildAdminEditorPath(locale, result.id));
+      router.replace(buildBlogEditHref(locale, result.id));
     }
   }
 
@@ -381,20 +381,4 @@ function resolveErrorMessage(error: unknown, fallback: string): string {
   }
 
   return error.message || fallback;
-}
-
-function buildAdminEditorPath(locale: string, id: string): string {
-  if (locale === routing.defaultLocale) {
-    return `/admin/blog/${id}`;
-  }
-
-  return `/${locale}/admin/blog/${id}`;
-}
-
-function buildPublicPreviewPath(locale: string, slug: string): string {
-  if (locale === routing.defaultLocale) {
-    return `/posts/${slug}`;
-  }
-
-  return `/${locale}/posts/${slug}`;
 }

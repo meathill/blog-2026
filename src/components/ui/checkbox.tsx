@@ -1,6 +1,7 @@
 'use client';
 
 import { Checkbox as CheckboxPrimitive } from '@base-ui/react/checkbox';
+import { CheckIcon, MinusIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -20,35 +21,9 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
         render={(props, state) => (
           <span {...props}>
             {state.indeterminate ? (
-              <svg
-                className="size-3.5 sm:size-3"
-                fill="none"
-                height="24"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3"
-                viewBox="0 0 24 24"
-                width="24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M5.252 12h13.496" />
-              </svg>
+              <MinusIcon className="size-3.5 sm:size-3" strokeWidth={3} />
             ) : (
-              <svg
-                className="size-3.5 sm:size-3"
-                fill="none"
-                height="24"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3"
-                viewBox="0 0 24 24"
-                width="24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M5.252 12.7 10.2 18.63 18.748 5.37" />
-              </svg>
+              <CheckIcon className="size-3.5 sm:size-3" strokeWidth={3} />
             )}
           </span>
         )}

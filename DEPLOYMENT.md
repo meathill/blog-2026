@@ -63,8 +63,3 @@ pnpm deploy
 ```bash
 pnpm preview
 ```
-
-## 同步任务说明
-
-Notion 同步接口受 `CRON_SECRET` 保护。
-如果接入外部定时任务，请调用 `/api/sync-notion` 并携带对应密钥参数。

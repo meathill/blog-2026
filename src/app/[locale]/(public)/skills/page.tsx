@@ -4,6 +4,7 @@ import SkillCard from '@/components/SkillCard';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { buildItemListJsonLd } from '@/lib/seo/jsonld';
 import { getAllSkills, getSkillGroups } from '@/lib/skills';
+import JsonLd from '@/components/JsonLd';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -64,11 +65,7 @@ export default async function SkillsListPage({ params }: { params: Promise<{ loc
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
-      />
+      <JsonLd data={itemListJsonLd} />
       <div className="text-center max-w-2xl mx-auto mb-16">
         <h1 className="text-responsive-hero mb-6 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
           {t('title')}

@@ -17,7 +17,8 @@
 - Admin 博客编辑器：集成 BlockNote 所见即所得编辑器，支持图文混排与自动保存
 - AI 辅助创作：基于 OpenAI/Gemini 自动生成文章 slug、摘要、标签
 - Open Graph 动态图片：基于 Satori 与边缘图片处理动态生成
-- 后台 Notion 同步：`Notion -> D1 备份 -> WordPress`（遗留功能，目前主推后台编辑器）
+- 后台搜索 + WordPress 老文章导入：`/admin/blog` 支持按标题/Slug/摘要搜索本地 D1 文章；
+  有搜索词时联合搜索 WordPress，展示尚未导入本地的老文章，点「导入并编辑」写入 D1
 - 应用（Apps）管理与标签管理
 
 ## 技术栈
@@ -66,3 +67,7 @@ pnpm deploy
 - `DEV_NOTE.md`：开发中长期约定与关键决策
 - `WIP.md`：当前任务拆解
 - `TODO.md`：长期维护事项
+- `docs/tech-content-plan.md`：`/tech` 频道选题施工图（issue #6）
+- `docs/seo-ahrefs-2026-09.md`：Ahrefs 全域 crawl 分组治理记录（issue #11）
+- `docs/seo-sitemap-cleanup-2026-08.md`：历史 sitemap 清理盘点（issue #7）
+- `docs/blog-draft-*.md`：待发布博文草稿（含 Issue #12 的 `_rsc` prefetch 事故记录）

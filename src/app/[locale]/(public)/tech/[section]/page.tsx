@@ -11,6 +11,7 @@ import { getAllTechSections, getTechSection, localize } from '@/lib/tech';
 import { getTechSectionPosts } from '@/lib/tech-posts';
 import { isTechSectionSlug, TECH_SECTION_SLUGS } from '@/lib/tech-sections';
 import { stripHtml } from '@/lib/wordpress';
+import JsonLd from '@/components/JsonLd';
 
 interface PageProps {
   params: Promise<{ locale: string; section: string }>;
@@ -93,18 +94,8 @@ export default async function TechSectionPage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
-      {itemListJsonLd && (
-        <script
-          type="application/ld+json"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
-        />
-      )}
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      {itemListJsonLd && <JsonLd data={itemListJsonLd} />}
+      <JsonLd data={breadcrumbJsonLd} />
 
       <nav className="mb-8 flex items-center text-sm text-muted-foreground max-w-6xl mx-auto">
         <Link prefetch={false} href="/" className="hover:text-foreground transition-colors">

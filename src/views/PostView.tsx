@@ -25,6 +25,7 @@ import PostBreadcrumb from '@/components/posts/post-breadcrumb';
 import PostHeader from '@/components/posts/post-header';
 import PostFooter from '@/components/posts/post-footer';
 import RelatedPosts from '@/components/posts/related-posts';
+import JsonLd from '@/components/JsonLd';
 
 interface PostViewProps {
   post: WPPost;
@@ -119,23 +120,9 @@ export default async function PostView({ post, locale }: PostViewProps) {
 
   return (
     <div className="min-h-screen pt-24 pb-16">
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      {faqJsonLd && (
-        <script
-          type="application/ld+json"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
-      )}
+      <JsonLd data={articleJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
+      {faqJsonLd && <JsonLd data={faqJsonLd} />}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className={`lg:flex lg:gap-8 ${toc.length === 0 ? 'lg:justify-center' : ''}`}>
           <PostToc items={toc} />

@@ -8,6 +8,7 @@ import RecentPosts from '@/components/home/RecentPosts';
 import ContactCTA from '@/components/home/ContactCTA';
 import { SITE_URL } from '@/lib/constants';
 import { buildOrganizationJsonLd, buildWebSiteJsonLd } from '@/lib/seo/jsonld';
+import JsonLd from '@/components/JsonLd';
 
 export const revalidate = 86400;
 
@@ -37,16 +38,8 @@ export default async function Home({ params }: HomeProps) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
-      />
+      <JsonLd data={organizationJsonLd} />
+      <JsonLd data={webSiteJsonLd} />
       <Hero />
       <ValueStrip />
       <Products />

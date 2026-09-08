@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { routing } from '@/i18n/routing';
+import { buildBlogEditHref, buildPublicPreviewHref, getLocalePrefix } from '@/lib/blog-admin-paths';
 import { searchWordPressPostsNotInD1 } from '@/lib/blog-import';
 
 const PAGE_SIZE = 12;
@@ -53,14 +53,6 @@ function parseSearchParam(search: string | string[] | undefined): string | undef
   return trimmed ? trimmed : undefined;
 }
 
-function getLocalePrefix(locale: string): string {
-  if (locale === routing.defaultLocale) {
-    return '';
-  }
-
-  return `/${locale}`;
-}
-
 function buildPaginationHref(locale: string, page: number, search?: string): string {
   const basePath = `${getLocalePrefix(locale)}/admin/blog`;
   const params = new URLSearchParams();
@@ -74,14 +66,6 @@ function buildPaginationHref(locale: string, page: number, search?: string): str
 
   const queryString = params.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;
-}
-
-function buildPublicPreviewHref(locale: string, slug: string): string {
-  return `${getLocalePrefix(locale)}/posts/${slug}`;
-}
-
-function buildBlogEditHref(locale: string, id: string): string {
-  return `${getLocalePrefix(locale)}/admin/blog/${id}`;
 }
 
 function formatDateTime(date: Date | null, locale: string): string {

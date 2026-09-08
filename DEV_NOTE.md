@@ -10,10 +10,12 @@
   - WordPress（内容主源）
   - D1（后台数据与同步备份）
 
-博文写作与发布有两条链路：
+博文写作与发布链路（2026-07-25 起唯一）：
 
-1. **后台编辑器（推荐）**：使用 `/admin/blog` 内置的 BlockNote 编辑器。文章内容以 Block JSON 格式存储在 D1，同时生成 Markdown/HTML 快照，并同步至 WordPress。
-2. **Notion 同步（遗留）**：`Notion -> D1 备份 -> WordPress`。适用于批量迁移或习惯 Notion 写作的场景。
+1. **后台编辑器**：使用 `/admin/blog` 内置的 BlockNote 编辑器。文章内容以 Block JSON 格式存储在 D1，同时生成 Markdown/HTML 快照，并同步至 WordPress。
+2. ~~**Notion 同步（遗留）**~~：`Notion -> D1 备份 -> WordPress` 已随 `a540fec` 下线（同步接口与模块删除，`/api/sync-notion` 不存在）。
+   `blog_posts` 等表的 `notion_post_backups` 备份表保留不动（历史数据，无迁移删除计划）；
+   `content-processor` 仍兼容 `notion.so/image` 图片 URL（历史正文引用）。
 
 时间规则：
 
@@ -96,11 +98,11 @@ API）。原因：BlockNote 的 `createCodeBlockSpec()` propSchema 写死只有 
 `lazyShikiPlugin`**：它要求显式传 `createHighlighter`，本项目从未配置过，一直是空转 no-op，去掉不算功能
 倒退，也省得引入 shiki 依赖。
 
-- **BlockNote 精确锁定在 `0.51.4`，没跟到 `0.52.0`**：`0.52.0`（发布于同一天）把 `codeBlock` 的
-  `content` 类型从 `"inline"` 改成新引入的 `"plain"`（字符串），官方自己标注「breaking-ish」。这正是
-  fork 的那个块类型，以后升级 BlockNote 到 `0.52+` 时，需要把 `blog-code-block.ts` 的
-  `content`/`parseContent` 从 inline-array 语义迁移到 plain-string 语义，重新对比一遍上游
-  `Code/block.ts` 的改动，不能直接改版本号了事。
+- **BlockNote 已到 `0.52.1`（`a540fec`，2026-07-25），fork 无需迁移**：实测 0.52 的 block `content`
+  类型是 `"inline" | "table" | "none" | "plain"`（见上游 `schema/blocks/internal.d.ts`），`'inline'`
+  仍被完整支持，fork 的 inline-array 语义在 0.52.1 下照常工作（编辑器测试全过）。以后升级仍要
+  重新对比上游 `Code/block.ts`（上游默认 codeBlock 已切 `plain`，fork 保持 `inline` 是有意为之，
+  不要"顺手"改成 `plain`）。
 - 语言 id 直接对齐 highlight.js 自己的语言名（`src/config/code-block-languages.ts` 和
   `src/config/highlight-languages.json`/`CodeHighlight.tsx` 的 `ALIASES` 共用同一套词表），编辑器和
   前端高亮之间不设翻译层。默认语言 key 保留 BlockNote 自己的硬编码值 `'text'`（没有改成
@@ -237,6 +239,35 @@ return new Response(transformed.image(), {
 - **sitemap /en 条目**：`expandEnEntries` 为声明 en alternate 的条目生成 /en 主条目；新增页面记得带 zh/en alternates。
 - **无标题旧文**：15 篇数字 slug 旧文标题已由 `scripts/seo/titles-manifest.json` + `apply-titles.php` 补齐（2026-07-22 已执行；脚本幂等，仅填空标题）。
 - **不修的**：tag 页 noindex（by design）、500×3（瞬时）、Slow page、tools/hsm/muiad 子站问题（各自仓库）。
+
+### 品牌网络（Meathill Studio，2026-08-31，`b1da4d1`）
+
+- Header/Footer/全局样式来自 `meathill-brand` / `meathill-brand-react`（npm 包，母站统一维护）。
+- `src/app/globals.css` 第一行必须是 `@import "meathill-brand-react/styles.css"`（在 tailwindcss 之前，
+  顺序错了品牌变量会被覆盖）。
+- 站点名/组织信息不要再手写：`src/lib/seo/jsonld.ts` 从 `brandCatalog.organization` 取
+  `name`/`id`/`legalName`（`SITE_NAME`、`ORGANIZATION_ID` 均派生）；`Article` 的 `publisher`
+  用 `{ '@id': ORGANIZATION_ID }` 引用，不再内联 Organization 对象。title 模板是
+  `'%s | Meathill Studio'`（`root-metadata.ts`），`DEFAULT_OG_IMAGE.alt` 也是 `Meathill Studio`。
+- 品牌文案变更（改名/换 slogan）先改上游 brand 包发版，再在本仓升版，不要两边各写一份。
+
+### 评论组件版本 pin（2026-09-07，`31d3ba4`）
+
+- `src/components/AwesomeComment.tsx` 从 unpkg 动态加载 `@roudanio/awesome-comment` 的 CSS + ESM，
+  **两处 URL 版本必须同步**（0.10.7 CSS 配 0.12.x JS 会导致输入控件无样式）。TS 声明在
+  `src/types/remote-modules.d.ts` 的 `declare module '<unpkg url>'` 里，升版时三处一起改。
+- 这是运行时外部依赖（unpkg 挂了评论区就挂），属于已知风险，不做自托管（保持与上游更新同步更重要）。
+
+### Issue #12 增补（Next/OpenNext prefetch 加固，2026-09-05，`fea4285`）
+
+- `open-next.config.ts`：`enableCacheInterception: false`（upstream opennextjs-cloudflare#1348 /
+  opennextjs-aws#1212：16.3 下 Cache Interception 会让 `_rsc` prefetch 空转打爆 Worker 请求量）。
+  诊断记录见 `docs/blog-draft-nextjs-opennext-rsc-prefetch.md`（待发布博文草稿，勿删）。
+- `wrangler.jsonc`：`observability.enabled: false`（本月额度用完，先关省请求数；排障时手动开，用完再关）。
+- Link 策略：次要 `<Link>`（卡片/列表/分页/面包屑/搜索/关于/admin/404 等，35 个文件）一律
+  `prefetch={false}`；主导航 `HeaderNavLink` 与品牌 `/` 保留预取。新增页面默认关预取，
+  除非确认是高点击主路径。
+- 版本：`next@16.3.4` / `@next/third-parties@16.3.4` / `@opennextjs/cloudflare@1.20.4` 对齐。
 
 ### Issue #11 增补（Ahrefs 全域 crawl 分组治理，2026-09）
 

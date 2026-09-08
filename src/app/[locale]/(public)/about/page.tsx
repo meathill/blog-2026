@@ -59,7 +59,6 @@ const skills = [
   { category: '移动端', items: ['React Native', 'Expo'] },
 ];
 
-// TODO(用户核对)：以下两个新增里程碑的年份请按实际情况修正
 const timeline = [
   { year: '2006', event: '开始 Web 开发之旅' },
   { year: '2012', event: '转型全栈开发' },

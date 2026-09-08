@@ -7,6 +7,7 @@ import { getAllSolutions, getSolutionBySlug, localize } from '@/lib/solutions';
 import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
 import PostCard from '@/components/PostCard';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
+import JsonLd from '@/components/JsonLd';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -90,11 +91,7 @@ export default async function SolutionDetailPage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <JsonLd data={breadcrumbJsonLd} />
       <nav className="mb-8 flex items-center text-sm text-muted-foreground">
         <Link prefetch={false} href="/" className="hover:text-foreground transition-colors">
           {t('home')}

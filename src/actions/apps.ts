@@ -9,8 +9,8 @@ import {
   revalidateAfterAppMutation,
   setAppTagsCore,
   updateAppCore,
-  type AppStatus,
 } from '@/lib/apps-core';
+import type { AppStatus } from '@/lib/apps-types';
 
 async function checkAuth() {
   const auth = await getAuth();

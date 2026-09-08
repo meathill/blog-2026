@@ -9,6 +9,7 @@ import { buildBreadcrumbJsonLd, buildItemListJsonLd } from '@/lib/seo/jsonld';
 import { getAllTechSections, localize } from '@/lib/tech';
 import { getTechHubPreviews, getTechSectionPosts } from '@/lib/tech-posts';
 import type { TechSectionSlug } from '@/lib/tech-sections';
+import JsonLd from '@/components/JsonLd';
 
 const HUB_PREVIEW_COUNT = 3;
 
@@ -65,16 +66,8 @@ export default async function TechHubPage({ params }: { params: Promise<{ locale
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD 结构化数据
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <JsonLd data={itemListJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
 
       <div className="text-center max-w-2xl mx-auto mb-16">
         <h1 className="text-responsive-hero mb-6 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
