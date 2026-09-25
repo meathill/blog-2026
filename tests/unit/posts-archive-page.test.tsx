@@ -15,6 +15,9 @@ vi.mock('../../src/components/posts/post-list', () => ({
 vi.mock('next/navigation', () => ({
   notFound: vi.fn(),
   redirect: vi.fn(),
+  permanentRedirect: vi.fn(() => {
+    throw new Error('NEXT_REDIRECT');
+  }),
 }));
 
 describe('ArchivePageNum', () => {
@@ -47,22 +50,38 @@ describe('ArchivePageNum', () => {
     expect(result).toBeDefined();
   });
 
-  it('should return notFound for out-of-range archive pages', async () => {
+  it('should permanently redirect out-of-range pages to the last page', async () => {
     (wordpress.getPosts as any).mockResolvedValue({
       posts: [],
       total: 800,
       totalPages: 40,
     });
 
-    await ArchivePageNum({
-      params: Promise.resolve({
-        locale: 'zh',
-        num: '61',
-      }),
-    });
+    await expect(ArchivePageNum({ params: Promise.resolve({ locale: 'zh', num: '61' }) })).rejects.toThrow(
+      'NEXT_REDIRECT',
+    );
 
-    expect(navigation.notFound).toHaveBeenCalled();
+    expect(navigation.permanentRedirect).toHaveBeenCalledWith('/posts/page/40');
     expect(wordpress.getCategories).not.toHaveBeenCalled();
+  });
+
+  it('should permanently redirect out-of-range en pages to /en/posts when total is unknown', async () => {
+    (wordpress.getPosts as any).mockResolvedValue({ posts: [], total: 0, totalPages: 0 });
+
+    await expect(ArchivePageNum({ params: Promise.resolve({ locale: 'en', num: '7' }) })).rejects.toThrow(
+      'NEXT_REDIRECT',
+    );
+
+    expect(navigation.permanentRedirect).toHaveBeenCalledWith('/en/posts');
+  });
+
+  it('should permanently redirect page 1 to /posts', async () => {
+    await expect(ArchivePageNum({ params: Promise.resolve({ locale: 'zh', num: '1' }) })).rejects.toThrow(
+      'NEXT_REDIRECT',
+    );
+
+    expect(navigation.permanentRedirect).toHaveBeenCalledWith('/posts');
+    expect(wordpress.getPosts).not.toHaveBeenCalled();
   });
 
   it('should return notFound for invalid page numbers', async () => {

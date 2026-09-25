@@ -27,7 +27,7 @@ describe('WordPress Posts Module', () => {
 
   describe('getPosts', () => {
     it('should fetch posts with correct parameters', async () => {
-      const mockPosts = [{ id: 1, title: { rendered: 'Test Post' } }];
+      const mockPosts = Array.from({ length: 5 }, (_, i) => ({ id: i + 1, title: { rendered: 'Test Post' } }));
       const mockResponse = {
         ok: true,
         json: async () => mockPosts,
@@ -45,7 +45,7 @@ describe('WordPress Posts Module', () => {
 
       expect(getCloudflareContext).toHaveBeenCalled();
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://mock-wp.com/wp-json/wp/v2/posts?_embed=true&per_page=5&page=1',
+        'https://mock-wp.com/wp-json/wp/v2/posts?_embed=true&per_page=5',
         expect.objectContaining({
           headers: expect.objectContaining({
             'CF-Access-Client-Id': 'mock_id',
@@ -150,6 +150,75 @@ describe('WordPress Posts Module', () => {
 
       const url = (global.fetch as any).mock.calls[0][0];
       expect(url).toContain('per_page=5');
+    });
+
+    // Issue #13：线上 WP 的 X-WP-Total 恒等于本页条数，page>=2 会被 400 拒绝
+    it('should paginate with offset instead of page', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => Array.from({ length: 20 }, (_, i) => ({ id: i })),
+        headers: { get: (key: string) => (key === 'X-WP-Total' ? '800' : '40') },
+      });
+
+      const result = await getPosts({ page: 3, perPage: 20, embed: false });
+
+      const url = (global.fetch as any).mock.calls[0][0];
+      expect(url).toContain('offset=40');
+      expect(url).not.toContain('page=3');
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(result.total).toBe(800);
+      expect(result.totalPages).toBe(40);
+    });
+
+    it('should count real total when X-WP-Total only reflects the current page', async () => {
+      const page = (n: number) => ({
+        ok: true,
+        json: async () => Array.from({ length: n }, (_, i) => ({ id: i })),
+        headers: { get: (key: string) => (key === 'X-WP-Total' ? String(n) : '1') },
+      });
+      (global.fetch as any)
+        .mockResolvedValueOnce(page(20)) // 列表页本身
+        .mockResolvedValueOnce(page(100)) // 计数扫描 offset=20
+        .mockResolvedValueOnce(page(37)); // 计数扫描 offset=120，未满即结束
+
+      const result = await getPosts({ perPage: 20, embed: false });
+
+      const calls = (global.fetch as any).mock.calls.map((c: any[]) => c[0]);
+      expect(calls[1]).toContain('_fields=id');
+      expect(calls[1]).toContain('per_page=100');
+      expect(calls[1]).toContain('offset=20');
+      expect(calls[2]).toContain('offset=120');
+      expect(result.total).toBe(157);
+      expect(result.totalPages).toBe(8);
+    });
+
+    it('should derive total from a partial last page without extra requests', async () => {
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => Array.from({ length: 7 }, (_, i) => ({ id: i })),
+        headers: { get: () => '7' },
+      });
+
+      const result = await getPosts({ page: 8, perPage: 20, embed: false });
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(result.total).toBe(147);
+      expect(result.totalPages).toBe(8);
+    });
+
+    it('should keep filters when counting', async () => {
+      const page = (n: number) => ({
+        ok: true,
+        json: async () => Array.from({ length: n }, (_, i) => ({ id: i })),
+        headers: { get: (key: string) => (key === 'X-WP-Total' ? String(n) : '1') },
+      });
+      (global.fetch as any).mockResolvedValueOnce(page(50)).mockResolvedValueOnce(page(33));
+
+      const result = await getPosts({ categories: [9], perPage: 50 });
+
+      expect((global.fetch as any).mock.calls[1][0]).toContain('categories=9');
+      expect(result.total).toBe(83);
+      expect(result.totalPages).toBe(2);
     });
 
     it('should return an empty result without fetching when slug is an empty array', async () => {

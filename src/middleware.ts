@@ -18,6 +18,14 @@ const LEGACY_REDIRECT_MAP: Record<string, string> = {
   'posts/honey-moon-in-phu-guoc-vietenam': 'posts/travel/second-time-to-phu-quoc-island',
   'internet/wp/wordpressmysql8': 'posts/serverside/setting-lnmp-on-ubuntu-16-04',
   'posts/internet/wp/wordpressmysql8': 'posts/serverside/setting-lnmp-on-ubuntu-16-04',
+  // Issue #13：slug 改过（development → develop）且补了分类
+  '2024-how-to-setup-react-native-development-environment-in-china-mainland':
+    'posts/app/2024-how-to-setup-react-native-develop-environment-in-china-mainland',
+  'posts/2024-how-to-setup-react-native-development-environment-in-china-mainland':
+    'posts/app/2024-how-to-setup-react-native-develop-environment-in-china-mainland',
+  // Issue #13：外链把 err 写成了 error，实际文章 slug 是 ...-err_blocked_by_client
+  'posts/chrome/chrome-extension-sso-fix-error_blocked_by_client':
+    'posts/chrome/chrome-extension-sso-fix-err_blocked_by_client',
 };
 
 // 精确匹配即 410 的旧 slug（无存活继任页）
@@ -111,6 +119,12 @@ export default async function middleware(req: NextRequest) {
     if (resolved) {
       return NextResponse.redirect(buildLegacyRedirectUrl(req, `${getLocalePrefix(legacyLocale)}/${resolved}`), 301);
     }
+  }
+
+  // Issue #13：/posts/page/1 的 canonical 是 /posts，middleware 直接 301（页面组件只能给 308）
+  if (/^\/(?:(zh|en)\/)?posts\/page\/1$/.test(pathname)) {
+    const pageOneLocale = pathname.startsWith('/en/') ? 'en' : routing.defaultLocale;
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `${getLocalePrefix(pageOneLocale)}/posts`), 301);
   }
 
   // Handle legacy AMP and .html paths

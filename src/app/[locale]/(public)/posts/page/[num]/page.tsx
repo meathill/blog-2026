@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getPosts, getCategories } from '@/lib/wordpress';
 import { PostList } from '@/components/posts/post-list';
@@ -44,16 +44,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ArchivePageNum({ params }: PageProps) {
-  const { num } = await params;
+  const { locale, num } = await params;
   const currentPage = parseInt(num, 10);
+  const postsPath = locale === 'en' ? '/en/posts' : '/posts';
 
   if (isNaN(currentPage) || currentPage < 1) {
     return notFound();
   }
 
-  // 第 1 页应该重定向到 /posts
+  // 第 1 页的 canonical 是 /posts（middleware 已 301，这里兜住直接渲染的情况）
   if (currentPage === 1) {
-    return notFound();
+    permanentRedirect(postsPath);
   }
 
   const { posts, total, totalPages } = await getPosts({
@@ -61,8 +62,9 @@ export default async function ArchivePageNum({ params }: PageProps) {
     perPage: POSTS_PER_PAGE,
   });
 
+  // 超出范围：跳最后一页（或列表首页），不给爬虫硬 404
   if (currentPage > totalPages) {
-    return notFound();
+    permanentRedirect(totalPages > 1 ? `${postsPath}/page/${totalPages}` : postsPath);
   }
 
   const categories = await getCategories();

@@ -3,18 +3,79 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { wpFetch, getAccessHeaders, getBasicAuthHeader } from './client';
 import { WPPost } from './types';
 
+// Issue #13：线上 WP 的 found_posts 失真——X-WP-Total 恒等于「本页返回条数」、X-WP-TotalPages 恒为 1，
+// 导致 `page>=2` 被 WP 以 rest_post_invalid_page_number（400）拒绝，列表分页、sitemap 全部截断在第一页。
+// 对策：
+// 1. 翻页一律用 `offset`（此时 WP 内部 paged=1，不会触发页码越界校验），数据本身总能取到；
+// 2. 仅当「本页满载且 header 声称后面没有了」时才不信 header，用 `_fields=id` 从本页之后往下数出真实总数。
+//    WP 恢复正常后 header 可信，该分支不会触发。
+const COUNT_SCAN_PAGE_SIZE = 100;
+const COUNT_SCAN_MAX_REQUESTS = 50;
+
+type PostsFilter = {
+  categories?: number[];
+  tags?: number[];
+  author?: number;
+  search?: string;
+  slug?: string[];
+};
+
+function applyFilter(searchParams: URLSearchParams, filter: PostsFilter) {
+  if (filter.slug?.length) {
+    searchParams.set('slug', filter.slug.join(','));
+  }
+  if (filter.categories?.length) {
+    searchParams.set('categories', filter.categories.join(','));
+  }
+  if (filter.tags?.length) {
+    searchParams.set('tags', filter.tags.join(','));
+  }
+  if (filter.author) {
+    searchParams.set('author', String(filter.author));
+  }
+  if (filter.search) {
+    searchParams.set('search', filter.search);
+  }
+}
+
+async function countPostsFrom(
+  apiUrl: string,
+  headers: HeadersInit,
+  filter: PostsFilter,
+  startOffset: number,
+): Promise<number> {
+  let offset = startOffset;
+  for (let i = 0; i < COUNT_SCAN_MAX_REQUESTS; i++) {
+    const searchParams = new URLSearchParams();
+    searchParams.set('_fields', 'id');
+    applyFilter(searchParams, filter);
+    searchParams.set('per_page', String(COUNT_SCAN_PAGE_SIZE));
+    searchParams.set('offset', String(offset));
+    const response = await fetch(`${apiUrl}/posts?${searchParams}`, {
+      headers,
+      next: { revalidate: 300 },
+    });
+    if (!response.ok) {
+      break;
+    }
+    const ids: unknown[] = await response.json();
+    offset += ids.length;
+    if (ids.length < COUNT_SCAN_PAGE_SIZE) {
+      break;
+    }
+  }
+  return offset;
+}
+
 export const getPosts = cache(
-  async (params?: {
-    page?: number;
-    perPage?: number;
-    categories?: number[];
-    tags?: number[];
-    author?: number;
-    search?: string;
-    embed?: boolean;
-    fields?: string[];
-    slug?: string[];
-  }): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
+  async (
+    params?: PostsFilter & {
+      page?: number;
+      perPage?: number;
+      embed?: boolean;
+      fields?: string[];
+    },
+  ): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
     // 显式传入空数组即视为白名单为空，直接返回空结果，不发请求
     if (params?.slug && params.slug.length === 0) {
       return { posts: [], total: 0, totalPages: 0 };
@@ -22,6 +83,13 @@ export const getPosts = cache(
 
     const searchParams = new URLSearchParams();
     const { embed = true, fields } = params || {};
+    const filter: PostsFilter = {
+      categories: params?.categories,
+      tags: params?.tags,
+      author: params?.author,
+      search: params?.search,
+      slug: params?.slug,
+    };
 
     if (embed) {
       searchParams.set('_embed', 'true');
@@ -29,25 +97,15 @@ export const getPosts = cache(
     if (fields && fields.length > 0) {
       searchParams.set('_fields', fields.join(','));
     }
-    if (params?.slug?.length) {
-      searchParams.set('slug', params.slug.join(','));
-    }
     // 未显式传 perPage 时，按 slug 数量拉取（上限 100，WP per_page 最大值），避免默认分页截断白名单
     const defaultPerPage = params?.slug?.length ? Math.min(params.slug.length, 100) : 10;
-    searchParams.set('per_page', String(params?.perPage || defaultPerPage));
-    searchParams.set('page', String(params?.page || 1));
-
-    if (params?.categories?.length) {
-      searchParams.set('categories', params.categories.join(','));
-    }
-    if (params?.tags?.length) {
-      searchParams.set('tags', params.tags.join(','));
-    }
-    if (params?.author) {
-      searchParams.set('author', String(params.author));
-    }
-    if (params?.search) {
-      searchParams.set('search', params.search);
+    const perPage = params?.perPage || defaultPerPage;
+    const page = params?.page && params.page > 1 ? params.page : 1;
+    const offset = (page - 1) * perPage;
+    applyFilter(searchParams, filter);
+    searchParams.set('per_page', String(perPage));
+    if (offset > 0) {
+      searchParams.set('offset', String(offset));
     }
 
     const { env } = await getCloudflareContext({ async: true });
@@ -61,9 +119,7 @@ export const getPosts = cache(
 
     if (!response.ok) {
       if (response.status === 400) {
-        const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
-        const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
-        return { posts: [], total, totalPages };
+        return { posts: [], total: 0, totalPages: 0 };
       }
       const text = await response.text();
       console.error('[WP API] Error Body:', text);
@@ -71,10 +127,18 @@ export const getPosts = cache(
     }
 
     const posts: WPPost[] = await response.json();
-    const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
-    const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
+    let total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
+    const loaded = offset + posts.length;
 
-    return { posts, total, totalPages };
+    if (posts.length > 0 && posts.length < perPage) {
+      // 未满载即最后一页，总数可精确得出
+      total = loaded;
+    } else if (posts.length === perPage && total <= loaded) {
+      // 满载但 header 声称没有更多：header 不可信，往后数
+      total = await countPostsFrom(env.WORDPRESS_API_URL, headers, filter, loaded);
+    }
+
+    return { posts, total, totalPages: total > 0 ? Math.ceil(total / perPage) : 0 };
   },
 );
 
@@ -114,67 +178,13 @@ export async function getPostById(id: number, options?: RequestInit): Promise<WP
 }
 
 export const getPostsByCategory = cache(
-  async (
-    categoryId: number,
-    page = 1,
-    perPage = 20,
-  ): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
-    const { env } = await getCloudflareContext({ async: true });
-    const headers = getAccessHeaders(env);
-    const url = `${env.WORDPRESS_API_URL}/posts?categories=${categoryId}&page=${page}&per_page=${perPage}&_embed=true`;
-
-    const response = await fetch(url, {
-      headers,
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      if (response.status === 400) {
-        const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
-        const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
-        return { posts: [], total, totalPages };
-      }
-      const text = await response.text();
-      console.error('[WP API] Error Body:', text);
-      throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
-    }
-
-    const posts: WPPost[] = await response.json();
-    const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
-    const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
-
-    return { posts, total, totalPages };
-  },
+  async (categoryId: number, page = 1, perPage = 20): Promise<{ posts: WPPost[]; total: number; totalPages: number }> =>
+    getPosts({ categories: [categoryId], page, perPage }),
 );
 
 export const getPostsByTag = cache(
-  async (tagId: number, page = 1, perPage = 20): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
-    const { env } = await getCloudflareContext({ async: true });
-    const headers = getAccessHeaders(env);
-    const url = `${env.WORDPRESS_API_URL}/posts?tags=${tagId}&page=${page}&per_page=${perPage}&_embed=true`;
-
-    const response = await fetch(url, {
-      headers,
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      if (response.status === 400) {
-        const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
-        const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
-        return { posts: [], total, totalPages };
-      }
-      const text = await response.text();
-      console.error('[WP API] Error Body:', text);
-      throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
-    }
-
-    const posts: WPPost[] = await response.json();
-    const total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
-    const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
-
-    return { posts, total, totalPages };
-  },
+  async (tagId: number, page = 1, perPage = 20): Promise<{ posts: WPPost[]; total: number; totalPages: number }> =>
+    getPosts({ tags: [tagId], page, perPage }),
 );
 
 export async function createPost(env: CloudflareEnv, postData: any): Promise<WPPost> {

@@ -304,6 +304,49 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
+  // Issue #13：两条 GSC 旧文死链 → 301 到现存文章
+  it('should 301 issue #13 legacy article URLs to their live successors', async () => {
+    const rn = '/posts/app/2024-how-to-setup-react-native-develop-environment-in-china-mainland';
+    const sso = '/posts/chrome/chrome-extension-sso-fix-err_blocked_by_client';
+    const cases: Array<[string, string]> = [
+      ['/posts/2024-how-to-setup-react-native-development-environment-in-china-mainland', rn],
+      ['/2024-how-to-setup-react-native-development-environment-in-china-mainland', rn],
+      ['/en/posts/2024-how-to-setup-react-native-development-environment-in-china-mainland', `/en${rn}`],
+      ['/en/posts/chrome/chrome-extension-sso-fix-error_blocked_by_client', `/en${sso}`],
+      ['/posts/chrome/chrome-extension-sso-fix-error_blocked_by_client', sso],
+    ];
+    for (const [path, target] of cases) {
+      const res = await middleware(new NextRequest(new URL(path, BASE_URL)));
+
+      expect(res?.status).toBe(301);
+      expect(res?.headers.get('Location')).toBe(`${BASE_URL}${target}`);
+    }
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  // Issue #13：/posts/page/1 → 301 /posts
+  it('should 301 /posts/page/1 to /posts (with locale prefix)', async () => {
+    const cases: Array<[string, string]> = [
+      ['/posts/page/1', '/posts'],
+      ['/zh/posts/page/1', '/posts'],
+      ['/en/posts/page/1', '/en/posts'],
+    ];
+    for (const [path, target] of cases) {
+      const res = await middleware(new NextRequest(new URL(path, BASE_URL)));
+
+      expect(res?.status).toBe(301);
+      expect(res?.headers.get('Location')).toBe(`${BASE_URL}${target}`);
+    }
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should pass /posts/page/2 and /posts/page/10 through to intl middleware', async () => {
+    for (const path of ['/posts/page/2', '/posts/page/10', '/en/posts/page/12']) {
+      await middleware(new NextRequest(new URL(path, BASE_URL)));
+    }
+    expect(mockIntlMiddleware).toHaveBeenCalledTimes(3);
+  });
+
   // --- 新增用例：attachment_id ---
 
   it('should return 404 for ?attachment_id when fetch fails', async () => {

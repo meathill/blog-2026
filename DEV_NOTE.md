@@ -423,3 +423,9 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 - Worker 每次 deploy 会换 build id → ISR 缓存整体失效 → 部署后有一波回源/RU 尖峰;
   wp-json 边缘缓存(24h)能吸收大部分,属预期现象。
 
+
+### WP REST 分页：X-WP-Total 失真（Issue #13）
+
+线上 WP 的 `found_posts` 不可信：`X-WP-Total` 恒等于本页返回条数、`X-WP-TotalPages` 恒为 1，于是 `page>=2` 被 WP 以 `rest_post_invalid_page_number`（400）拒绝——`/posts/page/N`、分类/标签第 2 页、sitemap（只剩最新 100 篇）全部截断。
+
+决策：`getPosts` 翻页一律用 `offset`（WP 内部 paged=1，不触发越界校验）；仅在「本页满载且 header 声称没有更多」时用 `_fields=id&per_page=100&offset=…` 往后数出真实总数。`getPostsByCategory/ByTag` 统一委托给 `getPosts`。WP 端修好 FOUND_ROWS 后 header 可信，计数分支自然不再触发。
