@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { unstable_cache } from 'next/cache';
 import { getPosts, getCategories } from '@/lib/wordpress';
 import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
@@ -6,7 +7,12 @@ import { eq } from 'drizzle-orm';
 import { getAllSkills } from '@/lib/skills';
 import { TECH_SECTION_SLUGS } from '@/lib/tech-sections';
 
-export const revalidate = 86400; // 1 day
+// ISR 改造（2026-09-27）：sitemap 不在构建期生成（构建期 0 次 WP 请求），改为请求时生成。
+// 无动态段的 metadata route 只要声明 revalidate 就会在 build 时预渲染，所以这里用 force-dynamic，
+// 整份结果放进 unstable_cache（同样落在 OpenNext 增量缓存 R2），命中时 0 次 WP/D1 请求。
+// 注意 unstable_cache 以 JSON 序列化：lastModified 命中时是 ISO 字符串，Next 序列化 sitemap 时两者都接受。
+export const dynamic = 'force-dynamic';
+const SITEMAP_REVALIDATE_SECONDS = 3600;
 
 function safeDate(date: unknown): Date {
   const d = date instanceof Date ? date : new Date(date as string);
@@ -30,7 +36,7 @@ function expandEnEntries(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap 
   });
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://meathill.com';
   // 静态页面
   const staticPages: MetadataRoute.Sitemap = [
@@ -152,10 +158,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 获取所有文章
   let postPages: MetadataRoute.Sitemap = [];
   try {
+    // 只有第一页要准确 totalPages（Issue #13：X-WP-Total 失真），后续页各一次请求
     const firstPage = await getPosts({
       perPage: 100,
       embed: false,
       fields: ['slug', 'date', 'modified', 'categories'],
+      withTotal: true,
     });
     const allPostsMap = new Map();
     firstPage.posts.forEach((post) => allPostsMap.set(post.slug, post));
@@ -249,4 +257,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   return expandEnEntries([...staticPages, ...postPages, ...categoryPages, ...appPages, ...skillPages]);
+}
+
+const getCachedSitemap = unstable_cache(buildSitemap, ['sitemap', 'v1'], {
+  revalidate: SITEMAP_REVALIDATE_SECONDS,
+  tags: ['sitemap'],
+});
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  return getCachedSitemap();
 }

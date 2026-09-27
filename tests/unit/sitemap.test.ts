@@ -28,6 +28,11 @@ vi.mock('@/lib/skills', () => ({
   getAllSkills: vi.fn().mockReturnValue([{ slug: 'react' }]),
 }));
 
+// unstable_cache 在 Next 运行时之外直接透传（缓存行为由 OpenNext 增量缓存负责）
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...args: any[]) => any) => fn,
+}));
+
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn(),
 }));
@@ -185,6 +190,15 @@ describe('Sitemap Generator', () => {
 
     // Check apps
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/app/app-1` })]));
+  });
+
+  // Issue #13 构建超时回归：只有第一页需要准确总数，后续页不应再触发计数
+  it('should request an accurate total only for the first posts page', async () => {
+    await sitemap();
+
+    const calls = mockGetPosts.mock.calls.map((c) => c[0]);
+    expect(calls[0]).toEqual(expect.objectContaining({ perPage: 100, withTotal: true }));
+    expect(calls.slice(1).every((params) => !params.withTotal)).toBe(true);
   });
 
   it('should handle WordPress API errors gracefully (getPosts failure)', async () => {

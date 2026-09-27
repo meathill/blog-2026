@@ -291,7 +291,7 @@ return new Response(transformed.image(), {
 ### Issue #10 增补（SEO 词矩阵、Ahrefs 抓取放行与 SSG 性能优化，2026-08-21）
 
 - **Ahrefs 抓取拦截修复**：`src/app/robots.ts` 中同时声明 `AhrefsSiteAudit` 和 `AhrefsBot` 允许抓取主站（`allow: '/'`），同时继续禁爬 `/tag/` 与 `/en/tag/` 避免 3000+ noindex 页消耗每月 1 万次免费 crawl credits。
-- **文章页 SSG 预渲染（降低 TTFB/FCP）**：`src/app/[locale]/(public)/posts/[...slug]/page.tsx` 导出 `generateStaticParams`，构建期预先拉取全部公开文章为 `zh` 与 `en` 生成静态页面。配合 OpenNext R2 regional cache 与 `revalidate = 86400`，首屏未命中时的冷启动回源时延从 1.8s+ 降低为边缘直接命中。
+- ~~**文章页 SSG 预渲染（降低 TTFB/FCP）**~~：已被「全站 ISR（构建期零预渲染）」取代（2026-09-27）。实测当时根 layout 调 `getLocale()` 读请求头，文章页其实一直是动态渲染，SSG/ISR 页面缓存从未生效。
 - **对比文章与富文本表格**：`src/app/post-content.css` 中为 `.wp-block-table` 和 `prose table` 增加了横向自适应滚动容器、边框/斑马纹及深色模式样式，提升 Vercel vs Cloudflare 对比文章在移动端与宽屏下的阅读体验与富文本表现。
 - **多语言工具矩阵与分仓约定**：
   - 工具独立站代码位于 `../evertools` 仓库（部署在 `tools.meathill.com`），工具本身的交互与单页 SEO 由其独立维护。
@@ -429,3 +429,23 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 线上 WP 的 `found_posts` 不可信：`X-WP-Total` 恒等于本页返回条数、`X-WP-TotalPages` 恒为 1，于是 `page>=2` 被 WP 以 `rest_post_invalid_page_number`（400）拒绝——`/posts/page/N`、分类/标签第 2 页、sitemap（只剩最新 100 篇）全部截断。
 
 决策：`getPosts` 翻页一律用 `offset`（WP 内部 paged=1，不触发越界校验）；仅在「本页满载且 header 声称没有更多」时用 `_fields=id&per_page=100&offset=…` 往后数出真实总数。`getPostsByCategory/ByTag` 统一委托给 `getPosts`。WP 端修好 FOUND_ROWS 后 header 可信，计数分支自然不再触发。
+
+构建超时回归（bcafe36 部署失败，2026-09-27）：计数原本对所有「满载」调用生效，文章详情页的相关文章（`perPage: 6`，满载 + header 失真）每页都触发扫描；同时 `posts/[...slug]` 的 `generateStaticParams` 拿到真实 totalPages 后从 100 篇变成全量（1630 页），叠加 WP 慢请求，62 个详情页超过 60s/页上限。修正：
+
+- `getPosts` 新增 `withTotal`（默认 false）：不传时只发一次请求，total 取 header（未满载页可零成本精确）；只有 `/posts`、`/posts/page/N`、作者页、分类/标签归档（`getPostsByCategory/ByTag` 第 4 个参数）和 sitemap 第一页传 `true`。相关文章、首页最新、solutions/app/tech 等「只要 N 篇」的调用不要传。
+- 计数从 offset 0 扫 `_fields=id`，按「API 地址 + 过滤条件」进程内缓存 5 分钟（与 fetch revalidate 对齐），并发共享 promise、失败不缓存；WP 查询不区分语言，所以 zh/en 共用一份。
+- 详情页不再预渲染，见下一节「全站 ISR」。
+- 顺带修正：越界空页（`/posts/page/999`）不能用 offset 当总数下限，否则 totalPages 变成 999 → 308 到 998 → … 重定向链；`withTotal` 时越界空页同样走计数，正确 308 到最后一页。
+
+### 全站 ISR：构建期零预渲染、零 WP 请求（2026-09-27）
+
+背景：bcafe36 构建失败后复查发现，本地用 mock WP（瞬时响应）预渲染 200 篇文章也会卡死——WP fetch 在 Next 内部挂住、根本没发到网络，60 篇则正常；而且根 layout 的 `getLocale()`（读 middleware 写的请求头）让**所有页面都是动态渲染**（响应 `Cache-Control: private, no-store`、无 `x-nextjs-cache`），只有 fetch 数据缓存在起作用。决策：构建期什么都不预渲染，页面全部按需 ISR。
+
+- **`<html>/<body>` 挪到 `app/[locale]/layout.tsx`**：locale 取自 params 并 `setRequestLocale(locale)`；`app/layout.tsx` 只透传 children（**不要**在里面调 `getLocale()/getMessages()/headers()`，否则全站退回动态渲染）。`app/not-found.tsx` 自带 `<html>/<body>`（[locale] 段外的 404），`app/[locale]/not-found.tsx` 处理段内 `notFound()`，内容共用 `components/NotFoundContent.tsx`。
+- **公开页面**（`[locale]/(public)` 下除 search / app / app/[slug] / login 外的所有 page）：`generateStaticParams() { return []; }` + 页面入口 `setRequestLocale(locale)`；`(public)/layout.tsx` 也注入（Header/Footer 的 `getTranslations()` 不带 locale）。build 表里显示为 `●` 但 0 条路径；首个请求渲染后写 R2 增量缓存，之后 `x-nextjs-cache: HIT`。
+- **revalidate 实际值**：页面 revalidate 取「段配置」与「本次渲染里 fetch / unstable_cache 的最小值」——WP fetch 是 300s，所以文章/归档/首页实际 `s-maxage=300`；只读 D1 导航缓存的静态页（about/skills/solutions）是 900s。过期后 stale-while-revalidate 后台重建。
+- **保持动态**：search（searchParams）、app 与 app/[slug]（显式 force-dynamic）、login、admin、api、feed。新增公开页面默认按 ISR 写法；需要动态的加进 `tests/unit/isr-config.test.ts` 的 `DYNAMIC_PAGES` 白名单。
+- **sitemap.xml**：`force-dynamic` + 整份结果 `unstable_cache`（1h，tag `sitemap`）。无动态段的 metadata route 只要声明 revalidate 就会在 build 预渲染，所以不能用 `revalidate`。命中时 0 次 WP/D1。
+- **测试桩**：`vitest.setup.ts` 统一把 `next-intl/server` 的 `setRequestLocale` 桩掉（jsdom 下解析到客户端桩会直接抛错）；单个测试文件自行 mock `next-intl/server` 时要自带 `setRequestLocale`。
+- **代价**：部署换 build id 后缓存全冷，每个页面第一个访客（含爬虫）要等一次完整渲染（WP 往返 2~13 次，归档/作者页首访会触发一次计数扫描）。
+- **本地验证方法**：mock WP + `opennextjs-cloudflare build` + `populateCache local` + `wrangler dev`，同一 URL 连打两次看 `x-nextjs-cache: MISS → HIT`。注意 curl 时带 `Host: localhost:<port>`，否则 host 不一致会被 OpenNext 当成外部 rewrite（中文默认语言路径会走一次自我代理并跟随重定向），结果失真。

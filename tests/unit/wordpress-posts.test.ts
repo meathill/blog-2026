@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getPosts, getPost, getPostById, createPost } from '../../src/lib/wordpress/posts';
+import {
+  getPosts,
+  getPost,
+  getPostById,
+  createPost,
+  getPostsByCategory,
+  getPostsByTag,
+  __resetPostCountCache,
+} from '../../src/lib/wordpress/posts';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 // Mock Cloudflare Env
@@ -18,6 +26,7 @@ vi.mock('@opennextjs/cloudflare', () => ({
 describe('WordPress Posts Module', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    __resetPostCountCache();
     (getCloudflareContext as any).mockResolvedValue({
       env,
     });
@@ -170,24 +179,26 @@ describe('WordPress Posts Module', () => {
       expect(result.totalPages).toBe(40);
     });
 
-    it('should count real total when X-WP-Total only reflects the current page', async () => {
-      const page = (n: number) => ({
-        ok: true,
-        json: async () => Array.from({ length: n }, (_, i) => ({ id: i })),
-        headers: { get: (key: string) => (key === 'X-WP-Total' ? String(n) : '1') },
-      });
-      (global.fetch as any)
-        .mockResolvedValueOnce(page(20)) // 列表页本身
-        .mockResolvedValueOnce(page(100)) // 计数扫描 offset=20
-        .mockResolvedValueOnce(page(37)); // 计数扫描 offset=120，未满即结束
+    const brokenPage = (n: number) => ({
+      ok: true,
+      json: async () => Array.from({ length: n }, (_, i) => ({ id: i })),
+      headers: { get: (key: string) => (key === 'X-WP-Total' ? String(n) : '1') },
+    });
 
-      const result = await getPosts({ perPage: 20, embed: false });
+    it('should count real total when withTotal is set and X-WP-Total only reflects the current page', async () => {
+      (global.fetch as any)
+        .mockResolvedValueOnce(brokenPage(20)) // 列表页本身
+        .mockResolvedValueOnce(brokenPage(100)) // 计数扫描 offset=0
+        .mockResolvedValueOnce(brokenPage(57)); // 计数扫描 offset=100，未满即结束
+
+      const result = await getPosts({ perPage: 20, embed: false, withTotal: true });
 
       const calls = (global.fetch as any).mock.calls.map((c: any[]) => c[0]);
+      expect(calls).toHaveLength(3);
       expect(calls[1]).toContain('_fields=id');
       expect(calls[1]).toContain('per_page=100');
-      expect(calls[1]).toContain('offset=20');
-      expect(calls[2]).toContain('offset=120');
+      expect(calls[1]).not.toContain('offset=');
+      expect(calls[2]).toContain('offset=100');
       expect(result.total).toBe(157);
       expect(result.totalPages).toBe(8);
     });
@@ -199,7 +210,7 @@ describe('WordPress Posts Module', () => {
         headers: { get: () => '7' },
       });
 
-      const result = await getPosts({ page: 8, perPage: 20, embed: false });
+      const result = await getPosts({ page: 8, perPage: 20, embed: false, withTotal: true });
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(result.total).toBe(147);
@@ -207,18 +218,111 @@ describe('WordPress Posts Module', () => {
     });
 
     it('should keep filters when counting', async () => {
-      const page = (n: number) => ({
-        ok: true,
-        json: async () => Array.from({ length: n }, (_, i) => ({ id: i })),
-        headers: { get: (key: string) => (key === 'X-WP-Total' ? String(n) : '1') },
-      });
-      (global.fetch as any).mockResolvedValueOnce(page(50)).mockResolvedValueOnce(page(33));
+      (global.fetch as any).mockResolvedValueOnce(brokenPage(50)).mockResolvedValueOnce(brokenPage(83));
 
-      const result = await getPosts({ categories: [9], perPage: 50 });
+      const result = await getPosts({ categories: [9], perPage: 50, withTotal: true });
 
       expect((global.fetch as any).mock.calls[1][0]).toContain('categories=9');
       expect(result.total).toBe(83);
       expect(result.totalPages).toBe(2);
+    });
+
+    // 构建超时回归：文章详情页的相关文章（满载 + header 失真）不能触发计数
+    it('should make exactly one request for a post-detail style call without withTotal', async () => {
+      (global.fetch as any).mockResolvedValue(brokenPage(6));
+
+      const byTags = await getPosts({ tags: [1, 2, 3], perPage: 6, embed: true });
+      const byCats = await getPosts({ categories: [4], perPage: 6, embed: true });
+
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      for (const call of (global.fetch as any).mock.calls) {
+        expect(call[0]).not.toContain('_fields=id');
+      }
+      expect(byTags.posts).toHaveLength(6);
+      expect(byTags.total).toBe(6);
+      expect(byCats.totalPages).toBe(1);
+    });
+
+    it('should never count via getPostsByCategory / getPostsByTag unless withTotal is passed', async () => {
+      (global.fetch as any).mockResolvedValue(brokenPage(3));
+
+      await getPostsByCategory(4, 1, 3);
+      await getPostsByTag(5, 1, 3);
+
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('should cache the count per filter across calls and pages', async () => {
+      (global.fetch as any).mockImplementation(async (url: string) => {
+        if (url.includes('_fields=id')) {
+          return brokenPage(url.includes('offset=') ? 30 : 100); // 总数 130
+        }
+        return brokenPage(20);
+      });
+
+      const p1 = await getPosts({ perPage: 20, embed: false, withTotal: true });
+      const p2 = await getPosts({ page: 2, perPage: 20, embed: false, withTotal: true });
+      const p3 = await getPosts({ page: 3, perPage: 20, embed: false, withTotal: true });
+
+      const scans = (global.fetch as any).mock.calls.filter((c: any[]) => c[0].includes('_fields=id'));
+      expect(scans).toHaveLength(2); // 只数一次（两次扫描请求）
+      expect((global.fetch as any).mock.calls).toHaveLength(5);
+      expect([p1.total, p2.total, p3.total]).toEqual([130, 130, 130]);
+      expect(p3.totalPages).toBe(7);
+
+      // 不同过滤条件各自计数
+      await getPosts({ categories: [9], perPage: 20, embed: false, withTotal: true });
+      const scansAfter = (global.fetch as any).mock.calls.filter((c: any[]) => c[0].includes('_fields=id'));
+      expect(scansAfter).toHaveLength(4);
+      expect(scansAfter[2][0]).toContain('categories=9');
+    });
+
+    it('should share one in-flight count between concurrent callers', async () => {
+      (global.fetch as any).mockImplementation(async (url: string) =>
+        url.includes('_fields=id') ? brokenPage(42) : brokenPage(20),
+      );
+
+      const results = await Promise.all(
+        [1, 2, 3, 4].map((page) => getPosts({ page, perPage: 20, embed: false, withTotal: true })),
+      );
+
+      const scans = (global.fetch as any).mock.calls.filter((c: any[]) => c[0].includes('_fields=id'));
+      expect(scans).toHaveLength(1);
+      // 第 4 页 offset=60 已取到 80 篇，总数至少为已加载数
+      expect(results.map((r) => r.total)).toEqual([42, 42, 60, 80]);
+    });
+
+    // 回归：越界空页曾把 offset 当成总数下限，/posts/page/999 → 998 → … 无限重定向
+    it('should not treat an out-of-range empty page as existing', async () => {
+      (global.fetch as any).mockImplementation(async (url: string) => {
+        if (url.includes('_fields=id')) {
+          return brokenPage(url.includes('offset=') ? 30 : 100); // 真实总数 130
+        }
+        return brokenPage(0);
+      });
+
+      const withTotal = await getPosts({ page: 999, perPage: 20, embed: false, withTotal: true });
+      expect(withTotal.posts).toHaveLength(0);
+      expect(withTotal.total).toBe(130);
+      expect(withTotal.totalPages).toBe(7);
+
+      const fetchesBefore = (global.fetch as any).mock.calls.length;
+      const plain = await getPosts({ page: 999, perPage: 20, embed: false });
+      expect((global.fetch as any).mock.calls.length - fetchesBefore).toBe(1);
+      expect(plain.totalPages).toBe(0);
+    });
+
+    it('should not cache a failed count', async () => {
+      (global.fetch as any)
+        .mockResolvedValueOnce(brokenPage(20))
+        .mockRejectedValueOnce(new Error('network'))
+        .mockResolvedValueOnce(brokenPage(20))
+        .mockResolvedValueOnce(brokenPage(55));
+
+      await expect(getPosts({ perPage: 20, embed: false, withTotal: true })).rejects.toThrow('network');
+      const result = await getPosts({ perPage: 20, embed: false, withTotal: true });
+
+      expect(result.total).toBe(55);
     });
 
     it('should return an empty result without fetching when slug is an empty array', async () => {

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Link from 'next/link';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
@@ -64,8 +64,15 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   };
 }
 
+// ISR：构建期不预渲染任何路径，首个请求渲染后写入增量缓存（R2），按 revalidate 过期后台重建。
+// 空数组 + dynamicParams（默认 true）= 全部按需生成；不要在这里列路径，见 DEV_NOTE「全站 ISR」。
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
+  setRequestLocale(locale);
   const { categoryPath, pageNum } = parseCategorySlug(slug);
 
   if (categoryPath.length === 0) {
@@ -84,7 +91,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const { posts, totalPages } = await getPostsByCategory(category.id, pageNum, 50);
+  const { posts, totalPages } = await getPostsByCategory(category.id, pageNum, 50, true);
 
   if (pageNum > 1 && pageNum > totalPages && totalPages > 0) {
     notFound();

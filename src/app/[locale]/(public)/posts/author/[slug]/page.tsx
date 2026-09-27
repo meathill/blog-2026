@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getPosts, getCategories, getUserBySlug } from '@/lib/wordpress';
 import { PostList } from '@/components/posts/post-list';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
@@ -49,8 +49,15 @@ export async function generateMetadata({ params }: AuthorPageProps): Promise<Met
   };
 }
 
+// ISR：构建期不预渲染任何路径，首个请求渲染后写入增量缓存（R2），按 revalidate 过期后台重建。
+// 空数组 + dynamicParams（默认 true）= 全部按需生成；不要在这里列路径，见 DEV_NOTE「全站 ISR」。
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function AuthorPage({ params }: AuthorPageProps) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
+  setRequestLocale(locale);
   const author = await getUserBySlug(slug);
 
   if (!author) {
@@ -61,6 +68,7 @@ export default async function AuthorPage({ params }: AuthorPageProps) {
     author: author.id,
     perPage: POSTS_PER_PAGE,
     page: 1,
+    withTotal: true,
   });
 
   const categories = await getCategories();

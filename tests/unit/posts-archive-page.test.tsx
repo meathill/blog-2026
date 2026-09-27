@@ -43,6 +43,7 @@ describe('ArchivePageNum', () => {
     expect(wordpress.getPosts).toHaveBeenCalledWith({
       page: 3,
       perPage: 20,
+      withTotal: true,
     });
     expect(wordpress.getCategories).toHaveBeenCalled();
     expect(navigation.redirect).not.toHaveBeenCalled();

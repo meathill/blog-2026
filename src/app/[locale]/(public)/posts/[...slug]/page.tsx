@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { setRequestLocale } from 'next-intl/server';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import {
@@ -8,7 +9,6 @@ import {
   getMediaBySlug,
   getPost,
   getPostById,
-  getPosts,
   stripHtml,
   WPPost,
 } from '@/lib/wordpress';
@@ -21,48 +21,11 @@ interface PostPageProps {
   params: Promise<{ slug: string[]; locale: string }>;
 }
 
+// ISR：构建期不预渲染任何路径，首个请求渲染后写入增量缓存（R2），按 revalidate 过期后台重建。
+// 空数组 + dynamicParams（默认 true）= 全部按需生成；不要在这里列路径，见 DEV_NOTE「全站 ISR」。
+// 历史：f8bbc1e 预渲染最新 100 篇、bcafe36 变成全量 1630 页 → 构建单页 60s 超时（Issue #13 回归）。
 export async function generateStaticParams() {
-  try {
-    const [allCategories, firstPage] = await Promise.all([
-      getCategories().catch(() => []),
-      getPosts({ perPage: 100, embed: false, fields: ['slug', 'categories'] }),
-    ]);
-
-    const categoryMap = new Map<number, string>();
-    allCategories.forEach((cat) => categoryMap.set(cat.id, decodeURIComponent(cat.slug)));
-
-    const posts = [...(firstPage?.posts || [])];
-    if (firstPage?.totalPages && firstPage.totalPages > 1) {
-      const remainingPages = Array.from({ length: firstPage.totalPages - 1 }, (_, i) => i + 2);
-      const results = await Promise.all(
-        remainingPages.map((page) =>
-          getPosts({ page, perPage: 100, embed: false, fields: ['slug', 'categories'] }).catch(() => ({
-            posts: [],
-            total: 0,
-            totalPages: 0,
-          })),
-        ),
-      );
-      results.forEach((res) => posts.push(...res.posts));
-    }
-
-    const params: { locale: string; slug: string[] }[] = [];
-    for (const locale of routing.locales) {
-      for (const post of posts) {
-        if (!post.slug) continue;
-        const catId = post.categories?.[0];
-        const categorySlug = catId ? categoryMap.get(catId) || 'uncategorized' : 'uncategorized';
-        params.push({
-          locale,
-          slug: [categorySlug, post.slug],
-        });
-      }
-    }
-    return params;
-  } catch (error) {
-    console.warn('[generateStaticParams] Failed to preload posts static params:', error);
-    return [];
-  }
+  return [];
 }
 
 /** 去掉路径末段可能残留的 `.html`，供 attachment 父文重定向使用。 */
@@ -166,6 +129,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug, locale } = await params;
+  setRequestLocale(locale);
   const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
 
   // 低价值 attachment URL → 301 到父文（issue #4：避免 self-canonical 继续喂给索引）

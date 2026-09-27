@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { ArrowRightIcon } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import PostCard from '@/components/PostCard';
 import TechSectionCard from '@/components/tech/tech-section-card';
@@ -37,8 +37,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+// ISR：构建期不预渲染任何路径，首个请求渲染后写入增量缓存（R2），按 revalidate 过期后台重建。
+// 空数组 + dynamicParams（默认 true）= 全部按需生成；不要在这里列路径，见 DEV_NOTE「全站 ISR」。
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function TechHubPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'Tech' });
   const sections = getAllTechSections();
   const baseUrl = locale === 'en' ? `${SITE_URL}/en` : SITE_URL;

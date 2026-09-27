@@ -17,6 +17,20 @@ vi.mock('@/i18n/routing', () => ({
   },
 }));
 
+vi.mock('next-intl/server', () => ({
+  getMessages: async () => ({}),
+  setRequestLocale: vi.fn(),
+}));
+vi.mock('next-intl', () => ({
+  hasLocale: (locales: readonly string[], locale: string) => locales.includes(locale),
+  NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+vi.mock('next/font/google', () => ({
+  Inter: () => ({ className: 'font-inter' }),
+}));
+vi.mock('../../src/components/ThirdPartyScripts', () => ({ default: () => null }));
+
+import { renderToStaticMarkup } from 'react-dom/server';
 import LocaleLayout from '../../src/app/[locale]/layout';
 
 describe('LocaleLayout locale 校验', () => {
@@ -34,21 +48,21 @@ describe('LocaleLayout locale 校验', () => {
     await expect(LocaleLayout({ children: null, params })).rejects.toThrow('NOT_FOUND');
   });
 
-  it('合法 locale zh（middleware 为默认语言注入的值）正常透传 children', async () => {
+  it('合法 locale zh（middleware 为默认语言注入的值）正常渲染 children', async () => {
     const params = Promise.resolve({ locale: 'zh' });
 
-    const result = await LocaleLayout({ children: 'content', params });
+    const html = renderToStaticMarkup(await LocaleLayout({ children: 'content', params }));
 
-    expect(result).toBe('content');
+    expect(html).toContain('content');
     expect(navigation.notFound).not.toHaveBeenCalled();
   });
 
-  it('合法 locale en 正常透传 children', async () => {
+  it('合法 locale en 正常渲染 children', async () => {
     const params = Promise.resolve({ locale: 'en' });
 
-    const result = await LocaleLayout({ children: 'content', params });
+    const html = renderToStaticMarkup(await LocaleLayout({ children: 'content', params }));
 
-    expect(result).toBe('content');
+    expect(html).toContain('content');
     expect(navigation.notFound).not.toHaveBeenCalled();
   });
 });

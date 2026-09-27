@@ -184,54 +184,12 @@ describe('PostPage', () => {
   });
 
   describe('generateStaticParams', () => {
-    it('should generate params for all locales and posts with primary category slug', async () => {
-      (wordpress.getCategories as any).mockResolvedValue([
-        { id: 10, slug: 'tech' },
-        { id: 20, slug: 'ai' },
-      ]);
-      (wordpress.getPosts as any).mockResolvedValue({
-        posts: [
-          { slug: 'post-1', categories: [10] },
-          { slug: 'post-2', categories: [20] },
-          { slug: 'post-uncategorized', categories: [] },
-        ],
-        totalPages: 1,
-      });
-
-      const params = await generateStaticParams();
-      expect(params).toHaveLength(6); // 3 posts * 2 locales
-      expect(params).toContainEqual({ locale: 'zh', slug: ['tech', 'post-1'] });
-      expect(params).toContainEqual({ locale: 'en', slug: ['tech', 'post-1'] });
-      expect(params).toContainEqual({ locale: 'zh', slug: ['ai', 'post-2'] });
-      expect(params).toContainEqual({ locale: 'en', slug: ['ai', 'post-2'] });
-      expect(params).toContainEqual({ locale: 'zh', slug: ['uncategorized', 'post-uncategorized'] });
-      expect(params).toContainEqual({ locale: 'en', slug: ['uncategorized', 'post-uncategorized'] });
-    });
-
-    it('should handle pagination when totalPages > 1', async () => {
-      (wordpress.getCategories as any).mockResolvedValue([{ id: 10, slug: 'tech' }]);
-      (wordpress.getPosts as any)
-        .mockResolvedValueOnce({
-          posts: [{ slug: 'post-page-1', categories: [10] }],
-          totalPages: 2,
-        })
-        .mockResolvedValueOnce({
-          posts: [{ slug: 'post-page-2', categories: [10] }],
-          totalPages: 2,
-        });
-
-      const params = await generateStaticParams();
-      expect(params).toHaveLength(4); // 2 posts * 2 locales
-      expect(params).toContainEqual({ locale: 'zh', slug: ['tech', 'post-page-1'] });
-      expect(params).toContainEqual({ locale: 'zh', slug: ['tech', 'post-page-2'] });
-    });
-
-    it('should return empty array on failure without throwing', async () => {
-      (wordpress.getCategories as any).mockRejectedValue(new Error('Network failure'));
-      (wordpress.getPosts as any).mockRejectedValue(new Error('Network failure'));
-
+    // ISR：构建期不预渲染任何文章（Issue #13 构建超时回归），也不应请求 WordPress
+    it('should return no params and make no WordPress requests', async () => {
       const params = await generateStaticParams();
       expect(params).toEqual([]);
+      expect(wordpress.getPosts).not.toHaveBeenCalled();
+      expect(wordpress.getCategories).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getPosts, getCategories } from '@/lib/wordpress';
 import { PostList } from '@/components/posts/post-list';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
@@ -43,8 +43,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+// ISR：构建期不预渲染任何路径，首个请求渲染后写入增量缓存（R2），按 revalidate 过期后台重建。
+// 空数组 + dynamicParams（默认 true）= 全部按需生成；不要在这里列路径，见 DEV_NOTE「全站 ISR」。
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function ArchivePageNum({ params }: PageProps) {
   const { locale, num } = await params;
+  setRequestLocale(locale);
   const currentPage = parseInt(num, 10);
   const postsPath = locale === 'en' ? '/en/posts' : '/posts';
 
@@ -60,6 +67,7 @@ export default async function ArchivePageNum({ params }: PageProps) {
   const { posts, total, totalPages } = await getPosts({
     page: currentPage,
     perPage: POSTS_PER_PAGE,
+    withTotal: true,
   });
 
   // 超出范围：跳最后一页（或列表首页），不给爬虫硬 404

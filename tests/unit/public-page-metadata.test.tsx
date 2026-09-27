@@ -6,6 +6,7 @@ import zhMessages from '../../messages/zh.json';
 // 回归背景：页面级 generateMetadata 曾 hardcode 中文文案，且 canonical 恒指 zh URL，
 // 导致 /en 页面 title/description 为中文、canonical 指向 zh 版（issue #5）
 vi.mock('next-intl/server', () => ({
+  setRequestLocale: () => {},
   getTranslations: async ({ locale, namespace }: { locale: string; namespace: string }) => {
     const all = (locale === 'en' ? enMessages : zhMessages) as Record<string, Record<string, string>>;
     const ns = all[namespace];

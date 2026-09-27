@@ -7,10 +7,17 @@ import { WPPost } from './types';
 // 导致 `page>=2` 被 WP 以 rest_post_invalid_page_number（400）拒绝，列表分页、sitemap 全部截断在第一页。
 // 对策：
 // 1. 翻页一律用 `offset`（此时 WP 内部 paged=1，不会触发页码越界校验），数据本身总能取到；
-// 2. 仅当「本页满载且 header 声称后面没有了」时才不信 header，用 `_fields=id` 从本页之后往下数出真实总数。
-//    WP 恢复正常后 header 可信，该分支不会触发。
+// 2. 只有调用方显式声明 `withTotal: true`（归档分页、sitemap 等真的要用 total/totalPages 的地方），且
+//    「本页满载且 header 声称后面没有了」时，才不信 header，用 `_fields=id` 数出真实总数。
+//    相关文章、首页最新、侧栏等「只要 N 篇」的调用默认不计数，保持一次请求（bcafe36 构建超时的教训：
+//    文章详情页的相关文章每页都触发计数，1600+ 页 × 多次扫描把构建拖过 60s/页上限）。
+// 3. 计数结果按「API 地址 + 过滤条件」在进程内缓存 COUNT_CACHE_TTL_MS（与 fetch revalidate 对齐），
+//    构建时每个 worker 每种过滤条件只数一次；并发调用共享同一个 promise。
+//    WP 恢复正常后 header 可信，计数分支自然不再触发。
 const COUNT_SCAN_PAGE_SIZE = 100;
 const COUNT_SCAN_MAX_REQUESTS = 50;
+const WP_REVALIDATE_SECONDS = 300;
+const COUNT_CACHE_TTL_MS = WP_REVALIDATE_SECONDS * 1000;
 
 type PostsFilter = {
   categories?: number[];
@@ -18,6 +25,20 @@ type PostsFilter = {
   author?: number;
   search?: string;
   slug?: string[];
+};
+
+export type PostsResult = { posts: WPPost[]; total: number; totalPages: number };
+
+export type GetPostsParams = PostsFilter & {
+  page?: number;
+  perPage?: number;
+  embed?: boolean;
+  fields?: string[];
+  /**
+   * 是否需要准确的 total/totalPages。默认 false：只发一次请求，total 取自 header（WP 失真时可能偏小）。
+   * 仅归档分页、sitemap 等依赖总数的调用传 true；可能额外触发一次（进程内缓存的）计数扫描。
+   */
+  withTotal?: boolean;
 };
 
 function applyFilter(searchParams: URLSearchParams, filter: PostsFilter) {
@@ -38,22 +59,19 @@ function applyFilter(searchParams: URLSearchParams, filter: PostsFilter) {
   }
 }
 
-async function countPostsFrom(
-  apiUrl: string,
-  headers: HeadersInit,
-  filter: PostsFilter,
-  startOffset: number,
-): Promise<number> {
-  let offset = startOffset;
+async function scanPostCount(apiUrl: string, headers: HeadersInit, filter: PostsFilter): Promise<number> {
+  let offset = 0;
   for (let i = 0; i < COUNT_SCAN_MAX_REQUESTS; i++) {
     const searchParams = new URLSearchParams();
     searchParams.set('_fields', 'id');
     applyFilter(searchParams, filter);
     searchParams.set('per_page', String(COUNT_SCAN_PAGE_SIZE));
-    searchParams.set('offset', String(offset));
+    if (offset > 0) {
+      searchParams.set('offset', String(offset));
+    }
     const response = await fetch(`${apiUrl}/posts?${searchParams}`, {
       headers,
-      next: { revalidate: 300 },
+      next: { revalidate: WP_REVALIDATE_SECONDS },
     });
     if (!response.ok) {
       break;
@@ -67,80 +85,115 @@ async function countPostsFrom(
   return offset;
 }
 
-export const getPosts = cache(
-  async (
-    params?: PostsFilter & {
-      page?: number;
-      perPage?: number;
-      embed?: boolean;
-      fields?: string[];
-    },
-  ): Promise<{ posts: WPPost[]; total: number; totalPages: number }> => {
-    // 显式传入空数组即视为白名单为空，直接返回空结果，不发请求
-    if (params?.slug && params.slug.length === 0) {
+const countCache = new Map<string, { promise: Promise<number>; expiresAt: number }>();
+
+function countKey(apiUrl: string, filter: PostsFilter): string {
+  return JSON.stringify([
+    apiUrl,
+    filter.categories ?? null,
+    filter.tags ?? null,
+    filter.author ?? null,
+    filter.search ?? null,
+    filter.slug ?? null,
+  ]);
+}
+
+/** 数出某过滤条件下的文章总数；进程内按过滤条件缓存（含并发去重），失败不缓存。 */
+function countPosts(apiUrl: string, headers: HeadersInit, filter: PostsFilter): Promise<number> {
+  const key = countKey(apiUrl, filter);
+  const now = Date.now();
+  const hit = countCache.get(key);
+  if (hit && hit.expiresAt > now) {
+    return hit.promise;
+  }
+  const promise = scanPostCount(apiUrl, headers, filter);
+  countCache.set(key, { promise, expiresAt: now + COUNT_CACHE_TTL_MS });
+  promise.catch(() => {
+    if (countCache.get(key)?.promise === promise) {
+      countCache.delete(key);
+    }
+  });
+  return promise;
+}
+
+/** 仅供测试：清空计数缓存。 */
+export function __resetPostCountCache() {
+  countCache.clear();
+}
+
+export const getPosts = cache(async (params?: GetPostsParams): Promise<PostsResult> => {
+  // 显式传入空数组即视为白名单为空，直接返回空结果，不发请求
+  if (params?.slug && params.slug.length === 0) {
+    return { posts: [], total: 0, totalPages: 0 };
+  }
+
+  const searchParams = new URLSearchParams();
+  const { embed = true, fields, withTotal = false } = params || {};
+  const filter: PostsFilter = {
+    categories: params?.categories,
+    tags: params?.tags,
+    author: params?.author,
+    search: params?.search,
+    slug: params?.slug,
+  };
+
+  if (embed) {
+    searchParams.set('_embed', 'true');
+  }
+  if (fields && fields.length > 0) {
+    searchParams.set('_fields', fields.join(','));
+  }
+  // 未显式传 perPage 时，按 slug 数量拉取（上限 100，WP per_page 最大值），避免默认分页截断白名单
+  const defaultPerPage = params?.slug?.length ? Math.min(params.slug.length, 100) : 10;
+  const perPage = params?.perPage || defaultPerPage;
+  const page = params?.page && params.page > 1 ? params.page : 1;
+  const offset = (page - 1) * perPage;
+  applyFilter(searchParams, filter);
+  searchParams.set('per_page', String(perPage));
+  if (offset > 0) {
+    searchParams.set('offset', String(offset));
+  }
+
+  const { env } = await getCloudflareContext({ async: true });
+  const headers = getAccessHeaders(env);
+  const url = `${env.WORDPRESS_API_URL}/posts?${searchParams}`;
+
+  const response = await fetch(url, {
+    headers,
+    next: { revalidate: WP_REVALIDATE_SECONDS },
+  });
+
+  if (!response.ok) {
+    if (response.status === 400) {
       return { posts: [], total: 0, totalPages: 0 };
     }
+    const text = await response.text();
+    console.error('[WP API] Error Body:', text);
+    throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
+  }
 
-    const searchParams = new URLSearchParams();
-    const { embed = true, fields } = params || {};
-    const filter: PostsFilter = {
-      categories: params?.categories,
-      tags: params?.tags,
-      author: params?.author,
-      search: params?.search,
-      slug: params?.slug,
-    };
+  const posts: WPPost[] = await response.json();
+  let total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
+  const loaded = offset + posts.length;
 
-    if (embed) {
-      searchParams.set('_embed', 'true');
-    }
-    if (fields && fields.length > 0) {
-      searchParams.set('_fields', fields.join(','));
-    }
-    // 未显式传 perPage 时，按 slug 数量拉取（上限 100，WP per_page 最大值），避免默认分页截断白名单
-    const defaultPerPage = params?.slug?.length ? Math.min(params.slug.length, 100) : 10;
-    const perPage = params?.perPage || defaultPerPage;
-    const page = params?.page && params.page > 1 ? params.page : 1;
-    const offset = (page - 1) * perPage;
-    applyFilter(searchParams, filter);
-    searchParams.set('per_page', String(perPage));
-    if (offset > 0) {
-      searchParams.set('offset', String(offset));
-    }
+  if (posts.length > 0 && posts.length < perPage) {
+    // 未满载即最后一页，总数可精确得出（零额外请求）
+    total = loaded;
+  } else if (posts.length > 0 && total < loaded) {
+    // header 连已取到的都不够，至少修正到已知下限（零额外请求）。
+    // 空页不能这么做：此时 loaded 只是 offset，会把越界页当成存在（曾导致 /posts/page/999 → 998 → … 重定向链）
+    total = loaded;
+  }
 
-    const { env } = await getCloudflareContext({ async: true });
-    const headers = getAccessHeaders(env);
-    const url = `${env.WORDPRESS_API_URL}/posts?${searchParams}`;
+  // 满载但 header 声称没有更多，或越界空页：header 不可信，数一次（进程内缓存）
+  const suspicious = posts.length === perPage || (posts.length === 0 && offset > 0);
+  if (withTotal && suspicious && total <= loaded) {
+    const counted = await countPosts(env.WORDPRESS_API_URL, headers, filter);
+    total = posts.length > 0 ? Math.max(loaded, counted) : counted;
+  }
 
-    const response = await fetch(url, {
-      headers,
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      if (response.status === 400) {
-        return { posts: [], total: 0, totalPages: 0 };
-      }
-      const text = await response.text();
-      console.error('[WP API] Error Body:', text);
-      throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
-    }
-
-    const posts: WPPost[] = await response.json();
-    let total = parseInt(response.headers.get('X-WP-Total') || '0', 10);
-    const loaded = offset + posts.length;
-
-    if (posts.length > 0 && posts.length < perPage) {
-      // 未满载即最后一页，总数可精确得出
-      total = loaded;
-    } else if (posts.length === perPage && total <= loaded) {
-      // 满载但 header 声称没有更多：header 不可信，往后数
-      total = await countPostsFrom(env.WORDPRESS_API_URL, headers, filter, loaded);
-    }
-
-    return { posts, total, totalPages: total > 0 ? Math.ceil(total / perPage) : 0 };
-  },
-);
+  return { posts, total, totalPages: total > 0 ? Math.ceil(total / perPage) : 0 };
+});
 
 export const getPost = cache(async (slug: string, options?: RequestInit): Promise<WPPost | null> => {
   const posts = await wpFetch<WPPost[]>(`/posts?slug=${encodeURIComponent(slug)}&_embed=true`, options);
@@ -177,14 +230,16 @@ export async function getPostById(id: number, options?: RequestInit): Promise<WP
   return response.json();
 }
 
+// React cache() 以参数 identity 作 key，所以这里只用原始类型参数，同一次渲染内可去重。
+// withTotal 语义同 getPosts：只有分类/标签归档分页需要准确 totalPages 时才传 true。
 export const getPostsByCategory = cache(
-  async (categoryId: number, page = 1, perPage = 20): Promise<{ posts: WPPost[]; total: number; totalPages: number }> =>
-    getPosts({ categories: [categoryId], page, perPage }),
+  async (categoryId: number, page = 1, perPage = 20, withTotal = false): Promise<PostsResult> =>
+    getPosts({ categories: [categoryId], page, perPage, withTotal }),
 );
 
 export const getPostsByTag = cache(
-  async (tagId: number, page = 1, perPage = 20): Promise<{ posts: WPPost[]; total: number; totalPages: number }> =>
-    getPosts({ tags: [tagId], page, perPage }),
+  async (tagId: number, page = 1, perPage = 20, withTotal = false): Promise<PostsResult> =>
+    getPosts({ tags: [tagId], page, perPage, withTotal }),
 );
 
 export async function createPost(env: CloudflareEnv, postData: any): Promise<WPPost> {

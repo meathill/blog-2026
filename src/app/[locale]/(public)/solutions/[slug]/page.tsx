@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowRightIcon, CheckIcon } from 'lucide-react';
-import { Link, routing } from '@/i18n/routing';
-import { getAllSolutions, getSolutionBySlug, localize } from '@/lib/solutions';
+import { Link } from '@/i18n/routing';
+import { getSolutionBySlug, localize } from '@/lib/solutions';
 import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
 import PostCard from '@/components/PostCard';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
@@ -13,14 +13,10 @@ interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
 }
 
+// ISR：构建期不预渲染任何路径，首个请求渲染后写入增量缓存（R2），按 revalidate 过期后台重建。
+// 空数组 + dynamicParams（默认 true）= 全部按需生成；不要在这里列路径，见 DEV_NOTE「全站 ISR」。
 export async function generateStaticParams() {
-  const params: { locale: string; slug: string }[] = [];
-  for (const locale of routing.locales) {
-    for (const solution of getAllSolutions()) {
-      params.push({ locale, slug: solution.slug });
-    }
-  }
-  return params;
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -55,6 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SolutionDetailPage({ params }: PageProps) {
   const { slug, locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'SolutionDetail' });
   const solution = getSolutionBySlug(slug);
   if (!solution) {

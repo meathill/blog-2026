@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ArrowRightIcon } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
-import { Link, routing } from '@/i18n/routing';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Link } from '@/i18n/routing';
 import PostCard from '@/components/PostCard';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { getPostPath } from '@/lib/post-utils';
 import { buildBreadcrumbJsonLd, buildItemListJsonLd } from '@/lib/seo/jsonld';
 import { getAllTechSections, getTechSection, localize } from '@/lib/tech';
 import { getTechSectionPosts } from '@/lib/tech-posts';
-import { isTechSectionSlug, TECH_SECTION_SLUGS } from '@/lib/tech-sections';
+import { isTechSectionSlug } from '@/lib/tech-sections';
 import { stripHtml } from '@/lib/wordpress';
 import JsonLd from '@/components/JsonLd';
 
@@ -17,14 +17,10 @@ interface PageProps {
   params: Promise<{ locale: string; section: string }>;
 }
 
+// ISR：构建期不预渲染任何路径，首个请求渲染后写入增量缓存（R2），按 revalidate 过期后台重建。
+// 空数组 + dynamicParams（默认 true）= 全部按需生成；不要在这里列路径，见 DEV_NOTE「全站 ISR」。
 export async function generateStaticParams() {
-  const params: { locale: string; section: string }[] = [];
-  for (const locale of routing.locales) {
-    for (const slug of TECH_SECTION_SLUGS) {
-      params.push({ locale, section: slug });
-    }
-  }
-  return params;
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -62,6 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function TechSectionPage({ params }: PageProps) {
   const { locale, section: sectionSlug } = await params;
+  setRequestLocale(locale);
   const section = isTechSectionSlug(sectionSlug) ? getTechSection(sectionSlug) : null;
 
   if (!section) {
