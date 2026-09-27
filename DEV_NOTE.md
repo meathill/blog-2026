@@ -269,6 +269,18 @@ return new Response(transformed.image(), {
   除非确认是高点击主路径。
 - 版本：`next@16.3.4` / `@next/third-parties@16.3.4` / `@opennextjs/cloudflare@1.20.4` 对齐。
 
+### ISR 增补（自引用绑定 + 保留 R2，2026-09-27）
+
+- `wrangler.jsonc` 补了 `services: WORKER_SELF_REFERENCE` 自引用：DO queue（`DOQueueHandler`，
+  见 `@opennextjs/cloudflare/dist/api/durable-objects/queue.js:25`）构造时缺它直接抛
+  `IgnorableError("No service binding for cache revalidation worker")`，time-based revalidate 发不出去。
+  之前 DO queue + D1 tag + R2 都配了，唯独缺这一块。
+- incremental cache 保持 R2 + `withRegionalCache(long-lived)`，不迁 KV：官方 caching 文档明确不推荐
+  KV（最终一致），R2 单 region 慢的问题已有区域缓存挡掉；本站量级下 KV 收益小、一致性风险大。
+- 守卫：`tests/unit/isr-config.test.ts`（wrangler 绑定 + open-next R2/queue/tag/`enableCacheInterception: false`）。
+- 部署后验证：`NEXT_PRIVATE_DEBUG_CACHE=1` 看 MISS→HIT、改文看 300s/86400s 窗口、R2 `site-cache` 对象增长；
+  `enableCacheInterception` 仍保持 `false`（issue #12 upstream 未修）。
+
 ### Issue #11 增补（Ahrefs 全域 crawl 分组治理，2026-09）
 
 - **先分组再修**：Ahrefs 项目是 `*.meathill.com/*` 全域，88 条 meta-long 里约 83 条属 `tools.meathill.com`（evertools 仓库模板问题，转交）；本仓只 5 条（`/en`、`en/about`、3 个 `en/skills/*`），已压到 ≤155，守卫 `tests/unit/seo-meta-length.test.ts`。文章页走 `buildPostDescription` 天然 ≤160，不在此列。

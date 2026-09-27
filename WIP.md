@@ -60,3 +60,11 @@
 - [x] 全量校验：format / typecheck / 469 测试 / build 通过
 - [ ] 待部署后验证：生产 `_rsc` 不再跑飞 + Worker 请求量回落，再关 issue
 
+## ISR 恢复 + 保留 R2（2026-09-27）
+
+- [x] `wrangler.jsonc`：补 `services: WORKER_SELF_REFERENCE` 自引用（DO queue 构造缺它会抛 `IgnorableError`，time-based revalidate 发不出去）；incremental cache 保持 R2，不迁 KV（官方明确不推荐 KV，最终一致）
+- [x] 测试：`tests/unit/isr-config.test.ts` 守卫 wrangler 绑定 + open-next R2/queue/tag 配置
+- [x] 校验：format / typecheck / 498 测试 / `next build` / `opennextjs-cloudflare build` 通过；`pnpm cf-typegen` 同步 `env.d.ts`（gitignored，内有 `WORKER_SELF_REFERENCE`）
+- [x] 文档：`DEV_NOTE.md` 记 ISR 决策
+- [ ] 待部署后验证：`NEXT_PRIVATE_DEBUG_CACHE=1` 看 MISS→HIT、改文看 300s/86400s 窗口、R2 `site-cache` 对象增长
+

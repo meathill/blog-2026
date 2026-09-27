@@ -20,6 +20,14 @@
       }
     ]
   },
+  // DO queue 回打 Worker 自身做 time-based revalidate，依赖自引用 service binding；
+  // 缺它 DO 构造直接抛 IgnorableError，ISR 定时刷新发不出去。R2 incremental cache 保持不动，不迁 KV。
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "blog-2026"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
