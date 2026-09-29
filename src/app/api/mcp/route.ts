@@ -1,37 +1,33 @@
 import { NextResponse } from 'next/server';
 import { McpAuthError, requireMcpAuth } from '@/lib/mcp/auth';
-import { toolDescriptors, toolMap } from '@/lib/mcp/tools';
+import { handleRpc, rpcError, type JsonRpcRequest } from '@/lib/mcp/protocol';
 
 export const dynamic = 'force-dynamic';
 
-const PROTOCOL_VERSION = '2024-11-05';
-const SERVER_NAME = 'blog-2026-apps';
-const SERVER_VERSION = '0.1.0';
-
-interface JsonRpcRequest {
-  jsonrpc: '2.0';
-  id?: string | number | null;
-  method: string;
-  params?: unknown;
+// 规范要求校验 Origin 防 DNS rebinding；CLI 类客户端不带 Origin，不受影响
+function isAllowedOrigin(origin: string): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://meathill.com';
+  return origin === siteUrl || origin === 'http://localhost:3000' || origin === 'http://127.0.0.1:3000';
 }
 
-function rpcResult(id: JsonRpcRequest['id'], result: unknown) {
-  return { jsonrpc: '2.0', id: id ?? null, result };
-}
-
-function rpcError(id: JsonRpcRequest['id'], code: number, message: string, data?: unknown) {
-  return {
-    jsonrpc: '2.0',
-    id: id ?? null,
-    error: data !== undefined ? { code, message, data } : { code, message },
-  };
-}
-
-export async function GET() {
+function methodNotAllowed() {
   return new NextResponse('Method Not Allowed', { status: 405, headers: { Allow: 'POST' } });
 }
 
+export async function GET() {
+  return methodNotAllowed();
+}
+
+export async function DELETE() {
+  return methodNotAllowed();
+}
+
 export async function POST(req: Request) {
+  const origin = req.headers.get('origin');
+  if (origin && !isAllowedOrigin(origin)) {
+    return new NextResponse('Forbidden', { status: 403 });
+  }
+
   try {
     await requireMcpAuth(req);
   } catch (e) {
@@ -52,72 +48,8 @@ export async function POST(req: Request) {
     return NextResponse.json(rpcError(body?.id ?? null, -32600, 'Invalid Request'));
   }
 
-  const isNotification = body.id === undefined || body.id === null;
-  const startedAt = Date.now();
-
   try {
-    switch (body.method) {
-      case 'initialize':
-        return NextResponse.json(
-          rpcResult(body.id, {
-            protocolVersion: PROTOCOL_VERSION,
-            capabilities: { tools: {} },
-            serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
-          }),
-        );
-
-      case 'notifications/initialized':
-      case 'notifications/cancelled':
-        return new NextResponse(null, { status: 202 });
-
-      case 'ping':
-        return NextResponse.json(rpcResult(body.id, {}));
-
-      case 'tools/list':
-        return NextResponse.json(rpcResult(body.id, { tools: toolDescriptors }));
-
-      case 'tools/call': {
-        const params = (body.params || {}) as { name?: string; arguments?: unknown };
-        const tool = params.name ? toolMap.get(params.name) : undefined;
-        if (!tool) {
-          return NextResponse.json(rpcError(body.id, -32602, `Unknown tool: ${params.name}`));
-        }
-        const parsed = tool.inputSchema.safeParse(params.arguments ?? {});
-        if (!parsed.success) {
-          return NextResponse.json(rpcError(body.id, -32602, 'Invalid arguments', parsed.error.issues));
-        }
-        try {
-          const out = await tool.handler(parsed.data);
-          console.log(JSON.stringify({ mcp: true, tool: tool.name, ms: Date.now() - startedAt, ok: true }));
-          return NextResponse.json(
-            rpcResult(body.id, {
-              content: [{ type: 'text', text: JSON.stringify(out, null, 2) }],
-            }),
-          );
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          console.log(
-            JSON.stringify({
-              mcp: true,
-              tool: tool.name,
-              ms: Date.now() - startedAt,
-              ok: false,
-              error: message,
-            }),
-          );
-          return NextResponse.json(
-            rpcResult(body.id, {
-              isError: true,
-              content: [{ type: 'text', text: message }],
-            }),
-          );
-        }
-      }
-
-      default:
-        if (isNotification) return new NextResponse(null, { status: 202 });
-        return NextResponse.json(rpcError(body.id, -32601, `Method not found: ${body.method}`));
-    }
+    return await handleRpc(body, req);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Internal error';
     console.error('[mcp] handler error:', err);

@@ -101,6 +101,7 @@
       "CF_ACCESS_CLIENT_ID",
       "CF_ACCESS_CLIENT_SECRET",
       "BETTER_AUTH_SECRET",
+      "MCP_TOKEN",
       "WP_USERNAME",
       "WP_APP_PASSWORD"
     ]

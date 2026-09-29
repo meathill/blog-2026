@@ -207,6 +207,17 @@ return new Response(transformed.image(), {
 
 `SITE_URL` 统一从 `src/lib/constants.ts` 导出，避免各文件重复写 `process.env.NEXT_PUBLIC_SITE_URL || '...'`。
 
+## MCP Server（/api/mcp，dual-era）
+
+- **零依赖手写**，不引官方 SDK；协议层在 `src/lib/mcp/protocol.ts`，路由只做 Origin 校验 + Bearer 鉴权（secret `MCP_TOKEN`）+ JSON 解析后委托。
+- **按 2026-07-28 规范实现 dual-era**（规范术语：modern / legacy，见 [Versioning](https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning)）：
+  - `initialize` 请求 → legacy 握手，在 `SUPPORTED_LEGACY_VERSIONS`（2025-11-25/2025-06-18/2025-03-26/2024-11-05）内原样回，否则回最新 legacy；现有客户端（ZCode/Codex/opencode/mimo/Antigravity 都是 legacy era）不受影响。
+  - `params._meta['io.modelcontextprotocol/protocolVersion']` 存在 → modern 无状态处理：校验 `MCP-Protocol-Version`/`Mcp-Method`/`Mcp-Name` 三个镜像头与 body 一致（失配 400 + `-32020`）；版本不支持 400 + `-32022`（`data.supported` 列表）；未知方法 **HTTP 404** + `-32601`（modern 客户端据此识别 modern server）；结果带 `resultType: 'complete'` 与 `_meta.serverInfo`；`tools/list`/`server/discover` 带 `ttlMs`/`cacheScope`。
+  - 都没有 → legacy 语义（版本头缺失视为 2025-03-26）；`ping` 只在 legacy 保留（2026-07-28 已移除）。
+- **传输即 Streamable HTTP 无状态模式**：单端点 POST、JSON 应答，GET/DELETE 405，不实现会话/SSE/`subscriptions/listen`。规范明确允许，勿为"完整性"加回会话。
+- **Origin 校验**：带 Origin 且不在白名单（站点 + localhost:3000）→ 403，防 DNS rebinding；CLI 客户端不带 Origin 不受影响。
+- 升级记录：2026-09-29 从硬编码 2024-11-05 升到 dual-era（v0.2.0），回归测试 `tests/app/api/mcp.test.ts`。
+
 ## SEO 约定（Issue #4）
 
 - **结构化数据**：`src/lib/seo/jsonld.ts` 提供 `buildArticleJsonLd`(BlogPosting) / `buildBreadcrumbJsonLd` / `buildItemListJsonLd` / `buildFaqJsonLd`，在 `PostView` 以 `<script type="application/ld+json">` 注入（写法对齐 skills 详情页）。JSON-LD 的 `url`/面包屑须与页面 canonical 一致（按 `post.categories[0]` 取主分类）。两个列表类 builder 会过滤 `name` 为空的条目并重排 position——2026-08 曾因 15 篇无标题旧文（slug=WP post ID）输出 `"name":""` 触发 GSC「应指定 name 或 item.name」报错，WP 端回写标题 + 代码防御双修。

@@ -390,8 +390,11 @@ export interface ToolDescriptor {
   inputSchema: unknown;
 }
 
-export const toolDescriptors: ToolDescriptor[] = tools.map((t) => ({
-  name: t.name,
-  description: t.description,
-  inputSchema: z.toJSONSchema(t.inputSchema, { target: 'draft-7' }),
-}));
+// 规范 SHOULD：tools/list 按确定性顺序返回，利于客户端缓存与 LLM prompt cache 命中
+export const toolDescriptors: ToolDescriptor[] = tools
+  .map((t) => ({
+    name: t.name,
+    description: t.description,
+    inputSchema: z.toJSONSchema(t.inputSchema, { target: 'draft-7' }),
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
