@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { PUBLIC_REVALIDATE_SECONDS, WP_CACHE_TAG } from '@/lib/cache-config';
 import { getWordPressAccessHeaders, getWordPressApiUrl } from './access';
 
 const getAccessHeaders = getWordPressAccessHeaders;
@@ -15,7 +16,8 @@ export async function wpFetch<T>(endpoint: string, options?: RequestInit): Promi
     ...options,
     headers,
     next: {
-      revalidate: options?.cache === 'no-store' ? 0 : 300,
+      revalidate: options?.cache === 'no-store' ? 0 : PUBLIC_REVALIDATE_SECONDS,
+      tags: [WP_CACHE_TAG],
       ...options?.next,
     },
     cache: options?.cache,

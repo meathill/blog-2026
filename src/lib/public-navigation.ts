@@ -8,10 +8,12 @@ import {
   type NavigationConfigBySection,
   type NavigationSection,
 } from '@/lib/navigation-config';
+import { PUBLIC_REVALIDATE_SECONDS } from '@/lib/cache-config';
 import { unstable_cache } from 'next/cache';
 import { eq } from 'drizzle-orm';
 
-const NAVIGATION_CACHE_SECONDS = 900;
+// Issue #14：与页面 ISR 对齐（短 TTL 会把整页 revalidate 压下去），变更靠 revalidateTag 失效
+const NAVIGATION_CACHE_SECONDS = PUBLIC_REVALIDATE_SECONDS;
 
 export function getNavigationTag(localeInput: string, section: NavigationSection) {
   const locale = resolveNavigationLocale(localeInput);

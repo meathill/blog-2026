@@ -3,15 +3,20 @@ import r2IncrementalCache from '@opennextjs/cloudflare/overrides/incremental-cac
 import { withRegionalCache } from '@opennextjs/cloudflare/overrides/incremental-cache/regional-cache';
 import doQueue from '@opennextjs/cloudflare/overrides/queue/do-queue';
 import d1TagCache from '@opennextjs/cloudflare/overrides/tag-cache/d1-next-tag-cache';
+import { withStoredRevalidate } from './src/lib/isr-freshness-cache';
 
 export default defineCloudflareConfig({
   // 区域缓存(Cache API)挡在 R2 前,热命中免跨区域读 R2;不设 bypassTagCacheOnCacheHit,
   // 命中时仍查 D1 tag cache,revalidateTag/revalidatePath 语义不变。
   // free plan 无按 tag purge,不配 cachePurge;发布流程的 purge_everything 会一并清区域缓存。
-  incrementalCache: withRegionalCache(r2IncrementalCache, {
-    mode: 'long-lived',
-    shouldLazilyUpdateOnCacheHit: true,
-  }),
+  // withStoredRevalidate（issue #14）：按条目自带的 revalidate 判定新鲜度，修复按需 ISR 路径
+  // （不在 prerender-manifest）被 Next 回退成 1s、几乎每次 STALE + 后台重渲染的问题。
+  incrementalCache: withStoredRevalidate(
+    withRegionalCache(r2IncrementalCache, {
+      mode: 'long-lived',
+      shouldLazilyUpdateOnCacheHit: true,
+    }),
+  ),
   queue: doQueue,
   tagCache: d1TagCache,
   // issue #12：Next 16.3 + OpenNext `_rsc` prefetch loop 会打爆 Worker 请求数，

@@ -443,9 +443,27 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 
 - **`<html>/<body>` 挪到 `app/[locale]/layout.tsx`**：locale 取自 params 并 `setRequestLocale(locale)`；`app/layout.tsx` 只透传 children（**不要**在里面调 `getLocale()/getMessages()/headers()`，否则全站退回动态渲染）。`app/not-found.tsx` 自带 `<html>/<body>`（[locale] 段外的 404），`app/[locale]/not-found.tsx` 处理段内 `notFound()`，内容共用 `components/NotFoundContent.tsx`。
 - **公开页面**（`[locale]/(public)` 下除 search / app / app/[slug] / login 外的所有 page）：`generateStaticParams() { return []; }` + 页面入口 `setRequestLocale(locale)`；`(public)/layout.tsx` 也注入（Header/Footer 的 `getTranslations()` 不带 locale）。build 表里显示为 `●` 但 0 条路径；首个请求渲染后写 R2 增量缓存，之后 `x-nextjs-cache: HIT`。
-- **revalidate 实际值**：页面 revalidate 取「段配置」与「本次渲染里 fetch / unstable_cache 的最小值」——WP fetch 是 300s，所以文章/归档/首页实际 `s-maxage=300`；只读 D1 导航缓存的静态页（about/skills/solutions）是 900s。过期后 stale-while-revalidate 后台重建。
+- **revalidate 实际值**：页面 revalidate 取「段配置」与「本次渲染里 fetch / unstable_cache 的最小值」。Issue #14 起所有公开数据源统一 `PUBLIC_REVALIDATE_SECONDS`（86400，见 `src/lib/cache-config.ts`），过期后 stale-while-revalidate 后台重建；新增数据源别再写短 TTL，否则整页被压回去（守卫在 `tests/unit/isr-config.test.ts`）。
 - **保持动态**：search（searchParams）、app 与 app/[slug]（显式 force-dynamic）、login、admin、api、feed。新增公开页面默认按 ISR 写法；需要动态的加进 `tests/unit/isr-config.test.ts` 的 `DYNAMIC_PAGES` 白名单。
 - **sitemap.xml**：`force-dynamic` + 整份结果 `unstable_cache`（1h，tag `sitemap`）。无动态段的 metadata route 只要声明 revalidate 就会在 build 预渲染，所以不能用 `revalidate`。命中时 0 次 WP/D1。
 - **测试桩**：`vitest.setup.ts` 统一把 `next-intl/server` 的 `setRequestLocale` 桩掉（jsdom 下解析到客户端桩会直接抛错）；单个测试文件自行 mock `next-intl/server` 时要自带 `setRequestLocale`。
 - **代价**：部署换 build id 后缓存全冷，每个页面第一个访客（含爬虫）要等一次完整渲染（WP 往返 2~13 次，归档/作者页首访会触发一次计数扫描）。
 - **本地验证方法**：mock WP + `opennextjs-cloudflare build` + `populateCache local` + `wrangler dev`，同一 URL 连打两次看 `x-nextjs-cache: MISS → HIT`。注意 curl 时带 `Host: localhost:<port>`，否则 host 不一致会被 OpenNext 当成外部 rewrite（中文默认语言路径会走一次自我代理并跟随重定向），结果失真。
+
+### Issue #14：公开页 ISR 从 300s 提到 86400s + 修复按需 ISR 恒 STALE（2026-09-29）
+
+- **现象**（修复前线上）：首页/文章 HIT 时 `s-maxage=77~270`（= 300 − 条目年龄，OpenNext `fixISRHeaders` 会减去年龄），大部分请求是 `x-nextjs-cache: STALE` 且无 Cache-Control，每次访问都后台整页重渲染。
+- **根因 1**：WP fetch `revalidate: 300`、导航/首页推荐应用 `unstable_cache` 900s，把页面 revalidate 压到 300s（段配置 `revalidate = 86400` 不起作用）。修复：统一 `PUBLIC_REVALIDATE_SECONDS`；WP 读请求全部打 `WP_CACHE_TAG`（`'wp'`）。
+- **根因 2**：全站按需 ISR，路径不在 prerender-manifest；Next 16 `calculateRevalidate` 取不到 revalidate 就按 **1 秒**判过期（只有本 isolate 内存里有值），Workers isolate 一换就恒 STALE。修复：`src/lib/isr-freshness-cache.ts` 的 `withStoredRevalidate` 包装增量缓存，按条目里 OpenNext 存的 `value.revalidate` 判新鲜度，TTL 内把 lastModified 报成 now 并写剩余 TTL 的 s-maxage。
+  - ⚠️ 与 free-ai-api 同名方案的差异：本站 tag cache 是 D1 **next-mode**，`hasBeenRevalidated` 比较「tag 失效时间 > lastModified」，直接改 lastModified 会吞掉 revalidateTag。所以包装层先用**真实** lastModified 查 tag（失效/在 SWR 窗口就原样返回），确认没失效才改。拿不到 next-mode tag cache 时保守不改。
+- **失效**：`publishBlogPost` 在 purge_everything 之后 `revalidateTag('wp', { expire: 0 })`，失效全部 WP fetch 及依赖它的页面（文章、首页、归档、相关文章）。导航/应用变更沿用各自 tag。**WP 后台直接改文不经本站发布流程，只能等 86400s TTL 或手动发布一次/清缓存。**
+- **边缘整页缓存：Workers Cache**（https://developers.cloudflare.com/workers/cache/）。zone 的 Cache Rules / purge_everything 对 Worker 响应都无效，只能用 Worker 自己的缓存。
+  - `wrangler.jsonc` `cache.enabled: true`；入口改为 `worker.ts`（包一层 `.open-next/worker.js`，经 `alias` 引用），出口 `applyEdgeCachePolicy`（`src/lib/workers-cache.ts`）给**每个**响应写 `Cloudflare-CDN-Cache-Control`：公共 ISR HTML = `max-age=3600, stale-while-revalidate=86400` + `Cache-Tag: html`；其余一律 `no-store`（不写的话 200 默认缓存 2h、404 缓存 3min）。
+  - 可缓存条件：GET/HEAD、无查询串、白名单路径（首页/posts/category/tag/about/skills/solutions/tech，含 /en）、无 RSC/next-action/x-prerender-revalidate/Authorization 头、无 better-auth / 预览 cookie；响应 200 + text/html + `x-nextjs-cache` 为 HIT/MISS（STALE 不缓存）+ 无 Set-Cookie/private/no-store。
+  - 缓存键不含 Cookie 和请求头，且缓存在 Worker 之前查：登录用户访问公共页也会命中公共 HTML（ISR 页对所有人相同，安全）；RSC / ISR 重验证请求靠 `Vary` 隔开（DO 队列经 `WORKER_SELF_REFERENCE` 回打也会先查缓存）。
+  - **不用文档的「网关 entrypoint + 缓存 entrypoint」模式**：本站开了 smart placement，网关（不缓存）会先被调度到远端机房再查缓存，失去边缘就近命中；单 entrypoint 时缓存先于 smart placement。
+  - 边缘 TTL 不用 `s-maxage`：会禁用边缘 SWR / stale-if-error。浏览器看到的 Cache-Control 仍是 Next 的 `s-maxage=…`（浏览器不缓存）。
+  - 失效：`publishBlogPost` 在 `waitUntil` 里延迟 3s（等 revalidateTag 落盘）调 `ctx.cache.purge({ tags: ['html'] })`，不需要 API token；按 Free 档限流，失败由 max-age 1h 兜底。导航/关于页等其它后台改动**不**清边缘，最多 1h 后可见。
+  - 部署：缓存键默认含 Worker 版本，每次部署从空缓存开始（`cross_version_cache` 保持 false）。
+  - 排查：`cf-cache-status` + `x-edge-cache`（cache/bypass，本策略判定）。
+

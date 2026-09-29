@@ -29,6 +29,23 @@ describe('ISR 配置守卫', () => {
     expect((config.r2_buckets ?? []).map((b) => b.binding)).toContain('NEXT_INC_CACHE_R2_BUCKET');
   });
 
+  it('Issue #14：Workers Cache 开启，入口 worker.ts 包一层 OpenNext 产物并导出 DO', () => {
+    const json = readText('wrangler.jsonc').replace(/^\s*\/\/.*$/gm, '');
+    const config = JSON.parse(json) as {
+      main: string;
+      alias?: Record<string, string>;
+      cache?: { enabled: boolean; cross_version_cache?: boolean };
+    };
+    expect(config.main).toBe('worker.ts');
+    expect(config.alias?.['open-next-generated-worker']).toBe('./.open-next/worker.js');
+    expect(config.cache?.enabled).toBe(true);
+    // 每次部署从空缓存开始，避免旧 HTML 引用已删除的静态资源
+    expect(config.cache?.cross_version_cache).not.toBe(true);
+    const worker = readText('worker.ts');
+    expect(worker).toContain('applyEdgeCachePolicy(request, response)');
+    expect(worker).toMatch(/export \{ DOQueueHandler \} from 'open-next-generated-worker'/);
+  });
+
   it('open-next.config.ts 保持 R2 + regional + DO queue + D1 tag，不用 KV', () => {
     const source = readText('open-next.config.ts');
     expect(source).toContain('r2-incremental-cache');
@@ -37,6 +54,25 @@ describe('ISR 配置守卫', () => {
     expect(source).toContain('d1-next-tag-cache');
     expect(source).not.toMatch(/kv-incremental-cache/);
     expect(source).toContain('enableCacheInterception: false');
+    // Issue #14：按需 ISR 路径不在 prerender-manifest，必须由包装层按条目 revalidate 判新鲜度
+    expect(source).toContain('withStoredRevalidate(');
+  });
+
+  it('Issue #14：公开页数据源 TTL 与页面 ISR 对齐（>= 1h），不再有 300/900s 短 TTL', () => {
+    const files = [
+      'src/lib/wordpress/client.ts',
+      'src/lib/wordpress/posts.ts',
+      'src/lib/public-navigation.ts',
+      'src/lib/public-apps.ts',
+    ];
+    for (const file of files) {
+      const source = readText(file);
+      expect(source, file).toContain('PUBLIC_REVALIDATE_SECONDS');
+      expect(source, file).not.toMatch(/revalidate: [^,}]*\b(300|900)\b/);
+      expect(source, file).not.toMatch(/_SECONDS = (300|900);/);
+    }
+    expect(readText('src/lib/wordpress/client.ts')).toContain('tags: [WP_CACHE_TAG]');
+    expect(readText('src/lib/wordpress/posts.ts')).toContain('tags: [WP_CACHE_TAG]');
   });
 
   // 全站 ISR（2026-09-27）：构建期 0 预渲染、0 次 WordPress 请求；页面首个请求渲染后进增量缓存

@@ -56,7 +56,7 @@ describe('public-navigation', () => {
 
     expect(items).toEqual(getDefaultNavigationItems('en', 'header'));
     expect(mockUnstableCache).toHaveBeenCalledWith(expect.any(Function), ['navigation', 'en', 'header'], {
-      revalidate: 900,
+      revalidate: 86400,
       tags: ['nav:en:header'],
     });
     expect(getNavigationTag('en', 'header')).toBe('nav:en:header');

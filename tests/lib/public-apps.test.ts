@@ -113,7 +113,7 @@ describe('public-apps', () => {
       },
     ]);
     expect(mockUnstableCache).toHaveBeenCalledWith(expect.any(Function), ['featured-apps', 'en'], {
-      revalidate: 900,
+      revalidate: 86400,
       tags: ['home:featured-apps:en'],
     });
     expect(mockAsc).toHaveBeenCalledWith(apps.sortOrder);

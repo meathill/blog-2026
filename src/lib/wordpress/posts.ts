@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { wpFetch, getAccessHeaders, getBasicAuthHeader } from './client';
+import { PUBLIC_REVALIDATE_SECONDS, WP_CACHE_TAG } from '@/lib/cache-config';
 import { WPPost } from './types';
 
 // Issue #13：线上 WP 的 found_posts 失真——X-WP-Total 恒等于「本页返回条数」、X-WP-TotalPages 恒为 1，
@@ -11,13 +12,14 @@ import { WPPost } from './types';
 //    「本页满载且 header 声称后面没有了」时，才不信 header，用 `_fields=id` 数出真实总数。
 //    相关文章、首页最新、侧栏等「只要 N 篇」的调用默认不计数，保持一次请求（bcafe36 构建超时的教训：
 //    文章详情页的相关文章每页都触发计数，1600+ 页 × 多次扫描把构建拖过 60s/页上限）。
-// 3. 计数结果按「API 地址 + 过滤条件」在进程内缓存 COUNT_CACHE_TTL_MS（与 fetch revalidate 对齐），
+// 3. 计数结果按「API 地址 + 过滤条件」在进程内缓存 COUNT_CACHE_TTL_MS（5 分钟，isolate 内存，与 fetch revalidate 无关），
 //    构建时每个 worker 每种过滤条件只数一次；并发调用共享同一个 promise。
 //    WP 恢复正常后 header 可信，计数分支自然不再触发。
 const COUNT_SCAN_PAGE_SIZE = 100;
 const COUNT_SCAN_MAX_REQUESTS = 50;
-const WP_REVALIDATE_SECONDS = 300;
-const COUNT_CACHE_TTL_MS = WP_REVALIDATE_SECONDS * 1000;
+const COUNT_CACHE_TTL_MS = 5 * 60 * 1000;
+// Issue #14：WP fetch 的 revalidate 决定了页面 ISR 的 revalidate 上限，见 cache-config.ts
+const WP_FETCH_CACHE = { revalidate: PUBLIC_REVALIDATE_SECONDS, tags: [WP_CACHE_TAG] };
 
 type PostsFilter = {
   categories?: number[];
@@ -71,7 +73,7 @@ async function scanPostCount(apiUrl: string, headers: HeadersInit, filter: Posts
     }
     const response = await fetch(`${apiUrl}/posts?${searchParams}`, {
       headers,
-      next: { revalidate: WP_REVALIDATE_SECONDS },
+      next: WP_FETCH_CACHE,
     });
     if (!response.ok) {
       break;
@@ -160,7 +162,7 @@ export const getPosts = cache(async (params?: GetPostsParams): Promise<PostsResu
 
   const response = await fetch(url, {
     headers,
-    next: { revalidate: WP_REVALIDATE_SECONDS },
+    next: WP_FETCH_CACHE,
   });
 
   if (!response.ok) {
@@ -211,7 +213,8 @@ export async function getPostById(id: number, options?: RequestInit): Promise<WP
     ...options,
     headers,
     next: {
-      revalidate: options?.cache === 'no-store' ? 0 : 300,
+      revalidate: options?.cache === 'no-store' ? 0 : PUBLIC_REVALIDATE_SECONDS,
+      tags: [WP_CACHE_TAG],
       ...options?.next,
     },
     cache: options?.cache,

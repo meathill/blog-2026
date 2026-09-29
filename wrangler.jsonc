@@ -1,6 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
+  // 自定义入口包一层 .open-next/worker.js：出口写 Workers Cache 边缘缓存策略（见 worker.ts / src/lib/workers-cache.ts）
+  "main": "worker.ts",
+  // worker.ts 用裸模块名引生成产物：TS 解析不到就不会把 14MB 的 server-functions/handler.mjs 拉进类型检查（next build 会挂）
+  "alias": {
+    "open-next-generated-worker": "./.open-next/worker.js"
+  },
   "name": "blog-2026",
   "compatibility_date": "2026-01-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -55,6 +60,12 @@
   },
   "placement": {
     "mode": "smart"
+  },
+  // Workers Cache（Issue #14）：Cloudflare 在执行 Worker 前先查这层分层缓存（先于 smart placement），命中直接从边缘返回。
+  // 缓存与否由 worker.ts 写的 Cloudflare-CDN-Cache-Control 决定（只缓存公共 ISR 页 HTML，其余一律 no-store），
+  // 发布时 ctx.cache.purge 按 tag 清除。cross_version_cache 保持默认 false：每次部署从空缓存开始。
+  "cache": {
+    "enabled": true
   },
   "r2_buckets": [
     {

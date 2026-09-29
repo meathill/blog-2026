@@ -1,7 +1,7 @@
 'use server';
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getAuth } from '@/lib/auth';
@@ -19,8 +19,10 @@ import {
   updateBlogPostRecord,
 } from '@/lib/blog-storage';
 import { syncBlogPostToWordPress } from '@/lib/blog-sync';
+import { WP_CACHE_TAG } from '@/lib/cache-config';
 import { purgeCloudflareCache } from '@/lib/cloudflare-purge';
 import { regeneratePostOg } from '@/lib/og/post-image';
+import { EDGE_PURGE_DELAY_MS, purgeEdgeHtmlCache } from '@/lib/workers-cache';
 
 export async function listBlogPosts(options?: { page?: number; pageSize?: number; search?: string }) {
   await checkAuth();
@@ -119,9 +121,15 @@ export async function publishBlogPost(formData: FormData): Promise<BlogEditorMut
   }
 
   revalidateBlogAdminPaths(id);
+  // Issue #14：公开页 ISR 是 86400s，发布（新文/改文）必须立即失效所有 WP 数据及依赖它的页面
+  // （文章页、首页、归档、相关文章）。expire: 0 = 立即过期，不走 SWR，避免先给旧页。
+  revalidateTag(WP_CACHE_TAG, { expire: 0 });
   revalidatePath('/');
   revalidatePath('/posts');
   revalidatePath('/feed');
+  // Workers Cache 整页边缘缓存（zone purge 对它无效）：延迟到 revalidateTag 落盘之后按 tag 清除，
+  // 否则紧随其后的请求可能把失效前的 ISR 页重新写回边缘。best-effort，失败时由边缘 max-age（1h）兜底。
+  ctx.waitUntil(purgeEdgeHtmlCache(ctx, EDGE_PURGE_DELAY_MS));
 
   // purge 之后后台重渲 OG 图并写入 R2,保证发文后被 X 抓取时即时命中(best-effort,失败不阻断发布)。
   ctx.waitUntil(
