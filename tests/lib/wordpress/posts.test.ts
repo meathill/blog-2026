@@ -131,4 +131,56 @@ describe('processContent', () => {
         '<a href="https://blog.meathill.com/wp-content/uploads/2011/08/MG_87421.jpg">照片</a>',
     );
   });
+
+  it('demotes body h1 to h2 and still adds an id (single page H1 lives in the template)', () => {
+    const input = '<h1>Title One</h1><p>Content</p><h2>Already</h2>';
+    expect(processContent(input)).toBe('<h2 id="title-one">Title One</h2><p>Content</p><h2 id="already">Already</h2>');
+  });
+
+  it('does not demote an h1 that only appears inside pre', () => {
+    const input = '<pre><h1>keep</h1></pre>';
+    expect(processContent(input)).toBe(input);
+  });
+
+  it('fills empty image alt from figcaption, otherwise the article title', () => {
+    const input =
+      '<figure><img src="/a.jpg" alt=""><figcaption>图注</figcaption></figure><img src="/b.jpg"><img src="/c.jpg" alt="已有">';
+    expect(processContent(input, { imageAlt: '文章标题' })).toBe(
+      '<figure><img src="/a.jpg" alt="图注"><figcaption>图注</figcaption></figure><img alt="文章标题" src="/b.jpg"><img src="/c.jpg" alt="已有">',
+    );
+  });
+
+  it('does not invent alt when no fallback is passed', () => {
+    const input = '<img src="/x.jpg" alt="">';
+    expect(processContent(input)).toBe(input);
+  });
+
+  it('rewrites internal hrefs that would 301', () => {
+    const input = [
+      '<a href="https://www.meathill.com/about">www</a>',
+      '<a href="https://blog.meathill.com/tech/foo">blog</a>',
+      '<a href="/tags/fathers-day">tags</a>',
+      '<a href="/life/my-post">legacy</a>',
+      '<a href="/tech/compare">section</a>',
+      '<a href="/tech/old-article">old tech</a>',
+      '<a href="/page/2">page</a>',
+      '<a href="/page/1">page one</a>',
+      '<a href="/posts/page/1">posts page one</a>',
+      '<a href="/sponsors">sponsors</a>',
+    ].join(' ');
+    expect(processContent(input)).toBe(
+      [
+        '<a href="/about">www</a>',
+        '<a href="/posts/tech/foo">blog</a>',
+        '<a href="/tag/fathers-day">tags</a>',
+        '<a href="/posts/life/my-post">legacy</a>',
+        '<a href="/tech/compare">section</a>',
+        '<a href="/posts/tech/old-article">old tech</a>',
+        '<a href="/posts/page/2">page</a>',
+        '<a href="/page/1">page one</a>',
+        '<a href="/posts/page/1">posts page one</a>',
+        '<a href="https://github.com/sponsors/meathill">sponsors</a>',
+      ].join(' '),
+    );
+  });
 });

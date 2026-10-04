@@ -214,7 +214,7 @@ return new Response(transformed.image(), {
 - **新鲜度**：`WPPost.modified`（WP REST 默认返回）驱动 sitemap `lastModified`、文章页「更新于」（晚于发布 1 天才显示）、OG `modifiedTime`、JSON-LD `dateModified`。
 - **noindex 策略**：tag / 作者归档 / search / 分页归档（`/page/N`）/ 分类分页一律 `robots: { index:false, follow:true }`；分类首页、`/posts` 归档首页保留索引。
 - **attachment**：`/posts/.../attachment/...` **301 到父文**（不再渲染可索引页）；blog 源站 Caddy/nginx/htaccess 对 `*.html/attachment*` 同样 301 到父文路径。
-- **meta description**：`buildPostDescription` 目标 **110–160 字符**（2026-07 Ahrefs 复查修订）：excerpt ≥110 原样优先；20–109 时以 excerpt 开头拼接正文补足（保 CTR 又达长度下限）；<20 或 WP 自动摘要（正文开头）直接用正文去重。
+- **meta description**：`buildPostDescription` 目标 **150–160 字符**（2026-07 下限 110；issue #15 Bing 仍报描述太短，下限抬到约 150）：excerpt ≥150 原样优先；20–149 时以 excerpt 开头拼接正文补足；无 excerpt / <20 / WP 自动摘要用正文前 160 字。空白会先折成单空格，避免换行把可见描述挤短。
 - **站内文章链**：列表/卡片用 `getPostPath(post)` → `/posts/{category}/{slug}`，与 canonical/sitemap 一致。
 - **sitemap 收口**：`src/app/sitemap.ts` 不再收录 tag 页（薄内容）；robots 额外 disallow `/search`。
 - **内容日历**：`docs/blog-topics-2026-q3.md`（一周两篇 + 直播联动）。
@@ -248,7 +248,7 @@ return new Response(transformed.image(), {
 - 站点名/组织信息不要再手写：`src/lib/seo/jsonld.ts` 从 `brandCatalog.organization` 取
   `name`/`id`/`legalName`（`SITE_NAME`、`ORGANIZATION_ID` 均派生）；`Article` 的 `publisher`
   用 `{ '@id': ORGANIZATION_ID }` 引用，不再内联 Organization 对象。title 模板是
-  `'%s | Meathill Studio'`（`root-metadata.ts`），`DEFAULT_OG_IMAGE.alt` 也是 `Meathill Studio`。
+  `'%s'`（`root-metadata.ts`，issue #15：不再追加过长的 ` | Meathill Studio`），`DEFAULT_OG_IMAGE.alt` 也是 `Meathill Studio`。
 - 品牌文案变更（改名/换 slogan）先改上游 brand 包发版，再在本仓升版，不要两边各写一份。
 
 ### 评论组件版本 pin（2026-09-07，`31d3ba4`）

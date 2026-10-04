@@ -32,16 +32,16 @@ describe('buildPostDescription', () => {
       }),
     );
 
-    // 摘要在前保住 CTR，正文补足到 110–160
+    // 摘要在前保住 CTR，正文补足到 150–160
     expect(desc.startsWith(excerpt)).toBe(true);
-    expect(desc.length).toBeGreaterThanOrEqual(110);
+    expect(desc.length).toBeGreaterThanOrEqual(150);
     expect(desc.length).toBeLessThanOrEqual(160);
     expect(desc).toContain('随着 Vibe coding');
   });
 
-  it('达到 110 的摘要原样优先，不拼接正文', () => {
-    const excerpt = `本文对比 Vercel 与 Cloudflare 的价格、冷启动、带宽费用、函数运行时与 Next.js 支持，${'补充说明'.repeat(15)}`;
-    expect(excerpt.length).toBeGreaterThanOrEqual(110);
+  it('达到 150 的摘要原样优先，不拼接正文', () => {
+    const excerpt = `本文对比 Vercel 与 Cloudflare 的价格、冷启动、带宽费用、函数运行时与 Next.js 支持，${'补充说明'.repeat(30)}`;
+    expect(excerpt.length).toBeGreaterThanOrEqual(150);
 
     const desc = buildPostDescription(makePost({ excerpt: `<p>${excerpt}</p>`, content: '<p>正文开头</p>' }));
     expect(desc).toBe(excerpt.slice(0, 160));
@@ -79,5 +79,29 @@ describe('buildPostDescription', () => {
       }),
     );
     expect(desc).toContain('足够长的正文');
+  });
+
+  it('120 字手写摘要用正文补到至少 150、不超过 160', () => {
+    const excerpt = '摘'.repeat(120);
+    const body = '正'.repeat(80);
+    const desc = buildPostDescription(makePost({ excerpt: `<p>${excerpt}</p>`, content: `<p>${body}</p>` }));
+    expect(desc.startsWith(excerpt)).toBe(true);
+    expect(desc).toContain('正');
+    expect(desc.length).toBeGreaterThanOrEqual(150);
+    expect(desc.length).toBeLessThanOrEqual(160);
+  });
+
+  it('没有 excerpt 时用正文前 160 字（约 150）', () => {
+    const body = '正'.repeat(200);
+    const desc = buildPostDescription(makePost({ excerpt: '', content: `<p>${body}</p>` }));
+    expect(desc).toBe(body.slice(0, 160));
+    expect(desc.length).toBe(160);
+  });
+
+  it('正文里的换行空白会先折掉，避免可见描述过短', () => {
+    const body = '正'.repeat(180);
+    const desc = buildPostDescription(makePost({ excerpt: '', content: `<p>\n\n${body}\n\n</p>` }));
+    expect(desc.startsWith('正')).toBe(true);
+    expect(desc.length).toBe(160);
   });
 });

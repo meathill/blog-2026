@@ -71,7 +71,7 @@ describe('RootLayout', () => {
 describe('LocaleLayout generateMetadata', () => {
   it('en 返回英文 title/description，OG locale 为 en_US、url 为 /en', async () => {
     const metadata = await generateMetadata({ params: params('en') });
-    expect(metadata.title).toMatchObject({ template: '%s | Meathill Studio' });
+    expect(metadata.title).toMatchObject({ template: '%s' });
     expect((metadata.title as { default: string }).default).toMatch(/Full-stack Engineering/);
     expect(metadata.description).toMatch(/20\+ years of full-stack experience/);
     expect(metadata.openGraph?.locale).toBe('en_US');

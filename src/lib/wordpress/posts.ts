@@ -324,16 +324,22 @@ export function stripHtml(html: string): string {
     .trim();
 }
 
-// SEO/OG 描述目标长度：110–160 字符（Ahrefs/搜索引擎摘要下限 110，OG 卡片上限 160）。
-// issue #4 曾决策 excerpt 一律优先、不凑长度；2026-07 Ahrefs 复查发现 1458 个可索引页
-// 描述过短，修订为：excerpt ≥110 仍原样优先；不足 110 时以 excerpt 开头拼接正文补足，
-// 保住手写摘要的 CTR 又满足长度下限。极短（<20）视为无摘要，直接用正文。
+// SEO/OG 描述目标长度：150–160 字符。
+// issue #4 曾决策 excerpt 一律优先；2026-07 Ahrefs 把下限定为 110；
+// Bing（issue #15，2026-09-27）仍报 258 条 meta 描述太短，下限抬到约 150。
+// excerpt ≥150 原样优先（超过 160 截断）；没有可用 excerpt 时用正文前 160 字
+// （约 150，且不超过 Ahrefs 上限）；20–149 的手写摘要仍放在开头，用正文补足。
+// 极短（<20）或 WP 自动摘要（正文开头）直接用正文，避免开头重复。
+function descriptionText(html: string): string {
+  return stripHtml(html).replace(/\s+/g, ' ').trim();
+}
+
 export function buildPostDescription(post: WPPost): string {
   const TARGET_MAX = 160;
-  const MIN_LENGTH = 110;
+  const MIN_LENGTH = 150;
   const EXCERPT_MIN_USABLE = 20;
-  const excerpt = stripHtml(post.excerpt?.rendered ?? '');
-  const body = stripHtml(post.content?.rendered ?? '');
+  const excerpt = descriptionText(post.excerpt?.rendered ?? '');
+  const body = descriptionText(post.content?.rendered ?? '');
 
   if (excerpt.length >= MIN_LENGTH) {
     return excerpt.slice(0, TARGET_MAX);

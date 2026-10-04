@@ -6,6 +6,7 @@ import { ExternalLink, Github, TagIcon } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import type { Metadata } from 'next';
 import { marked } from 'marked';
+import { demoteBodyH1, withImageAltFallback } from '@/lib/wordpress/content';
 import { getPublicAppTags } from '@/lib/public-apps';
 import AwesomeComment from '@/components/AwesomeComment';
 import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
@@ -87,7 +88,7 @@ export default async function AppDetailPage({ params }: PageProps) {
   const tags = await getPublicAppTags(app.id);
 
   // Convert markdown to HTML
-  const contentHtml = content ? await marked(content) : '';
+  const contentHtml = content ? withImageAltFallback(demoteBodyH1(String(await marked(content))), name) : '';
 
   const category = await getCategoryBySlug(slug);
   let recentPosts: any[] = [];

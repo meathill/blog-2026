@@ -17,13 +17,14 @@ import AwesomeComment from '@/components/AwesomeComment';
 import { getAboutContent } from '@/actions/about';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { marked } from 'marked';
+import { demoteBodyH1, withImageAltFallback } from '@/lib/wordpress/content';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Metadata' });
   const canonicalUrl = `${SITE_URL}${locale === 'en' ? '/en' : ''}/about`;
 
-  // title 不再带 "· Meathill LLC"——根 layout 的 title.template 会追加品牌名，避免重复
+  // title 只放页面名。根 layout 的 title.template 不再追加站名（issue #15：后缀把标题撑过 Bing 上限）。
   return {
     title: t('about_title'),
     description: t('about_description'),
@@ -145,7 +146,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             className="prose prose-invert max-w-none text-[var(--text-secondary)]"
             dangerouslySetInnerHTML={{
               __html: aboutContent?.content
-                ? marked(aboutContent.content)
+                ? withImageAltFallback(demoteBodyH1(String(marked(aboutContent.content))), 'Meathill')
                 : `<p>大家好，我是肉山（Meathill），Meathill LLC 创始人，拥有 20+ 年全栈开发经验。我以一人公司的方式远程交付项目，专注 Cloudflare 全栈架构、AI 应用与计费系统、以及 React Native 跨端开发——从沟通到上线，对你的产品全程负责。</p>`,
             }}
           />
@@ -157,7 +158,9 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             <h2 className="text-xl font-bold text-gradient mb-6">GitHub Profile</h2>
             <div
               className="prose prose-invert max-w-none p-6 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)]"
-              dangerouslySetInnerHTML={{ __html: marked(aboutContent.githubContent) }}
+              dangerouslySetInnerHTML={{
+                __html: withImageAltFallback(demoteBodyH1(String(marked(aboutContent.githubContent))), 'Meathill'),
+              }}
             />
           </section>
         )}

@@ -73,7 +73,7 @@ export default async function PostView({ post, locale }: PostViewProps) {
   const isMeaningfullyUpdated =
     !!post.modified && new Date(post.modified).getTime() - new Date(post.date).getTime() > 24 * 60 * 60 * 1000;
   const updatedFormatted = isMeaningfullyUpdated ? formatDate(post.modified) : undefined;
-  const processedContent = processContent(post.content.rendered);
+  const processedContent = processContent(post.content.rendered, { imageAlt: title });
   const toc = extractTOC(processedContent, stripHtml);
   const needsCodeHighlight = hasCodeBlocks(processedContent);
   const needsMermaid = hasMermaidBlocks(processedContent);

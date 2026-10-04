@@ -40,9 +40,9 @@ export default function LoginPage() {
     <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8 rounded-2xl bg-white/50 p-8 shadow-xl backdrop-blur-md ring-1 ring-black/5 dark:bg-zinc-900/50 dark:ring-white/10">
         <div className="text-center">
-          <h2 className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+          <h1 className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
             Admin Login
-          </h2>
+          </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Sign in to manage your apps</p>
         </div>
 

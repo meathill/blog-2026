@@ -64,7 +64,9 @@ export function buildRootMetadata(locale: string | undefined): Metadata {
   return {
     title: {
       default: text.title,
-      template: '%s | Meathill Studio',
+      // 子页不要再追加「 | Meathill Studio」（18 字符）。Bing（issue #15）报标题过长，
+      // 过长来自模板后缀而不是单篇文章；首页 default 仍用完整站名，Open Graph siteName 不变。
+      template: '%s',
     },
     description: text.description,
     keywords: text.keywords,
