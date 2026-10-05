@@ -4,6 +4,56 @@ import { getWordPressAccessHeaders, getWordPressApiUrl } from './access';
 
 const getAccessHeaders = getWordPressAccessHeaders;
 
+// 源站（Tunnel→Caddy→PHP-FPM→TiDB）偶发挂起时，Cloudflare 要等满 100s 才回 524，
+// 期间冷渲染的文章页一直挂着。30s 快速失败 + GET 重试一次，最坏 ~61s，
+// 同时给源站冷启动（15s+，见 DEV_NOTE）留足余量。
+const WP_FETCH_TIMEOUT_MS = 30_000;
+const WP_FETCH_RETRY_DELAY_MS = 1_000;
+const WP_FETCH_MAX_ATTEMPTS = 2;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function requestWithRetry(url: string, init: RequestInit): Promise<Response> {
+  // 写操作不具备幂等性，失败直接抛出，避免重试导致重复创建
+  const canRetry = (init.method ?? 'GET').toUpperCase() === 'GET';
+
+  for (let attempt = 1; attempt <= WP_FETCH_MAX_ATTEMPTS; attempt += 1) {
+    const startedAt = Date.now();
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...init,
+        signal: AbortSignal.timeout(WP_FETCH_TIMEOUT_MS),
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      if (!canRetry || attempt === WP_FETCH_MAX_ATTEMPTS) {
+        console.error(
+          `[WP API] Request failed, attempt ${attempt}, spent ${Date.now() - startedAt}ms: ${url} (${reason})`,
+        );
+        throw error;
+      }
+      console.warn(`[WP API] Request failed in ${Date.now() - startedAt}ms (${reason}), retrying: ${url}`);
+      await sleep(WP_FETCH_RETRY_DELAY_MS);
+      continue;
+    }
+
+    // 4xx 属于确定失败（如文章不存在），重试没有意义
+    if (response.ok || response.status < 500 || !canRetry || attempt === WP_FETCH_MAX_ATTEMPTS) {
+      return response;
+    }
+
+    console.warn(`[WP API] Origin returned ${response.status} in ${Date.now() - startedAt}ms, retrying: ${url}`);
+    await response.body?.cancel();
+    await sleep(WP_FETCH_RETRY_DELAY_MS);
+  }
+
+  // 循环内必有 return / throw，这里只为通过 TS 的类型收窄
+  throw new Error('[WP API] unreachable');
+}
+
 export async function wpFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const { env } = await getCloudflareContext({ async: true });
   const url = `${getWordPressApiUrl(env)}${endpoint}`;
@@ -12,7 +62,7 @@ export async function wpFetch<T>(endpoint: string, options?: RequestInit): Promi
     ...(options?.headers || {}),
   };
 
-  const response = await fetch(url, {
+  const response = await requestWithRetry(url, {
     ...options,
     headers,
     next: {

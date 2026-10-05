@@ -60,6 +60,15 @@
 - `gemini*`：使用 `@google/genai`。
 - 其他：使用 `openai` SDK（兼容 OpenAI 格式的代理）。
 
+### WP 源站访问韧性（2026-10-05）
+
+源站（Tunnel→Caddy→PHP-FPM→TiDB）偶发挂起，Cloudflare 要等满 100s 才回 524，冷渲染文章页会跟着挂起后 500。对策（`src/lib/wordpress/client.ts`）：
+
+- `wpFetch` 每次请求带 `AbortSignal.timeout(30s)`：30s 快速失败远好于挂满 100s，同时给源站冷启动（15s+）留余量。
+- 网络错误/5xx 对 **GET** 自动重试 1 次（间隔 1s）；写操作不重试（非幂等，避免重复创建）。4xx 确定失败不重试。
+- 源站故障时文章页仍会 500，但 `src/app/[locale]/error.tsx` 提供友好错误页（重试 + 回首页）。**刻意保持 500 而不是 200 占位/404**：5xx 对 SEO 是"稍后重试"，不摘索引；边缘 Workers Cache 的 SWR（1h + stale 1d）兜住近期访问过的页面。
+- 定性为瞬时抖动，未开启 observability、未改源站；若复发再按日志时间点查 TiDB 连接与 PHP-FPM。
+
 ### 性能优化 (Web Vitals)
 
 - **第三方脚本**：Google Adsense/GA 等脚本在 `ThirdPartyScripts` 组件中延迟加载。在用户滚动超过首屏或空闲时才注入。

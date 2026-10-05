@@ -1,5 +1,16 @@
 # WIP: 处理 issue #6 / #7 / #8
 
+## WP 源站抖动导致文章页 500（2026-10-05，已完成待部署）
+
+线上 blog.meathill.com 源站间歇性挂起（>100s，Cloudflare 回 524），冷渲染文章页 `wpFetch` 抛未捕获异常 → 裸 500。定性为瞬时抖动（当日已自愈），只做代码韧性：
+
+- [x] 测试先行：`tests/unit/wordpress-client.test.ts`（5xx 重试 / 网络错误重试 / 耗尽抛错 / 4xx 不重试 / 非 GET 不重试 / 超时 signal）
+- [x] `wpFetch`：30s 超时 + GET 重试 1 次 + 结构化错误日志（`src/lib/wordpress/client.ts`）
+- [x] 友好错误页：`src/app/[locale]/error.tsx`（500 语义 + 重试/回首页）+ `tests/unit/locale-error.test.tsx`
+- [x] 回归：test 615 通过 / format / typecheck / build
+- [ ] 部署后线上验证文章页与 feed 路由
+- 决策记录见 DEV_NOTE「WP 源站访问韧性」；不做：feed 路由改造、observability 重开、源站排查
+
 完整计划见 `~/.claude/plans/https-github-com-meathill-blog-2026-iss-linear-tide.md`。执行模式:主管 + Sonnet subagents 分包,逐项督查验收。
 
 ## 任务分解 (TODO)
