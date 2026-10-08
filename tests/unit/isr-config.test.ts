@@ -45,16 +45,21 @@ describe('ISR 配置守卫', () => {
     expect(config.cache?.cross_version_cache).not.toBe(true);
     const worker = readText('worker.ts');
     expect(worker).toContain('applyEdgeCachePolicy(request, response)');
+    expect(worker).toContain('runWithCacheWritePolicy(() => handler.fetch(request, env, ctx))');
+    expect(readText('src/components/NotFoundContent.tsx')).toContain('data-blog-not-found="true"');
     expect(worker).toMatch(/export \{ DOQueueHandler \} from 'open-next-generated-worker'/);
   });
 
   it('本月临时禁用增量与 tag 缓存，保留 DO queue 与关闭的 cache interception', () => {
     const source = readText('open-next.config.ts');
-    expect(source).toContain("incrementalCache: 'dummy'");
-    expect(source).not.toContain('r2-incremental-cache');
+    expect(source).toContain('const R2_CACHE_ENABLED = false');
+    expect(source).toContain(
+      "incrementalCache: R2_CACHE_ENABLED ? createBlogIncrementalCache(r2IncrementalCache) : 'dummy'",
+    );
+    expect(source).toContain('createBlogIncrementalCache');
     expect(source).not.toContain('withRegionalCache');
     expect(source).toContain('do-queue');
-    expect(source).toContain("tagCache: 'dummy'");
+    expect(source).toContain("tagCache: R2_CACHE_ENABLED ? d1TagCache : 'dummy'");
     expect(source).not.toMatch(/kv-incremental-cache/);
     expect(source).toContain('enableCacheInterception: false');
   });

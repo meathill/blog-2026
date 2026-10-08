@@ -504,10 +504,27 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 incremental cache 与 D1 tag cache 的组合）。边缘未命中的请求
 需要重新渲染和读取 WordPress / D1，CPU 与回源开销可能增加。
 
-恢复条件：先修复并验证 404 等按需缓存的重复写入，再按额度情况恢复原来的
-`withStoredRevalidate(withRegionalCache(r2IncrementalCache, { mode: 'long-lived',
-shouldLazilyUpdateOnCacheHit: true }))` 及 D1 tag cache、`site-cache` 绑定。配置守卫随恢复决策更新；
-不会到月末自动恢复。
+恢复条件：确认额度与剩余重复写入问题后，显式将 `open-next.config.ts` 的
+`R2_CACHE_ENABLED` 改为 true 并恢复 `NEXT_INC_CACHE_R2_BUCKET=site-cache` 绑定。
+恢复配置固定调用 `createBlogIncrementalCache`，不能改回裸 R2 adapter；tag cache 随开关恢复。
+当前开关仍为 false，配置守卫继续要求博客没有 site-cache 绑定，不会到月末自动恢复。
+
+永久策略（`src/lib/blog-incremental-cache.ts` / `src/lib/cache-write-policy.ts`）：
+
+- HTTP 404 请求：延后本次增量缓存写入，最终 404 时全部丢弃；同请求后台写入也受限。
+  使用 AsyncLocalStorage 隔离并发请求，bind 保留 OpenNext 的 Cloudflare 绑定上下文。
+- 404 条目：过滤 `meta.status=404`，以及本站 404 组件的 `data-blog-not-found="true"`
+  标记（兼容 Next 流式 200 / 无状态码的 notFound 页面）。不能用 `revalidate=false` 判 404，
+  正常永久 SSG 页面仍应缓存；已存的明确 404 条目读取时按 miss 处理。
+- fetch 条目：过滤状态码 404，以及 WP posts/media/categories/tags 的 slug 查询返回空数组。
+  兼容 Next base64 body；普通空列表和成功内容可缓存。
+- CLI 预填会直接上传 R2，绕过运行时 set：采用独立缓存名称跳过预填，按需生成后再走过滤。
+  恢复后冷启动需要按需填充有效页面，不会把构建出的 `_not-found` 页面上传 R2。
+
+10 月 7 日 17:00 至 8 日 17:00 的 20 个高频页面缓存键抽查：约 5,527 次写入中，
+确认 7 个 404 条目贡献约 2,346 次（42.4% 的样本），不能推算整月占比。
+隔离复现证明 revalidate=false 条目在新缓存控制上下文里会被 Next 16.3.4 按 1 秒过期判断。
+
 
 
 已发布版本 `ff29457c-d900-443c-a215-3b696b56bbd9`。线上 API 核对 `site-cache` 绑定已移除、

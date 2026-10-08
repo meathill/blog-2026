@@ -5,11 +5,12 @@
 // server-functions/handler.mjs 拉进类型检查，`next build` 的 TypeScript 步骤会直接失败。
 // @ts-ignore 仅 wrangler 打包时可解析
 import { default as handler } from 'open-next-generated-worker';
+import { runWithCacheWritePolicy } from './src/lib/cache-write-policy';
 import { applyEdgeCachePolicy, type EdgeCacheContext } from './src/lib/workers-cache';
 
 export default {
   async fetch(request: Request, env: unknown, ctx: EdgeCacheContext): Promise<Response> {
-    const response: Response = await handler.fetch(request, env, ctx);
+    const response = await runWithCacheWritePolicy(() => handler.fetch(request, env, ctx));
     // 边缘缓存策略必须是出口最后一步：它依据最终的状态码 / 响应头决定缓存与否
     return applyEdgeCachePolicy(request, response);
   },

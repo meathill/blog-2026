@@ -5,7 +5,7 @@ import { HomeIcon, SearchIcon, ArrowLeftIcon } from 'lucide-react';
 
 export default function NotFoundContent() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div data-blog-not-found="true" className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-md">
         {/* 404 Number */}
         <div className="relative mb-8">
