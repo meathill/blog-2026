@@ -487,3 +487,29 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   - 部署：缓存键默认含 Worker 版本，每次部署从空缓存开始（`cross_version_cache` 保持 false）。
   - 排查：`cf-cache-status` + `x-edge-cache`（cache/bypass，本策略判定）。
 
+
+
+## 本月 R2 增量缓存临时停用（2026-10-08）
+
+账号本周期 R2 Class A 免费额度已用完。线上 API 核对博客几个构建的 `site-cache`
+`PutObject` 合计约 96.70 万次，占该桶写入约 98.1%；高频 `.cache` 样本为博客 404 页面。
+`withStoredRevalidate` 只修正数值 revalidate，跳过 `revalidate=false` 的 404 条目；
+按需路径的 Next 新鲜度回退与 404 不进入整页 Workers Cache 是重复写入的排查重点，
+尚未完成全部请求路径和历史流量的根因验证。
+
+止损：`open-next.config.ts` 暂用官方 `incrementalCache: 'dummy'`，博客 Wrangler 移除
+`NEXT_INC_CACHE_R2_BUCKET` / `site-cache` 绑定，阻断 ISR / fetch 缓存对 R2 的读写。
+媒体桶 `BUCKET=blog`、D1 绑定、DO queue 与整页 Workers Cache 保留；tag cache 同时暂设
+`dummy`（无增量缓存时无需 tag store；OpenNext 1.20.4 的配置校验也不接受 dummy
+incremental cache 与 D1 tag cache 的组合）。边缘未命中的请求
+需要重新渲染和读取 WordPress / D1，CPU 与回源开销可能增加。
+
+恢复条件：先修复并验证 404 等按需缓存的重复写入，再按额度情况恢复原来的
+`withStoredRevalidate(withRegionalCache(r2IncrementalCache, { mode: 'long-lived',
+shouldLazilyUpdateOnCacheHit: true }))` 及 D1 tag cache、`site-cache` 绑定。配置守卫随恢复决策更新；
+不会到月末自动恢复。
+
+
+已发布版本 `ff29457c-d900-443c-a215-3b696b56bbd9`。线上 API 核对 `site-cache` 绑定已移除、
+Workers Cache 保持开启；首页第二次 GET 为 `CF-Cache-Status: HIT`，真实文章 200、
+不存在文章 404。615 项测试、类型检查、格式和 Cloudflare 构建通过。

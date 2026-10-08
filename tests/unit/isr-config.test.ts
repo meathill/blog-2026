@@ -26,7 +26,9 @@ describe('ISR 配置守卫', () => {
       expect.arrayContaining([{ name: 'NEXT_CACHE_DO_QUEUE', class_name: 'DOQueueHandler' }]),
     );
     expect((config.d1_databases ?? []).map((d) => d.binding)).toContain('NEXT_TAG_CACHE_D1');
-    expect((config.r2_buckets ?? []).map((b) => b.binding)).toContain('NEXT_INC_CACHE_R2_BUCKET');
+    // 本月 R2 Class A 超额：博客暂时不能访问共享 site-cache；媒体桶仍保留。
+    expect((config.r2_buckets ?? []).map((b) => b.binding)).not.toContain('NEXT_INC_CACHE_R2_BUCKET');
+    expect((config.r2_buckets ?? []).map((b) => b.binding)).toContain('BUCKET');
   });
 
   it('Issue #14：Workers Cache 开启，入口 worker.ts 包一层 OpenNext 产物并导出 DO', () => {
@@ -46,16 +48,15 @@ describe('ISR 配置守卫', () => {
     expect(worker).toMatch(/export \{ DOQueueHandler \} from 'open-next-generated-worker'/);
   });
 
-  it('open-next.config.ts 保持 R2 + regional + DO queue + D1 tag，不用 KV', () => {
+  it('本月临时禁用增量与 tag 缓存，保留 DO queue 与关闭的 cache interception', () => {
     const source = readText('open-next.config.ts');
-    expect(source).toContain('r2-incremental-cache');
-    expect(source).toContain('withRegionalCache');
+    expect(source).toContain("incrementalCache: 'dummy'");
+    expect(source).not.toContain('r2-incremental-cache');
+    expect(source).not.toContain('withRegionalCache');
     expect(source).toContain('do-queue');
-    expect(source).toContain('d1-next-tag-cache');
+    expect(source).toContain("tagCache: 'dummy'");
     expect(source).not.toMatch(/kv-incremental-cache/);
     expect(source).toContain('enableCacheInterception: false');
-    // Issue #14：按需 ISR 路径不在 prerender-manifest，必须由包装层按条目 revalidate 判新鲜度
-    expect(source).toContain('withStoredRevalidate(');
   });
 
   it('Issue #14：公开页数据源 TTL 与页面 ISR 对齐（>= 1h），不再有 300/900s 短 TTL', () => {

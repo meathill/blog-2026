@@ -26,7 +26,7 @@
     ]
   },
   // DO queue 回打 Worker 自身做 time-based revalidate，依赖自引用 service binding；
-  // 缺它 DO 构造直接抛 IgnorableError，ISR 定时刷新发不出去。R2 incremental cache 保持不动，不迁 KV。
+  // 缺它 DO 构造直接抛 IgnorableError，ISR 定时刷新发不出去。临时停用增量缓存时保留绑定便于恢复。
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
@@ -71,10 +71,6 @@
     {
       "binding": "BUCKET",
       "bucket_name": "blog"
-    },
-    {
-      "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "site-cache"
     }
   ],
   "kv_namespaces": [
