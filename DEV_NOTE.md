@@ -470,7 +470,7 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 - **代价**：部署换 build id 后缓存全冷，每个页面第一个访客（含爬虫）要等一次完整渲染（WP 往返 2~13 次，归档/作者页首访会触发一次计数扫描）。
 - **本地验证方法**：mock WP + `opennextjs-cloudflare build` + `populateCache local` + `wrangler dev`，同一 URL 连打两次看 `x-nextjs-cache: MISS → HIT`。注意 curl 时带 `Host: localhost:<port>`，否则 host 不一致会被 OpenNext 当成外部 rewrite（中文默认语言路径会走一次自我代理并跟随重定向），结果失真。
 
-### Issue #14：公开页 ISR 从 300s 提到 86400s + 修复按需 ISR 恒 STALE（2026-09-29）
+### Issue #14：公开页 ISR 与自定义缓存历史方案（2026-09-29，已于 10-09 撤销）
 
 - **现象**（修复前线上）：首页/文章 HIT 时 `s-maxage=77~270`（= 300 − 条目年龄，OpenNext `fixISRHeaders` 会减去年龄），大部分请求是 `x-nextjs-cache: STALE` 且无 Cache-Control，每次访问都后台整页重渲染。
 - **根因 1**：WP fetch `revalidate: 300`、导航/首页推荐应用 `unstable_cache` 900s，把页面 revalidate 压到 300s（段配置 `revalidate = 86400` 不起作用）。修复：统一 `PUBLIC_REVALIDATE_SECONDS`；WP 读请求全部打 `WP_CACHE_TAG`（`'wp'`）。
@@ -504,29 +504,39 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 incremental cache 与 D1 tag cache 的组合）。边缘未命中的请求
 需要重新渲染和读取 WordPress / D1，CPU 与回源开销可能增加。
 
-恢复条件：确认额度与剩余重复写入问题后，显式将 `open-next.config.ts` 的
-`R2_CACHE_ENABLED` 改为 true 并恢复 `NEXT_INC_CACHE_R2_BUCKET=site-cache` 绑定。
-恢复配置固定调用 `createBlogIncrementalCache`，不能改回裸 R2 adapter；tag cache 随开关恢复。
-当前开关仍为 false，配置守卫继续要求博客没有 site-cache 绑定，不会到月末自动恢复。
-
-永久策略（`src/lib/blog-incremental-cache.ts` / `src/lib/cache-write-policy.ts`）：
-
-- HTTP 404 请求：延后本次增量缓存写入，最终 404 时全部丢弃；同请求后台写入也受限。
-  使用 AsyncLocalStorage 隔离并发请求，bind 保留 OpenNext 的 Cloudflare 绑定上下文。
-- 404 条目：过滤 `meta.status=404`，以及本站 404 组件的 `data-blog-not-found="true"`
-  标记（兼容 Next 流式 200 / 无状态码的 notFound 页面）。不能用 `revalidate=false` 判 404，
-  正常永久 SSG 页面仍应缓存；已存的明确 404 条目读取时按 miss 处理。
-- fetch 条目：过滤状态码 404，以及 WP posts/media/categories/tags 的 slug 查询返回空数组。
-  兼容 Next base64 body；普通空列表和成功内容可缓存。
-- CLI 预填会直接上传 R2，绕过运行时 set：采用独立缓存名称跳过预填，按需生成后再走过滤。
-  恢复后冷启动需要按需填充有效页面，不会把构建出的 `_not-found` 页面上传 R2。
-
-10 月 7 日 17:00 至 8 日 17:00 的 20 个高频页面缓存键抽查：约 5,527 次写入中，
-确认 7 个 404 条目贡献约 2,346 次（42.4% 的样本），不能推算整月占比。
-隔离复现证明 revalidate=false 条目在新缓存控制上下文里会被 Next 16.3.4 按 1 秒过期判断。
-
+恢复条件：在官方 Next/OpenNext 链路验证正常页面的一天 TTL、404 不写入、发布失效与队列绕过
+边缘缓存之后，再显式恢复官方缓存配置和 site-cache 绑定；不再恢复自定义时间戳包装。
+当前仍全关，不会到月末自动恢复。
 
 
 已发布版本 `ff29457c-d900-443c-a215-3b696b56bbd9`。线上 API 核对 `site-cache` 绑定已移除、
 Workers Cache 保持开启；首页第二次 GET 为 `CF-Cache-Status: HIT`，真实文章 200、
 不存在文章 404。615 项测试、类型检查、格式和 Cloudflare 构建通过。
+
+
+## Wrangler / OpenNext 官方基线（2026-10-09，当前本地方案）
+
+入口采用官方 `.open-next/worker.js`，不再包 `worker.ts`，也不使用别名、自造时间戳新鲜度、
+请求级写入队列或自定义 R2 过滤 adapter。OpenNext 仅使用 `defineCloudflareConfig` 和官方 DO queue。
+Wrangler 保留业务绑定、已有 DO 迁移、官方自引用/队列绑定及 `cache.enabled: true`，
+移除自定义入口别名、Smart Placement 与额外静态资源路由选项。
+
+项目只编译 TS/TSX（allowJs=false），避免生成的 Env 引用官方入口后扫描整个生成 JS 产物；
+不再通过自定义 Worker 入口解决类型检查边界。
+
+- Workers Cache 根据 Next/OpenNext 的 Cache-Control 与 Vary 处理公开响应，命中不执行 Worker。
+- API 用 Next headers() 声明 Cloudflare-CDN-Cache-Control=no-store；登录、后台、搜索和 404
+  的 private/no-store 由 Next 产生。
+- 公开页与数据源的 revalidate 仍为 86400。当前增量/tag 缓存都是 dummy，无 site-cache 绑定，
+  因此目前没有持久 ISR；第一层边缘缓存未命中时仍需渲染。
+- 发布沿用 revalidateTag/revalidatePath，由 Next after() 调用原生
+  ctx.cache.purge({ purgeEverything: true }) 清理边缘，不再手写 tag、入口或固定延迟。
+
+历史异常尚未定位完整原因：同一构建下正常 /zh/category/js 保存 86400，却在一天内约 274 次
+PutObject，覆盖 23 小时。此前局部 1s 回退复现不能当作生产完整根因；删除原包装不代表问题已修复。
+恢复 R2 前必须在原生链路验证：正常 TTL 内不重复 put、过期刷新符合预期、404/不存在内容不写 R2、
+发布失效有效、ISR 队列请求不被 Workers Cache 截断。验证不通过则继续关闭，不再堆叠包装。
+
+本地 workerd 已验证：skills 200 + s-maxage=86400；无效 skill/solution 404 + private/no-store；
+API 显式 no-store；登录、后台、搜索 private/no-store。预览未连接生产 WordPress Access 配置，
+WP 依赖页面不算此轮成功样本，也没有模拟云端 Workers Cache 的命中层。

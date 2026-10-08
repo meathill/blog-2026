@@ -1,6 +1,7 @@
 'use server';
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { after } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -22,7 +23,6 @@ import { syncBlogPostToWordPress } from '@/lib/blog-sync';
 import { WP_CACHE_TAG } from '@/lib/cache-config';
 import { purgeCloudflareCache } from '@/lib/cloudflare-purge';
 import { regeneratePostOg } from '@/lib/og/post-image';
-import { EDGE_PURGE_DELAY_MS, purgeEdgeHtmlCache } from '@/lib/workers-cache';
 
 export async function listBlogPosts(options?: { page?: number; pageSize?: number; search?: string }) {
   await checkAuth();
@@ -127,9 +127,16 @@ export async function publishBlogPost(formData: FormData): Promise<BlogEditorMut
   revalidatePath('/');
   revalidatePath('/posts');
   revalidatePath('/feed');
-  // Workers Cache 整页边缘缓存（zone purge 对它无效）：延迟到 revalidateTag 落盘之后按 tag 清除，
-  // 否则紧随其后的请求可能把失效前的 ISR 页重新写回边缘。best-effort，失败时由边缘 max-age（1h）兜底。
-  ctx.waitUntil(purgeEdgeHtmlCache(ctx, EDGE_PURGE_DELAY_MS));
+  // Next 原生 after 在响应完成后执行，不再手写入口、缓存 tag 或固定延迟。
+  after(async () => {
+    if (!ctx.cache) return;
+    try {
+      const result = await ctx.cache.purge({ purgeEverything: true });
+      if (!result.success) console.error('[publish] Workers Cache 清理失败:', result.errors);
+    } catch (error) {
+      console.error('[publish] Workers Cache 清理异常:', error);
+    }
+  });
 
   // purge 之后后台重渲 OG 图并写入 R2,保证发文后被 X 抓取时即时命中(best-effort,失败不阻断发布)。
   ctx.waitUntil(

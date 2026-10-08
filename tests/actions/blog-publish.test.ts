@@ -5,18 +5,25 @@ const mockRevalidateTag = vi.fn();
 const mockPurge = vi.fn();
 const mockSync = vi.fn();
 const mockWaitUntil = vi.fn();
-const mockEdgePurge = vi.fn();
+const mockAfter = vi.fn();
+const mockWorkerPurge = vi.fn();
 
 vi.mock('@/lib/auth', () => ({
   getAuth: () => ({ api: { getSession: vi.fn().mockResolvedValue({ user: { id: 'user-1' } }) } }),
 }));
 vi.mock('next/headers', () => ({ headers: vi.fn().mockResolvedValue(new Headers()) }));
+vi.mock('next/server', () => ({ after: (...args: unknown[]) => mockAfter(...args) }));
 vi.mock('next/cache', () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
   revalidateTag: (...args: unknown[]) => mockRevalidateTag(...args),
 }));
 vi.mock('@opennextjs/cloudflare', () => ({
-  getCloudflareContext: vi.fn().mockImplementation(async () => ({ env: {}, ctx: { waitUntil: mockWaitUntil } })),
+  getCloudflareContext: vi
+    .fn()
+    .mockImplementation(async () => ({
+      env: {},
+      ctx: { waitUntil: mockWaitUntil, cache: { purge: mockWorkerPurge } },
+    })),
 }));
 vi.mock('@/lib/blog-ai', () => ({ generateBlogMetadataSuggestion: vi.fn() }));
 vi.mock('@/lib/blog-content', () => ({
@@ -32,10 +39,6 @@ vi.mock('@/lib/blog-storage', () => ({
 }));
 vi.mock('@/lib/blog-sync', () => ({ syncBlogPostToWordPress: (...args: unknown[]) => mockSync(...args) }));
 vi.mock('@/lib/cloudflare-purge', () => ({ purgeCloudflareCache: (...args: unknown[]) => mockPurge(...args) }));
-vi.mock('@/lib/workers-cache', () => ({
-  EDGE_PURGE_DELAY_MS: 3000,
-  purgeEdgeHtmlCache: (...args: unknown[]) => mockEdgePurge(...args),
-}));
 vi.mock('@/lib/og/post-image', () => ({ regeneratePostOg: vi.fn().mockResolvedValue(undefined) }));
 
 import { publishBlogPost } from '@/actions/blog';
@@ -62,15 +65,18 @@ describe('publishBlogPost 缓存失效（Issue #14）', () => {
     expect(mockRevalidatePath).toHaveBeenCalledWith('/');
   });
 
-  it('发布后在 waitUntil 里延迟按 tag 清除 Workers Cache 整页缓存', async () => {
-    mockEdgePurge.mockResolvedValue(true);
+  it('发布后通过 Next after 调用原生 Workers Cache purge', async () => {
+    mockWorkerPurge.mockResolvedValue({ success: true, errors: [] });
     const formData = new FormData();
     formData.set('title', 'Hello');
 
     await publishBlogPost(formData);
 
-    expect(mockEdgePurge).toHaveBeenCalledWith(expect.objectContaining({ waitUntil: mockWaitUntil }), 3000);
-    expect(mockEdgePurge.mock.invocationCallOrder[0]).toBeGreaterThan(mockRevalidateTag.mock.invocationCallOrder[0]);
+    expect(mockAfter).toHaveBeenCalledOnce();
+    expect(mockWorkerPurge).not.toHaveBeenCalled();
+    const callback = mockAfter.mock.calls[0][0] as () => Promise<void>;
+    await callback();
+    expect(mockWorkerPurge).toHaveBeenCalledWith({ purgeEverything: true });
     expect(mockWaitUntil).toHaveBeenCalled();
   });
 });

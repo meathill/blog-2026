@@ -64,6 +64,11 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // API 由业务处理，不交给 Workers Cache 的默认启发式缓存。
+        source: '/api/:path*',
+        headers: [{ key: 'Cloudflare-CDN-Cache-Control', value: 'no-store' }],
+      },
+      {
         source: '/favicon.webp',
         headers: [
           {

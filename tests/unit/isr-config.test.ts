@@ -31,37 +31,23 @@ describe('ISR 配置守卫', () => {
     expect((config.r2_buckets ?? []).map((b) => b.binding)).toContain('BUCKET');
   });
 
-  it('Issue #14：Workers Cache 开启，入口 worker.ts 包一层 OpenNext 产物并导出 DO', () => {
+  it('官方生成入口直接运行，Workers Cache 保留，R2 缓存保持关闭', () => {
     const json = readText('wrangler.jsonc').replace(/^\s*\/\/.*$/gm, '');
     const config = JSON.parse(json) as {
       main: string;
       alias?: Record<string, string>;
       cache?: { enabled: boolean; cross_version_cache?: boolean };
     };
-    expect(config.main).toBe('worker.ts');
-    expect(config.alias?.['open-next-generated-worker']).toBe('./.open-next/worker.js');
+    expect(config.main).toBe('.open-next/worker.js');
+    expect(config.alias).toBeUndefined();
     expect(config.cache?.enabled).toBe(true);
-    // 每次部署从空缓存开始，避免旧 HTML 引用已删除的静态资源
     expect(config.cache?.cross_version_cache).not.toBe(true);
-    const worker = readText('worker.ts');
-    expect(worker).toContain('applyEdgeCachePolicy(request, response)');
-    expect(worker).toContain('runWithCacheWritePolicy(() => handler.fetch(request, env, ctx))');
-    expect(readText('src/components/NotFoundContent.tsx')).toContain('data-blog-not-found="true"');
-    expect(worker).toMatch(/export \{ DOQueueHandler \} from 'open-next-generated-worker'/);
-  });
-
-  it('本月临时禁用增量与 tag 缓存，保留 DO queue 与关闭的 cache interception', () => {
     const source = readText('open-next.config.ts');
-    expect(source).toContain('const R2_CACHE_ENABLED = false');
-    expect(source).toContain(
-      "incrementalCache: R2_CACHE_ENABLED ? createBlogIncrementalCache(r2IncrementalCache) : 'dummy'",
-    );
-    expect(source).toContain('createBlogIncrementalCache');
-    expect(source).not.toContain('withRegionalCache');
+    expect(source).toContain("incrementalCache: 'dummy'");
+    expect(source).toContain("tagCache: 'dummy'");
     expect(source).toContain('do-queue');
-    expect(source).toContain("tagCache: R2_CACHE_ENABLED ? d1TagCache : 'dummy'");
-    expect(source).not.toMatch(/kv-incremental-cache/);
-    expect(source).toContain('enableCacheInterception: false');
+    expect(source).not.toContain("from './src/");
+    expect(source).not.toContain('edgeExternals');
   });
 
   it('Issue #14：公开页数据源 TTL 与页面 ISR 对齐（>= 1h），不再有 300/900s 短 TTL', () => {

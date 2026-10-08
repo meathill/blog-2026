@@ -1,21 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // 自定义入口包一层 .open-next/worker.js：出口写 Workers Cache 边缘缓存策略（见 worker.ts / src/lib/workers-cache.ts）
-  "main": "worker.ts",
-  // worker.ts 用裸模块名引生成产物：TS 解析不到就不会把 14MB 的 server-functions/handler.mjs 拉进类型检查（next build 会挂）
-  "alias": {
-    "open-next-generated-worker": "./.open-next/worker.js"
-  },
+  "main": ".open-next/worker.js",
   "name": "blog-2026",
   "compatibility_date": "2026-01-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "account_id": "fdc63eeea83ae8f5234357308b9a638b",
-  "keep_names": false,
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS",
-    "html_handling": "auto-trailing-slash",
-    "not_found_handling": "none"
+    "binding": "ASSETS"
   },
   "durable_objects": {
     "bindings": [
@@ -25,8 +17,7 @@
       }
     ]
   },
-  // DO queue 回打 Worker 自身做 time-based revalidate，依赖自引用 service binding；
-  // 缺它 DO 构造直接抛 IgnorableError，ISR 定时刷新发不出去。临时停用增量缓存时保留绑定便于恢复。
+  // 官方 ISR 队列的自引用绑定；停用 R2 期间保留既有绑定和迁移历史。
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
@@ -58,12 +49,7 @@
   "observability": {
     "enabled": false
   },
-  "placement": {
-    "mode": "smart"
-  },
-  // Workers Cache（Issue #14）：Cloudflare 在执行 Worker 前先查这层分层缓存（先于 smart placement），命中直接从边缘返回。
-  // 缓存与否由 worker.ts 写的 Cloudflare-CDN-Cache-Control 决定（只缓存公共 ISR 页 HTML，其余一律 no-store），
-  // 发布时 ctx.cache.purge 按 tag 清除。cross_version_cache 保持默认 false：每次部署从空缓存开始。
+  // 官方 Workers Cache：命中时不执行 Worker，遵循 Next/OpenNext 的响应缓存头。
   "cache": {
     "enabled": true
   },
