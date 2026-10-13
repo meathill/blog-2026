@@ -98,20 +98,19 @@
 
 ## 已知限制与解法
 
-### 代码块 codeBlock 是本地 fork（语言/文件名/mermaid，2026-07-20）
+### 代码块 codeBlock 是本地 fork（语言/文件名/高亮/mermaid，2026-07-20 起）
 
 `src/lib/blog-code-block.ts` 整份 fork 自 `@blocknote/core` 的 `src/blocks/Code/block.ts`（用
 `createBlockConfig`/`createBlockSpec`/`createExtension`/`getLanguageId` 这些公开导出搭的，不是碰内部私有
 API）。原因：BlockNote 的 `createCodeBlockSpec()` propSchema 写死只有 `language`，没有扩展点，加不了
-`filename` 字段，只能整份 fork 才能塞进文件名 UI + mermaid 实时预览面板。**没有复用上游的
-`lazyShikiPlugin`**：它要求显式传 `createHighlighter`，本项目从未配置过，一直是空转 no-op，去掉不算功能
-倒退，也省得引入 shiki 依赖。
+`filename` 字段，只能整份 fork 才能塞进文件名 UI + mermaid 实时预览面板。
 
 - **BlockNote 已到 `0.52.1`（`a540fec`，2026-07-25），fork 无需迁移**：实测 0.52 的 block `content`
   类型是 `"inline" | "table" | "none" | "plain"`（见上游 `schema/blocks/internal.d.ts`），`'inline'`
   仍被完整支持，fork 的 inline-array 语义在 0.52.1 下照常工作（编辑器测试全过）。以后升级仍要
   重新对比上游 `Code/block.ts`（上游默认 codeBlock 已切 `plain`，fork 保持 `inline` 是有意为之，
-  不要"顺手"改成 `plain`）。
+  **不要"顺手"改成 `plain`**：prosemirror-highlight 只处理 `inlineContent` 节点，改了高亮会静默失效，
+  `tests/lib/blog-code-block.test.ts` 有守卫）。
 - 语言 id 直接对齐 highlight.js 自己的语言名（`src/config/code-block-languages.ts` 和
   `src/config/highlight-languages.json`/`CodeHighlight.tsx` 的 `ALIASES` 共用同一套词表），编辑器和
   前端高亮之间不设翻译层。默认语言 key 保留 BlockNote 自己的硬编码值 `'text'`（没有改成
@@ -121,6 +120,62 @@ API）。原因：BlockNote 的 `createCodeBlockSpec()` propSchema 写死只有 
   踩 `turndown` 那种 CJS-under-Workers 的坑（见下面「HTML → Markdown 转换」条目）。
 - 文件名走 `data-filename` 属性 + CSS `::before`（`pre[data-filename]::before`），复用了
   `.wp-block-code[title]::before` 已有的视觉方案（同一份声明块，只有 `content: attr(...)` 不同）。
+
+#### 编辑器内语法高亮走 shiki（2026-10-13）
+
+`src/lib/blog-code-block-highlight.ts`。上游的 `lazyShikiPlugin` **没有公开导出**（只内联在 dist 里），
+所以按它的加载协议自己实现了一份，key 沿用上游的 `code-block-highlighter` 便于日后比对：
+
+- shiki 用细粒度入口 `shiki/core` + `createJavaScriptRegexEngine({ forgiving: true })`
+  （`shiki/engine/javascript`），**不引入 oniguruma 的 .wasm 资源**；主题 `one-dark-pro`，
+  语言包按需 `import('@shikijs/langs/*')`。`bash` 在 shiki 里叫 `shellscript`（其 aliases 含
+  bash/sh/zsh/shell），映射表见文件内 `SHIKI_LANGUAGE_LOADERS`；`text`/`mermaid`/词表外语言直接不产出装饰。
+- 加载协议：parser 在加载期间返回 `Promise<void>`，prosemirror-highlight 会在 resolve 后重算，
+  所以代码块是「先渲染、后上色」；装饰是 `Decoration`，不改文档内容，不影响编辑/撤销/复制。
+- **shiki 只服务后台编辑器，不参与博客内容渲染**：公开文章页的代码高亮仍然是 highlight.js
+  （`CodeHighlight.tsx` + `atom-one-dark`）。静态 import 图有守卫测试
+  `tests/unit/editor-shiki-boundary.test.ts`（只有高亮模块能引 shiki，且高亮模块只被 fork 引用，
+  fork 只被 `components/admin/` 引用）。构建产物层面实测：公开文章页的 13 个 chunk 里只有
+  highlight.js、没有任何 shiki；chunk 级复算是遍历 `page_client-reference-manifest.js` +
+  `react-loadable-manifest.json` 里的 `static/chunks/*.js` 再逐个 grep shiki 标记，
+  **改完这条链路后建议重跑一次**。
+- 体积：shiki 相关代码是**一个约 900KB 的异步 chunk + 每语言 40~60KB 的独立 chunk**，
+  编辑器初始 chunk（15 个 / 0.38MB）里也没有它，只有真的出现代码块时才加载。
+- 主题选 `one-dark-pro` 是因为它的背景色就是发布页 `.wp-block-code` 的 `#282c34`，编辑器与线上观感一致；
+  编辑器代码块底色因此也在 `BlogBlockEditor.module.css` 里改成 `#282c34`、正文色 `#abb2bf`。
+  发布页仍然是 highlight.js + `atom-one-dark`（两套引擎同属 One Dark 系，token 颜色会有细微差异）。
+- **四个依赖都必须是直接依赖**：`shiki`、`@shikijs/langs`、`@shikijs/themes`（要 import 它们的子路径）、
+  `prosemirror-highlight`（BlockNote 的传递依赖，pnpm 严格模式下不能直接 import）。`@shikijs/types` 只作
+  类型出现在插件 d.ts 里，不用自己声明。
+- `HighlighterCore` 实际是 `HighlighterGeneric<never, never>`，比 prosemirror-highlight 声明的
+  `HighlighterGeneric<string, string>` 在 `loadTheme` 参数上更窄，传参处需要一次 `as`（运行时无差别）。
+
+#### BlockNote 自带 CSS 会打乱 fork 的 toolbar（2026-10-13）
+
+排查「文件名输入框和代码块并排、语言下拉点不到」时定位到的两条上游规则（core 与 shadcn 两份都有）：
+
+- `.bn-block-content{display:flex}`（行方向）：fork 的 `[toolbar, pre, preview]` 变成三个并排的
+  flex item，toolbar 里的文件名 input 被拉成整块高度。解法是在 `BlogBlockEditor.module.css` 里对
+  `[data-content-type=codeBlock]` 单独设 `flex-direction: column`（选择器带 `.bn-block` 祖先是为了
+  特异性压过 BlockNote 自己的 `background-color:#161616`，不依赖 CSS 加载顺序）。
+- `.bn-block-content[data-content-type=codeBlock]>div>select{position:absolute;opacity:0}`：上游用它
+  做「hover 才显示语言选择」的效果，正好命中 fork 的 `toolbar>select`——select 被绝对定位到左上角且
+  透明，我们自己的样式因特异性更低全部失效。解法是给 select 外面多包一层
+  `div.bn-code-block-language`，让子组合器失配；同一条规则也解释了为什么不能把 select 直接放进 toolbar。
+- 词表外的语言（WordPress 导入、MCP 草稿可能带 `php` 等）会在下拉里补一个同名选项，避免显示错位。
+
+#### 已知缺口：mermaid 预览只在编辑后显示（2026-10-13 排查确认，非本次引入）
+
+打开已有文章时，mermaid 代码块下方只有空的预览面板；敲一下字（或把语言切走再切回来）才会出图。
+原因是两段既有行为的叠加，改动前后（`228b925` 对照）完全相同：
+
+1. `attachMermaidPreview` 在 block `render()`（node view 构造时）读 `contentDOM.textContent`，此刻
+   ProseMirror 还没把内容填进去，读到空串直接返回；只有后续 `input` 事件（防抖 500ms）才会真正渲染。
+2. 预览写进面板后，node view 会被 BlockNote/ProseMirror 重建（它不做增量更新），新的面板又是空的。
+
+修的话给 `attachMermaidPreview` 加 MutationObserver 监听 `contentDOM` 就能自愈，但要同时确认
+「渲染 → 重建 → 再渲染」不会形成循环（面板写入在 contentDOM 之外，PM 默认 `ignoreMutation` 会忽略，
+仍需实测），暂未处理。
 
 ### 动态 OG 图（next/og + Cloudflare IMAGES binding）
 

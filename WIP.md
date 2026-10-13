@@ -1,4 +1,20 @@
-## Wrangler / OpenNext 回归官方配置（2026-10-09）
+## 博客编辑器代码块与排版改进（2026-10-13，已完成）
+
+- [x] 装依赖：shiki / @shikijs/langs / @shikijs/themes / prosemirror-highlight（13 项高亮单测）
+- [x] fork `blog-code-block.ts`：select 包一层 `.bn-code-block-language`、词表外语言补选项、挂 `code-block-highlighter`
+- [x] `BlogBlockEditor.module.css`：代码块纵向布局、#282c34 底色、行内代码、段落间距
+- [x] 无头 Chrome 截图验收（临时预览页，已删除）：工具条回到代码上方、shiki 高亮生效（82 个装饰）、
+      语言下拉可见可点、行内代码有底色边框、段落间距变松；564 测试 / typecheck / next build 通过
+- [x] `DEV_NOTE.md` 记录选型与两条 BlockNote CSS 坑
+- [ ] 待用户确认观感（间距数值、深色工具栏是否合意，都在 CSS 里，随时可调）
+
+根因：BlockNote 自带 `.bn-block-content{display:flex}`（行方向）让 toolbar 与 `<pre>` 并排；
+`.bn-block-content[data-content-type=codeBlock]>div>select`（绝对定位 + opacity:0）命中 fork 的 select，
+把它变成左上角隐形浮层，我们自己的下拉样式被更高特异性盖掉。
+
+顺带发现（非本次引入，改动前后对照一致）：mermaid 预览只在编辑后才显示，详见 DEV_NOTE。
+
+
 
 - [x] 入口改回 .open-next/worker.js，移除自定义别名与入口
 - [x] 仅用官方 OpenNext 配置，保留当前 R2 全关与业务资源

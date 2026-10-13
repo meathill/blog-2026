@@ -2,6 +2,7 @@ import type { BlockImplementation, CodeBlockOptions } from '@blocknote/core';
 import { createBlockConfig, createBlockSpec, createExtension, getLanguageId } from '@blocknote/core';
 import { DOMParser } from '@tiptap/pm/model';
 import { attachMermaidPreview } from '@/lib/blog-code-block-mermaid-preview';
+import { createBlogCodeHighlightPlugin } from '@/lib/blog-code-block-highlight';
 import { MERMAID_LANGUAGE_ID } from '@/config/code-block-languages';
 
 /**
@@ -13,8 +14,11 @@ import { MERMAID_LANGUAGE_ID } from '@/config/code-block-languages';
  * 与上游的差异：
  * - propSchema 加了 `filename`（配合语言 select 一起放在 toolbar 里）。
  * - `language === 'mermaid'` 时，toolbar 下方挂一个实时预览面板（见 `blog-code-block-mermaid-preview.ts`）。
- * - 不复用上游的 `lazyShikiPlugin`：它要求显式传入 `createHighlighter`，本项目从未配置，一直是空转
- *   no-op（打印一次 dev 警告后返回空数组），去掉它不算功能倒退，也省得再引入 shiki 依赖。
+ * - 语法高亮：上游的 `lazyShikiPlugin` 没有公开导出，换成 `@/lib/blog-code-block-highlight` 里
+ *   自实现的同款插件（同样是 shiki + prosemirror-highlight，加载协议一致）。
+ * - 语言 select 多包了一层 `div.bn-code-block-language`：BlockNote 自带
+ *   `.bn-block-content[data-content-type=codeBlock]>div>select` 会把「直接子 div 的直接子 select」
+ *   绝对定位到左上角并透明化（上游靠 hover 才显示语言），隔一层就避开了那条规则。
  */
 
 export const createBlogCodeBlockConfig = createBlockConfig(
@@ -97,15 +101,26 @@ export const createBlogCodeBlockImplementation = (
     const syncMermaidPreview = (language: string) => mermaidPreview.setActive(language === MERMAID_LANGUAGE_ID);
 
     if (options.supportedLanguages) {
+      const supportedLanguages = options.supportedLanguages;
       select = document.createElement('select');
+      select.setAttribute('aria-label', '代码语言');
 
-      Object.entries(options.supportedLanguages ?? {}).forEach(([id, { name }]) => {
+      Object.entries(supportedLanguages).forEach(([id, { name }]) => {
         const option = document.createElement('option');
         option.value = id;
         option.text = name;
         select!.appendChild(option);
       });
-      select.value = block.props.language || options.defaultLanguage || 'text';
+
+      const currentLanguage = block.props.language || options.defaultLanguage || 'text';
+      // 历史内容（WordPress 导入、MCP 草稿）可能带着词表外的语言，补一个同名选项，避免下拉错位
+      if (!(currentLanguage in supportedLanguages)) {
+        const option = document.createElement('option');
+        option.value = currentLanguage;
+        option.text = currentLanguage;
+        select.appendChild(option);
+      }
+      select.value = currentLanguage;
 
       if (editor.isEditable) {
         const handleLanguageChange = (event: Event) => {
@@ -119,7 +134,10 @@ export const createBlogCodeBlockImplementation = (
         select.disabled = true;
       }
 
-      toolbar.appendChild(select);
+      const languageWrapper = document.createElement('div');
+      languageWrapper.className = 'bn-code-block-language';
+      languageWrapper.appendChild(select);
+      toolbar.appendChild(languageWrapper);
     }
 
     const filenameInput = document.createElement('input');
@@ -174,6 +192,11 @@ export const createBlogCodeBlockImplementation = (
 /** 单独导出方便单测浅层断言「确实挂上了几个 extension / key 对不对」。 */
 export const createBlogCodeBlockExtensions = (options: CodeBlockOptions) => {
   return [
+    // 与上游 key 同名同位置，只是换成了自己实现的 shiki 插件
+    createExtension({
+      key: 'code-block-highlighter',
+      prosemirrorPlugins: [createBlogCodeHighlightPlugin(options)],
+    }),
     createExtension({
       key: 'code-block-keyboard-shortcuts',
       keyboardShortcuts: {

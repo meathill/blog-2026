@@ -7,7 +7,9 @@ vi.mock('@/lib/blog-code-block-mermaid-preview', () => ({
   attachMermaidPreview: vi.fn(() => ({ setActive: setActiveMock, destroy: destroyMock })),
 }));
 
-const { createBlogCodeBlockExtensions, createBlogCodeBlockImplementation } = await import('@/lib/blog-code-block');
+const { createBlogCodeBlockConfig, createBlogCodeBlockExtensions, createBlogCodeBlockImplementation } = await import(
+  '@/lib/blog-code-block'
+);
 const { MERMAID_LANGUAGE_ID } = await import('@/config/code-block-languages');
 
 const SUPPORTED_LANGUAGES = {
@@ -115,6 +117,32 @@ describe('blog-code-block', () => {
       expect(select.value).toBe('javascript');
     });
 
+    it('词表外的语言补一个同名选项，避免下拉错位', () => {
+      const block = fakeBlock({ language: 'php' });
+      const { dom } = impl.render(block, fakeEditor());
+      const select = (dom as DocumentFragment).querySelector('select') as HTMLSelectElement;
+
+      expect(Array.from(select.options).map((o) => o.value)).toEqual([
+        'text',
+        'javascript',
+        MERMAID_LANGUAGE_ID,
+        'php',
+      ]);
+      expect(select.value).toBe('php');
+    });
+
+    it('toolbar 在代码块最前面，select 包在 .bn-code-block-language 里', () => {
+      const { dom } = impl.render(fakeBlock(), fakeEditor());
+      const [toolbar, pre] = Array.from((dom as DocumentFragment).children) as HTMLElement[];
+
+      expect(toolbar.className).toBe('bn-code-block-toolbar');
+      // 多包一层 div 是为了绕开 BlockNote 的 `.bn-block-content[...]>div>select`
+      // 绝对定位规则（它会把直接子 div 的直接子 select 藏到左上角）
+      expect(toolbar.querySelector('select')?.parentElement?.className).toBe('bn-code-block-language');
+      expect(toolbar.querySelector(':scope > select')).toBeNull();
+      expect(pre.tagName).toBe('PRE');
+    });
+
     it('文件名 input 回填 block.props.filename', () => {
       const block = fakeBlock({ filename: 'index.ts' });
       const { dom } = impl.render(block, fakeEditor());
@@ -175,34 +203,44 @@ describe('blog-code-block', () => {
     });
   });
 
+  describe('createBlogCodeBlockConfig', () => {
+    it("content 保持 'inline'：prosemirror-highlight 只高亮 inlineContent 节点，改成上游的 'plain' 会静默失效", () => {
+      expect(createBlogCodeBlockConfig({}).content).toBe('inline');
+    });
+  });
+
   describe('createBlogCodeBlockExtensions', () => {
     // createExtension({key, ...}) 返回的是个工厂函数，调用它（不传 ctx 也行，这个分支不读 ctx）
     // 才能拿到真正的 { key, keyboardShortcuts, inputRules } 对象。
     const extensions = (createBlogCodeBlockExtensions({ supportedLanguages: SUPPORTED_LANGUAGES }) as AnyImpl[]).map(
       (factory) => factory(),
     );
+    const shortcuts = extensions.find((extension) => extension.key === 'code-block-keyboard-shortcuts') as AnyImpl;
 
-    it('只挂了一个 extension（不复用空转的 shiki highlighter）', () => {
-      expect(extensions).toHaveLength(1);
-      expect(extensions[0].key).toBe('code-block-keyboard-shortcuts');
+    it('挂了高亮与快捷键两个 extension（高亮沿用上游的 key 名）', () => {
+      expect(extensions.map((extension) => extension.key)).toEqual([
+        'code-block-highlighter',
+        'code-block-keyboard-shortcuts',
+      ]);
+      expect(extensions[0].prosemirrorPlugins).toHaveLength(1);
     });
 
     it('输入规则把 ```lang 转成对应语言的 codeBlock', () => {
-      const inputRule = extensions[0].inputRules[0];
+      const inputRule = shortcuts.inputRules[0];
       const result = inputRule.replace({ match: ['```javascript ', 'javascript'] });
 
       expect(result).toEqual({ type: 'codeBlock', props: { language: 'javascript' }, content: [] });
     });
 
     it('输入规则支持别名解析（js -> javascript）', () => {
-      const inputRule = extensions[0].inputRules[0];
+      const inputRule = shortcuts.inputRules[0];
       const result = inputRule.replace({ match: ['```js ', 'js'] });
 
       expect(result.props.language).toBe('javascript');
     });
 
     it('输入规则遇到未知语言名时原样保留', () => {
-      const inputRule = extensions[0].inputRules[0];
+      const inputRule = shortcuts.inputRules[0];
       const result = inputRule.replace({ match: ['```made-up-lang ', 'made-up-lang'] });
 
       expect(result.props.language).toBe('made-up-lang');
