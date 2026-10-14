@@ -2,6 +2,7 @@ import 'server-only';
 
 import type { PartialBlock } from '@blocknote/core';
 import { parseBlogBlocksJson } from '@/lib/blog-blocks';
+import { processBlogHtmlLinks, stripDofollowMarkers } from '@/lib/blog-links';
 import { hasMeaningfulBlogBlocks } from '@/lib/blog-post';
 
 export interface BlogContentSnapshot {
@@ -24,7 +25,7 @@ export function buildBlogContentSnapshot(
   return {
     blocks,
     blocksJson: JSON.stringify(blocks),
-    markdown,
-    html,
+    markdown: stripDofollowMarkers(markdown),
+    html: processBlogHtmlLinks(html),
   };
 }

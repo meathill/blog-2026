@@ -18,12 +18,10 @@ vi.mock('next/cache', () => ({
   revalidateTag: (...args: unknown[]) => mockRevalidateTag(...args),
 }));
 vi.mock('@opennextjs/cloudflare', () => ({
-  getCloudflareContext: vi
-    .fn()
-    .mockImplementation(async () => ({
-      env: {},
-      ctx: { waitUntil: mockWaitUntil, cache: { purge: mockWorkerPurge } },
-    })),
+  getCloudflareContext: vi.fn().mockImplementation(async () => ({
+    env: {},
+    ctx: { waitUntil: mockWaitUntil, cache: { purge: mockWorkerPurge } },
+  })),
 }));
 vi.mock('@/lib/blog-ai', () => ({ generateBlogMetadataSuggestion: vi.fn() }));
 vi.mock('@/lib/blog-content', () => ({

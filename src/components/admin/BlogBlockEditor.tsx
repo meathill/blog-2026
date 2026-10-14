@@ -13,9 +13,11 @@ import {
 import { BlockNoteView } from '@blocknote/shadcn';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import BlogLinkToolbarController from '@/components/admin/BlogLinkToolbarController';
 import { CODE_BLOCK_SUPPORTED_LANGUAGES, DEFAULT_CODE_BLOCK_LANGUAGE } from '@/config/code-block-languages';
 import { getInitialBlogBlocks } from '@/lib/blog-blocks';
 import { createBlogCodeBlockSpec } from '@/lib/blog-code-block';
+import { processBlogHtmlLinks, stripDofollowMarkers } from '@/lib/blog-links';
 import { looksLikeMarkdownDocument } from '@/lib/blog-markdown-paste';
 import styles from '@/components/admin/BlogBlockEditor.module.css';
 
@@ -47,24 +49,39 @@ export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBloc
       dictionary: locale === 'en' ? en : zh,
       pasteHandler: handleEditorPaste,
       uploadFile: uploadEditorFile,
+      links: {
+        onClick: (event) => {
+          // 彻底阻断 BlockNote 原生 clickHandler 触发 window.open
+          event.preventDefault();
+          return true;
+        },
+      },
     },
     [locale],
   );
 
   useEffect(() => {
-    setHtmlValue(editor.blocksToHTMLLossy(editor.document));
-    setMarkdownValue(editor.blocksToMarkdownLossy(editor.document));
+    setHtmlValue(processBlogHtmlLinks(editor.blocksToHTMLLossy(editor.document)));
+    setMarkdownValue(stripDofollowMarkers(editor.blocksToMarkdownLossy(editor.document)));
   }, [editor]);
 
   function handleChange() {
     const blocks = editor.document;
     setSerializedValue(JSON.stringify(blocks));
-    setHtmlValue(editor.blocksToHTMLLossy(blocks));
-    setMarkdownValue(editor.blocksToMarkdownLossy(blocks));
+    setHtmlValue(processBlogHtmlLinks(editor.blocksToHTMLLossy(blocks)));
+    setMarkdownValue(stripDofollowMarkers(editor.blocksToMarkdownLossy(blocks)));
   }
 
   return (
-    <div className={`${styles.editorRoot} space-y-3`}>
+    <div
+      className={`${styles.editorRoot} space-y-3`}
+      onClickCapture={(e) => {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest('a')) {
+          e.preventDefault();
+        }
+      }}
+    >
       <input type="hidden" name={name} value={serializedValue} />
       <input type="hidden" name="html" value={htmlValue} />
       <input type="hidden" name="markdown" value={markdownValue} />
@@ -73,6 +90,7 @@ export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBloc
         editor={editor}
         onChange={handleChange}
         formattingToolbar={false}
+        linkToolbar={false}
         className="min-h-[26rem] rounded border border-border/60 bg-background py-4"
       >
         <FormattingToolbarController
@@ -84,6 +102,7 @@ export default function BlogBlockEditor({ locale, name, defaultValue }: BlogBloc
             return <FormattingToolbar>{items}</FormattingToolbar>;
           }}
         />
+        <BlogLinkToolbarController />
       </BlockNoteView>
 
       <p className="text-sm text-muted-foreground">

@@ -88,17 +88,24 @@ describe('processContent', () => {
     );
   });
 
-  it('should prepend https to scheme-less bare domain links', () => {
+  it('should prepend https to scheme-less bare domain links and mark as external', () => {
     const input = '<a href="segmentfault.com">SF</a> <a href="www.cdnjs.com/libraries">cdnjs</a>';
     expect(processContent(input)).toBe(
-      '<a href="https://segmentfault.com">SF</a> <a href="https://www.cdnjs.com/libraries">cdnjs</a>',
+      '<a href="https://segmentfault.com" target="_blank" rel="noopener nofollow">SF</a> <a href="https://www.cdnjs.com/libraries" target="_blank" rel="noopener nofollow">cdnjs</a>',
     );
   });
 
-  it('should NOT touch normal absolute/relative/anchor links', () => {
+  it('should normalize external links with target="_blank" and rel="noopener nofollow", while keeping internal links clean', () => {
     const input =
       '<a href="https://example.com/a">a</a> <a href="/posts/tech/x">b</a> <a href="#section">c</a> <a href="mailto:a@b.com">d</a> <a href="article.html">e</a>';
-    expect(processContent(input)).toBe(input);
+    const expected =
+      '<a href="https://example.com/a" target="_blank" rel="noopener nofollow">a</a> <a href="/posts/tech/x">b</a> <a href="#section">c</a> <a href="mailto:a@b.com">d</a> <a href="article.html">e</a>';
+    expect(processContent(input)).toBe(expected);
+  });
+
+  it('should treat links with dofollow marker as friendly exchange links without nofollow', () => {
+    const input = '<a href="https://friend.com/blog#__dofollow">友链博客</a>';
+    expect(processContent(input)).toBe('<a href="https://friend.com/blog" target="_blank" rel="noopener">友链博客</a>');
   });
 
   // --- Ahrefs 修复：wp-content 图片走 Image Resizing 管线 ---
@@ -179,7 +186,7 @@ describe('processContent', () => {
         '<a href="/posts/page/2">page</a>',
         '<a href="/page/1">page one</a>',
         '<a href="/posts/page/1">posts page one</a>',
-        '<a href="https://github.com/sponsors/meathill">sponsors</a>',
+        '<a href="https://github.com/sponsors/meathill" target="_blank" rel="noopener nofollow">sponsors</a>',
       ].join(' '),
     );
   });

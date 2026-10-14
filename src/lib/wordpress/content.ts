@@ -1,4 +1,5 @@
 import slugify from 'slugify';
+import { processBlogHtmlLinks } from '@/lib/blog-links';
 import { parseCategorySlug } from '@/lib/category-slug';
 import { TECH_SECTION_SLUGS } from '@/lib/tech-sections';
 
@@ -268,6 +269,7 @@ export function processContent(html: string, options?: { imageAlt?: string }): s
   // 先降 H1，再给 H2–H4 补 id，这样降级后的标题仍能进目录。
   result = addHeadingIds(demoteBodyH1(result));
   result = rewriteInternalRedirectHrefs(result);
+  result = processBlogHtmlLinks(result);
   if (options?.imageAlt) {
     result = withImageAltFallback(result, options.imageAlt);
   }

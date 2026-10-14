@@ -144,3 +144,36 @@
   font-size: 0.8rem;
   color: color-mix(in srgb, red 70%, var(--foreground));
 }
+
+/* 正文链接样式：
+   BlockNote 默认没有给 a 标签设置颜色，导致命中浏览器默认的纯深蓝（#0000ee）与原生 :active/:visited 伪类，
+   在暗黑模式深色底上对比度极低。
+   此处对齐发布页高对比度琥珀金主色，并统一去除浏览器的默认 :active 与 :visited 变暗效果。 */
+:global(.bn-editor a),
+:global(.bn-inline-content a) {
+  color: var(--primary-from, #f59e0b) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+  text-decoration-thickness: 1.5px !important;
+  text-decoration-color: color-mix(in srgb, var(--primary-from, #f59e0b) 60%, transparent) !important;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+  cursor: pointer;
+}
+
+:global(.bn-editor a:hover),
+:global(.bn-inline-content a:hover) {
+  color: var(--accent-hover, #ea580c) !important;
+  text-decoration-color: var(--accent-hover, #ea580c) !important;
+}
+
+:global(.bn-editor a:active),
+:global(.bn-inline-content a:active) {
+  color: var(--primary-from, #f59e0b) !important;
+}
+
+:global(.bn-editor a:visited),
+:global(.bn-inline-content a:visited) {
+  color: var(--primary-from, #f59e0b) !important;
+}

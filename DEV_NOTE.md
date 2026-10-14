@@ -181,6 +181,17 @@ API）。原因：BlockNote 的 `createCodeBlockSpec()` propSchema 写死只有 
 「渲染 → 重建 → 再渲染」不会形成循环（面板写入在 contentDOM 之外，PM 默认 `ignoreMutation` 会忽略，
 仍需实测），暂未处理。
 
+#### BlockNote 链接点击与原生跳转拦截（2026-10-14）
+
+- **现象**：在编辑器内点击超链接时，即便在外层 DOM 拦截 `click`，依然会弹出新窗口跳走；鼠标经过相邻行链接时工具栏跳窜。
+- **根因**：
+  1. BlockNote 内部在 TipTap Link 扩展（`clickHandler.ts`）中注册了 ProseMirror 插件 `handleClickLink`。当未显式配置 `links.onClick` 时，内核会**直接执行 `window.open(href, target)`**。
+  2. 官方 `LinkToolbarController` 默认在整个编辑器绑定了 `mouseover`，导致移动光标经过其他链接时工具栏被强行劫持。
+- **解法**：
+  1. 在 `useCreateBlockNote` 的配置中显式注入 `links: { onClick: (e) => { e.preventDefault(); return true; } }`。根据官方契约，传入 `onClick` 并返回 `true` 即可彻底禁用内置的 `window.open`。
+  2. 自定义 `BlogLinkToolbarController` 移除 `mouseover` 监听，仅在明确点击或光标选区落入链接时激活浮层。
+  3. 外层配合 `BlogBlockEditor.module.css` 覆盖暗黑模式链接对比度与 `:active` 样式。
+
 ### 动态 OG 图（next/og + Cloudflare IMAGES binding）
 
 实现位置：`src/app/api/og/post/route.tsx`

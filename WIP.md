@@ -1,11 +1,18 @@
-## Issue #16：关掉导航预取、空 slug 链接、favicon、OG 边缘缓存（2026-10-14）
+## 文章链接 nofollow / 友链 dofollow 可选支持与 noopener 默认支持（2026-10-14，已完成）
 
-- [x] `@/i18n/routing` Link 默认 `prefetch={false}`，页头品牌与主导航显式关闭；确认没有 `router.prefetch`
-- [x] slug 为空（含字面量 `null`）时不生成 `/tag/null`、`/category/null`、`/posts/*/null`
-- [x] `public/favicon.ico` 静态返回
-- [x] `/api/og` 成功响应可进 Workers Cache，失败和 `?refresh=1` 为 no-store；API 其余路由仍 no-store
-- [x] 测试 582、format、typecheck、next build 通过
-- [ ] 部署后看 Workers CPU：导航 RSC 预取下降，`/favicon.ico` 不再 404，`/api/og/post` 边缘命中上升
+- [x] 方案与核心工具库：创建 `src/lib/blog-links.ts`，提供链接属性解析、dofollow 标记编解码、内链判定与 HTML/Markdown 链接清洗
+- [x] 单元测试先行：编写 `tests/lib/blog-links.test.ts` 覆盖内链、默认外链 (nofollow+noopener)、交换链接 (dofollow+noopener)、特殊 URL 兼容（16 项测试通过）
+- [x] 前台内容流集成：在 `src/lib/wordpress/content.ts` 的 `processContent` 中接入链接处理，确保所有输出 HTML 链接规范统一
+- [x] 后台编辑器交互：开发 `BlogLinkToolbar` 自定义组件，并在 `BlogBlockEditor.tsx` 中集成，支持浮层一键切换/编辑 nofollow 状态（5 项组件测试通过）
+- [x] 导出与序列化清洗：在 `BlogBlockEditor.tsx` 与 `src/lib/blog-content.ts` 中将 HTML 与 Markdown 输出经由 `processBlogHtmlLinks` 和 `stripDofollowMarkers` 清洗
+- [x] 全量验证：跑通全部 606 项单测、Biome 格式化、TypeScript 类型检查与 Next.js 构建验证通过
+
+## 编辑器链接体验修复：鼠标掠过误切第二行链接 & 暗黑模式链接颜色优化（2026-10-14，已完成）
+
+- [x] 链接浮层触发机制重构：开发 `BlogLinkToolbarController`，彻底移除 BlockNote 默认在 mouseover 上的激进劫持，仅在光标选中/点击链接时激活并锁定当前链接，避免鼠标移动时浮层跳窜（3 项组件测试通过）
+- [x] 编辑器链接与暗色模式样式：在 `BlogBlockEditor.module.css` 中补齐 `.bn-editor a` 样式，适配 dark mode 高对比度琥珀主色，移除原生深蓝与浏览器默认 `:active` / `:visited` 变色
+- [x] 单元测试与验证：更新/新增控制器测试，运行全量测试套件（609 项全绿通过）、格式化与构建验证
+
 
 ## 博客编辑器代码块与排版改进（2026-10-13，已完成）
 
