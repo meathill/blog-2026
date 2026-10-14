@@ -1,5 +1,7 @@
-import { ArrowRightIcon, CalendarIcon, ClockIcon, EyeIcon, ExternalLinkIcon } from 'lucide-react';
+import { ArrowRightIcon, CalendarIcon, ClockIcon, ExternalLinkIcon, EyeIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from '@/i18n/routing';
+import { isPublicSlug } from '@/lib/public-slug';
 import { cn } from '@/lib/utils';
 
 interface PostCardProps {
@@ -26,12 +28,32 @@ export default function PostCard({
   isExternal = false,
 }: PostCardProps) {
   // category 为分类 slug 时拼规范路径；否则降级 /posts/{slug}（页内会 301 补全）
-  const linkHref = isExternal ? slug : category ? `/posts/${category}/${slug}` : `/posts/${slug}`;
-  const LinkComponent = isExternal ? 'a' : Link;
-  // issue #12：卡片类低意向链接关闭预取，避免 _rsc 预取放大 Worker 请求数
-  const linkProps = isExternal
-    ? { href: linkHref, target: '_blank', rel: 'noopener noreferrer' }
-    : { href: linkHref, prefetch: false as const };
+  const categorySlug = isPublicSlug(category) ? category : null;
+  const postSlug = isPublicSlug(slug) ? slug : null;
+  const linkHref = isExternal
+    ? postSlug
+    : postSlug
+      ? categorySlug
+        ? `/posts/${categorySlug}/${postSlug}`
+        : `/posts/${postSlug}`
+      : null;
+  function CardLink({ className, children }: { className: string; children: ReactNode }) {
+    if (!linkHref) {
+      return <span className={className}>{children}</span>;
+    }
+    if (isExternal) {
+      return (
+        <a href={linkHref} target="_blank" rel="noopener noreferrer" className={className}>
+          {children}
+        </a>
+      );
+    }
+    return (
+      <Link href={linkHref} prefetch={false} className={className}>
+        {children}
+      </Link>
+    );
+  }
 
   return (
     <article
@@ -65,13 +87,10 @@ export default function PostCard({
           featured ? 'text-xl md:text-2xl' : 'text-lg',
         )}
       >
-        <LinkComponent
-          {...linkProps}
-          className="hover:no-underline text-[var(--text-primary)] inline-flex items-start gap-2"
-        >
+        <CardLink className="hover:no-underline text-[var(--text-primary)] inline-flex items-start gap-2">
           <span className="flex-1">{title}</span>
           {isExternal && <ExternalLinkIcon size={14} className="flex-shrink-0 mt-1 opacity-50" />}
-        </LinkComponent>
+        </CardLink>
       </h3>
 
       {/* 摘要 */}
@@ -95,16 +114,14 @@ export default function PostCard({
         )}
       </div>
 
-      {/* 悬浮时显示的阅读更多 */}
-      <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-        <LinkComponent
-          {...linkProps}
-          className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:gap-2 transition-all"
-        >
-          阅读全文
-          <ArrowRightIcon size={14} />
-        </LinkComponent>
-      </div>
+      {linkHref && (
+        <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <CardLink className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:gap-2 transition-all">
+            阅读全文
+            <ArrowRightIcon size={14} />
+          </CardLink>
+        </div>
+      )}
     </article>
   );
 }

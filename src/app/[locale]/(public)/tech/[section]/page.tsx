@@ -1,9 +1,10 @@
+import { ArrowRightIcon } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ArrowRightIcon } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Link } from '@/i18n/routing';
+import JsonLd from '@/components/JsonLd';
 import PostCard from '@/components/PostCard';
+import { Link } from '@/i18n/routing';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { getPostPath } from '@/lib/post-utils';
 import { buildBreadcrumbJsonLd, buildItemListJsonLd } from '@/lib/seo/jsonld';
@@ -11,7 +12,6 @@ import { getAllTechSections, getTechSection, localize } from '@/lib/tech';
 import { getTechSectionPosts } from '@/lib/tech-posts';
 import { isTechSectionSlug } from '@/lib/tech-sections';
 import { stripHtml } from '@/lib/wordpress';
-import JsonLd from '@/components/JsonLd';
 
 interface PageProps {
   params: Promise<{ locale: string; section: string }>;
@@ -82,10 +82,11 @@ export default async function TechSectionPage({ params }: PageProps) {
       ? buildItemListJsonLd({
           name: title,
           description: intro,
-          items: posts.map((post) => ({
-            url: `${baseUrl}${getPostPath(post)}`,
-            name: stripHtml(post.title.rendered),
-          })),
+          items: posts.flatMap((post) => {
+            const path = getPostPath(post);
+            if (!path) return [];
+            return [{ url: `${baseUrl}${path}`, name: stripHtml(post.title.rendered) }];
+          }),
         })
       : null;
 

@@ -1,31 +1,32 @@
-import { apps } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import AppCard from '@/components/AppCard';
-import {
-  calculateReadingTime,
-  formatDate,
-  stripHtml,
-  processContent,
-  buildPostDescription,
-  getTags,
-  WPTag,
-  WPPost,
-  getCategories,
-} from '@/lib/wordpress';
-import CodeHighlight from '@/components/CodeHighlight';
 import AwesomeComment from '@/components/AwesomeComment';
-import { getDb } from '@/lib/db';
-import { SITE_URL } from '@/lib/constants';
-import { buildArticleJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo/jsonld';
-import { PostToc } from '@/components/posts/post-toc';
-import { extractTOC, extractFaq, hasCodeBlocks, hasMermaidBlocks } from '@/lib/post-utils';
+import CodeHighlight from '@/components/CodeHighlight';
+import JsonLd from '@/components/JsonLd';
 import FeaturedImage from '@/components/posts/featured-image';
 import MermaidRenderer from '@/components/posts/mermaid-renderer';
 import PostBreadcrumb from '@/components/posts/post-breadcrumb';
-import PostHeader from '@/components/posts/post-header';
 import PostFooter from '@/components/posts/post-footer';
+import PostHeader from '@/components/posts/post-header';
+import { PostToc } from '@/components/posts/post-toc';
 import RelatedPosts from '@/components/posts/related-posts';
-import JsonLd from '@/components/JsonLd';
+import { apps } from '@/db/schema';
+import { SITE_URL } from '@/lib/constants';
+import { getDb } from '@/lib/db';
+import { extractFaq, extractTOC, hasCodeBlocks, hasMermaidBlocks } from '@/lib/post-utils';
+import { decodePublicSlug, isPublicSlug } from '@/lib/public-slug';
+import { buildArticleJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo/jsonld';
+import {
+  buildPostDescription,
+  calculateReadingTime,
+  formatDate,
+  getCategories,
+  getTags,
+  processContent,
+  stripHtml,
+  WPPost,
+  WPTag,
+} from '@/lib/wordpress';
 
 interface PostViewProps {
   post: WPPost;
@@ -94,9 +95,10 @@ export default async function PostView({ post, locale }: PostViewProps) {
   const primaryCategory = post.categories?.length
     ? allCategories.find((cat) => cat.id === post.categories[0])
     : undefined;
-  const categorySlug = primaryCategory ? decodeURIComponent(primaryCategory.slug) : 'uncategorized';
-  const canonicalUrl = `${baseUrl}/posts/${categorySlug}/${post.slug}`;
-  const ogImage = thumbnail || `${SITE_URL}/api/og/post?slug=${post.slug}`;
+  const primaryCategorySlug = decodePublicSlug(primaryCategory?.slug);
+  const categorySlug = primaryCategorySlug ?? 'uncategorized';
+  const canonicalUrl = isPublicSlug(post.slug) ? `${baseUrl}/posts/${categorySlug}/${post.slug}` : `${baseUrl}/posts`;
+  const ogImage = thumbnail || (isPublicSlug(post.slug) ? `${SITE_URL}/api/og/post?slug=${post.slug}` : undefined);
   const faqPairs = extractFaq(processedContent);
 
   const articleJsonLd = buildArticleJsonLd({
@@ -111,8 +113,8 @@ export default async function PostView({ post, locale }: PostViewProps) {
   });
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: '首页', url: baseUrl },
-    primaryCategory
-      ? { name: primaryCategory.name, url: `${baseUrl}/category/${primaryCategory.slug}` }
+    primaryCategory && primaryCategorySlug
+      ? { name: primaryCategory.name, url: `${baseUrl}/category/${primaryCategorySlug}` }
       : { name: '全部文章', url: `${baseUrl}/posts` },
     { name: title, url: canonicalUrl },
   ]);

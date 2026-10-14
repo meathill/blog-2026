@@ -1,14 +1,15 @@
+import { ArrowLeftIcon } from 'lucide-react';
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import Link from 'next/link';
-import { ArrowLeftIcon } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
 import { PostListItem } from '@/components/posts/post-list-item';
-import { getCategoryBySlug, getPostsByCategory, calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { parseCategorySlug } from '@/lib/category-slug';
-import { getPostPath } from '@/lib/post-utils';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
+import { getPostPath } from '@/lib/post-utils';
+import { rememberCategorySlug } from '@/lib/public-slug';
+import { calculateReadingTime, formatDate, getCategoryBySlug, getPostsByCategory, stripHtml } from '@/lib/wordpress';
 
 interface CategoryPageProps {
   params: Promise<{ locale: string; slug: string[] }>;
@@ -127,7 +128,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <ul className="space-y-4">
           {(() => {
             // 当前页已知分类 slug，作为 getPostPath 的兜底（embed 缺失时仍规范）
-            const categorySlugById = new Map<number, string>([[category.id, decodeURIComponent(category.slug)]]);
+            const categorySlugById = new Map<number, string>();
+            rememberCategorySlug(categorySlugById, category.id, category.slug);
             return posts.map((post) => {
               const title = stripHtml(post.title.rendered);
               const readingTime = calculateReadingTime(post.content.rendered);

@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { CalendarIcon, ClockIcon, TagIcon } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { searchContent, trackClick, type MuiSearchResult } from '@/lib/mui-search/client';
+import { type MuiSearchResult, searchContent, trackClick } from '@/lib/mui-search/client';
+import { searchResultPath } from '@/lib/public-slug';
 import { formatDate } from '@/lib/wordpress';
 
 interface Props {
@@ -21,22 +22,6 @@ interface State {
 }
 
 const INITIAL_STATE: State = { status: 'idle', results: [], total: 0 };
-
-/** 优先用索引里的规范 url，否则降级 /posts/{slug}（页内会 301 补全分类）。 */
-function getSearchResultHref(result: MuiSearchResult): string {
-  if (result.url) {
-    try {
-      const pathname = new URL(result.url, 'https://meathill.com').pathname;
-      const withoutLocale = pathname.replace(/^\/en(?=\/)/, '');
-      if (withoutLocale.includes('/posts/')) {
-        return withoutLocale;
-      }
-    } catch {
-      // ignore invalid url
-    }
-  }
-  return `/posts/${result.slug}`;
-}
 
 export function SearchResultsClient({ query, locale }: Props) {
   const [state, setState] = useState<State>(INITIAL_STATE);
@@ -145,38 +130,50 @@ function SearchResultItem({ query, result }: SearchResultItemProps) {
     });
   }
 
+  const href = searchResultPath(result.url, result.slug);
+  const className =
+    'group block rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] p-5 transition-all card-hover hover:border-[var(--accent)]/30';
+  const body = (
+    <>
+      <h3 className="mb-2 font-semibold text-[var(--text-primary)] text-lg transition-colors group-hover:text-[var(--accent)]">
+        {result.title}
+      </h3>
+      {result.content && <p className="mb-3 line-clamp-2 text-[var(--text-secondary)] text-sm">{result.content}</p>}
+      <div className="flex items-center gap-4 text-[var(--text-muted)] text-xs">
+        {dateText && (
+          <span className="inline-flex items-center gap-1">
+            <CalendarIcon size={12} />
+            {dateText}
+          </span>
+        )}
+        {readingTimeText && (
+          <span className="inline-flex items-center gap-1">
+            <ClockIcon size={12} />
+            {readingTimeText}
+          </span>
+        )}
+        {categoryText && (
+          <span className="inline-flex items-center gap-1">
+            <TagIcon size={12} />
+            {categoryText}
+          </span>
+        )}
+      </div>
+    </>
+  );
+
+  if (!href) {
+    return (
+      <li>
+        <div className={className}>{body}</div>
+      </li>
+    );
+  }
+
   return (
     <li>
-      <Link
-        prefetch={false}
-        href={getSearchResultHref(result)}
-        onClick={handleClick}
-        className="group block rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] p-5 transition-all card-hover hover:border-[var(--accent)]/30"
-      >
-        <h3 className="mb-2 font-semibold text-[var(--text-primary)] text-lg transition-colors group-hover:text-[var(--accent)]">
-          {result.title}
-        </h3>
-        {result.content && <p className="mb-3 line-clamp-2 text-[var(--text-secondary)] text-sm">{result.content}</p>}
-        <div className="flex items-center gap-4 text-[var(--text-muted)] text-xs">
-          {dateText && (
-            <span className="inline-flex items-center gap-1">
-              <CalendarIcon size={12} />
-              {dateText}
-            </span>
-          )}
-          {readingTimeText && (
-            <span className="inline-flex items-center gap-1">
-              <ClockIcon size={12} />
-              {readingTimeText}
-            </span>
-          )}
-          {categoryText && (
-            <span className="inline-flex items-center gap-1">
-              <TagIcon size={12} />
-              {categoryText}
-            </span>
-          )}
-        </div>
+      <Link prefetch={false} href={href} onClick={handleClick} className={className}>
+        {body}
       </Link>
     </li>
   );

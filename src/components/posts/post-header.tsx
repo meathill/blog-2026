@@ -1,5 +1,6 @@
+import { CalendarIcon, ClockIcon, FolderIcon, RefreshCwIcon, TagIcon } from 'lucide-react';
 import Link from 'next/link';
-import { CalendarIcon, ClockIcon, TagIcon, FolderIcon, RefreshCwIcon } from 'lucide-react';
+import { termPublicPath } from '@/lib/public-slug';
 import type { WPCategory, WPTag } from '@/lib/wordpress';
 
 interface PostHeaderProps {
@@ -43,16 +44,22 @@ export default function PostHeader({
           <span className="inline-flex items-center gap-2">
             <FolderIcon size={14} />
             <span className="inline-flex flex-wrap items-center gap-2">
-              {categories.map((cat) => (
-                <Link
-                  prefetch={false}
-                  key={cat.id}
-                  href={`/category/${cat.slug}`}
-                  className="hover:text-[var(--accent)] transition-colors"
-                >
-                  {cat.name}
-                </Link>
-              ))}
+              {categories.map((cat) => {
+                const href = termPublicPath('category', cat.slug);
+                if (!href) {
+                  return <span key={cat.id}>{cat.name}</span>;
+                }
+                return (
+                  <Link
+                    prefetch={false}
+                    key={cat.id}
+                    href={href}
+                    className="hover:text-[var(--accent)] transition-colors"
+                  >
+                    {cat.name}
+                  </Link>
+                );
+              })}
             </span>
           </span>
         )}
@@ -60,16 +67,22 @@ export default function PostHeader({
           <span className="inline-flex items-center gap-2">
             <TagIcon size={14} />
             <span className="inline-flex flex-wrap items-center gap-2">
-              {tags.map((tag) => (
-                <Link
-                  prefetch={false}
-                  href={`/tag/${tag.slug}`}
-                  key={tag.id}
-                  className="hover:text-[var(--accent)] transition-colors"
-                >
-                  {tag.name}
-                </Link>
-              ))}
+              {tags.map((tag) => {
+                const href = termPublicPath('tag', tag.slug);
+                if (!href) {
+                  return <span key={tag.id}>{tag.name}</span>;
+                }
+                return (
+                  <Link
+                    prefetch={false}
+                    href={href}
+                    key={tag.id}
+                    className="hover:text-[var(--accent)] transition-colors"
+                  >
+                    {tag.name}
+                  </Link>
+                );
+              })}
             </span>
           </span>
         )}

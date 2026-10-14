@@ -1,12 +1,13 @@
 import type { TocItem } from '@/components/posts/post-toc';
+import { decodePublicSlug, isPublicSlug } from '@/lib/public-slug';
 import type { FaqPair } from '@/lib/seo/jsonld';
 
 /** 构建规范文章路径所需的最小 post 形状（避免 post-utils 依赖 wordpress 包）。 */
 export interface PostPathInput {
-  slug: string;
+  slug: string | null | undefined;
   categories?: number[];
   _embedded?: {
-    'wp:term'?: Array<Array<{ id: number; name: string; slug: string }>>;
+    'wp:term'?: Array<Array<{ id: number; name: string; slug: string | null }>>;
   };
 }
 
@@ -21,24 +22,24 @@ export function getPrimaryCategorySlug(post: PostPathInput, categorySlugById?: M
   if (embeddedCategories?.length) {
     if (primaryId != null) {
       const matched = embeddedCategories.find((term) => term.id === primaryId);
-      if (matched?.slug) {
-        return decodeURIComponent(matched.slug);
-      }
+      const slug = decodePublicSlug(matched?.slug);
+      if (slug) return slug;
     }
-    if (embeddedCategories[0]?.slug) {
-      return decodeURIComponent(embeddedCategories[0].slug);
-    }
+    const first = decodePublicSlug(embeddedCategories[0]?.slug);
+    if (first) return first;
   }
 
   if (primaryId != null && categorySlugById?.has(primaryId)) {
-    return categorySlugById.get(primaryId)!;
+    const mapped = categorySlugById.get(primaryId);
+    if (isPublicSlug(mapped)) return mapped;
   }
 
   return 'uncategorized';
 }
 
-/** 规范文章路径：`/posts/{category}/{slug}`，与 sitemap / 页内 canonical 一致。 */
-export function getPostPath(post: PostPathInput, categorySlugById?: Map<number, string>): string {
+/** 规范文章路径：`/posts/{category}/{slug}`。slug 为空时返回 null，避免生成 `/posts/.../null`。 */
+export function getPostPath(post: PostPathInput, categorySlugById?: Map<number, string>): string | null {
+  if (!isPublicSlug(post.slug)) return null;
   const categorySlug = getPrimaryCategorySlug(post, categorySlugById);
   return `/posts/${categorySlug}/${post.slug}`;
 }

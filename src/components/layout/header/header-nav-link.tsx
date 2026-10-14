@@ -17,7 +17,7 @@ export function HeaderNavLink({ item, className, onClick }: HeaderNavLinkProps) 
   }
 
   return (
-    <Link href={item.href} className={className} onClick={onClick}>
+    <Link href={item.href} prefetch={false} className={className} onClick={onClick}>
       {item.label}
     </Link>
   );

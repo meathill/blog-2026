@@ -1,10 +1,8 @@
-import { ImageResponse } from 'next/og';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { ImageResponse } from 'next/og';
 import { getPost, stripHtml } from '@/lib/wordpress';
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
-
-export const OG_CACHE_CONTROL = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800';
 
 export interface OgImage {
   bytes: ArrayBuffer;

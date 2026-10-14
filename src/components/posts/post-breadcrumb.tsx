@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { termPublicPath } from '@/lib/public-slug';
 import type { WPCategory } from '@/lib/wordpress';
 
 interface PostBreadcrumbProps {
@@ -7,20 +8,21 @@ interface PostBreadcrumbProps {
 }
 
 export default function PostBreadcrumb({ title, categories }: PostBreadcrumbProps) {
+  const category = categories[0];
+  const categoryHref = category ? termPublicPath('category', category.slug) : null;
+
   return (
     <nav className="mb-8 flex items-center text-sm text-[var(--text-muted)]">
       <Link prefetch={false} href="/" className="hover:text-[var(--text-primary)] transition-colors">
         首页
       </Link>
       <span className="mx-2">/</span>
-      {categories.length > 0 ? (
-        <Link
-          prefetch={false}
-          href={`/category/${categories[0].slug}`}
-          className="hover:text-[var(--text-primary)] transition-colors"
-        >
-          {categories[0].name}
+      {categoryHref ? (
+        <Link prefetch={false} href={categoryHref} className="hover:text-[var(--text-primary)] transition-colors">
+          {category?.name}
         </Link>
+      ) : category ? (
+        <span className="text-[var(--text-primary)]">{category.name}</span>
       ) : (
         <Link prefetch={false} href="/posts" className="hover:text-[var(--text-primary)] transition-colors">
           全部文章

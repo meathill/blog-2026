@@ -73,6 +73,10 @@
 
 - **第三方脚本**：Google Adsense/GA 等脚本在 `ThirdPartyScripts` 组件中延迟加载。在用户滚动超过首屏或空闲时才注入。
 - **图片加载**：全站 `next/image` 使用自定义 `image-loader.ts`，对接 Cloudflare 的 `/cdn-cgi/image/` 路径，实现边缘裁剪与格式转换。
+- **导航预取（Issue #16）**：`@/i18n/routing` 的 `Link` 默认 `prefetch={false}`。主导航和品牌链到 `/`、`/about`、`/skills`、`/app`（含 `/en`）的 RSC 预取占了 Workers CPU。需要预取时显式传 `prefetch={true}`。代码里没有 `router.prefetch`。
+- **OG 边缘缓存（Issue #16）**：`next.config` 的 `Cloudflare-CDN-Cache-Control: no-store` 排除 `/api/og/*`（这条头优先于 `Cache-Control`）。成功图由 `ogImageHeaders` 写 `max-age=86400`；404 和 `?refresh=1` 为 `no-store`。Workers cache key 含查询串，不同 slug 不会撞车。
+- **空 slug（Issue #16）**：`null` 进模板会变成路径段 `null`。`isPublicSlug` 拒绝空值以及字面量 `null` / `undefined`，链接、sitemap、搜索降级路径都不生成。
+- **favicon**：浏览器会自己请求 `/favicon.ico`。文件在 `public/favicon.ico`，由静态资源返回，不走页面 404。
 
 ### 环境变量
 
@@ -528,8 +532,8 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 ### Issue #14：公开页 ISR 与自定义缓存历史方案（2026-09-29，已于 10-09 撤销）
 
 - **现象**（修复前线上）：首页/文章 HIT 时 `s-maxage=77~270`（= 300 − 条目年龄，OpenNext `fixISRHeaders` 会减去年龄），大部分请求是 `x-nextjs-cache: STALE` 且无 Cache-Control，每次访问都后台整页重渲染。
-- **根因 1**：WP fetch `revalidate: 300`、导航/首页推荐应用 `unstable_cache` 900s，把页面 revalidate 压到 300s（段配置 `revalidate = 86400` 不起作用）。修复：统一 `PUBLIC_REVALIDATE_SECONDS`；WP 读请求全部打 `WP_CACHE_TAG`（`'wp'`）。
-- **根因 2**：全站按需 ISR，路径不在 prerender-manifest；Next 16 `calculateRevalidate` 取不到 revalidate 就按 **1 秒**判过期（只有本 isolate 内存里有值），Workers isolate 一换就恒 STALE。修复：`src/lib/isr-freshness-cache.ts` 的 `withStoredRevalidate` 包装增量缓存，按条目里 OpenNext 存的 `value.revalidate` 判新鲜度，TTL 内把 lastModified 报成 now 并写剩余 TTL 的 s-maxage。
+- **已核对的配置与框架行为**：当时 WP fetch `revalidate: 300`、导航/首页推荐应用 `unstable_cache` 900s，会把页面 revalidate 压到较短 TTL。后来统一 `PUBLIC_REVALIDATE_SECONDS`；WP 读请求全部打 `WP_CACHE_TAG`（`'wp'`）。这不能解释统一 86400s 后的频繁写入，也未单独量化对历史写入总数的贡献。
+- **历史尝试，不能当作已完成的根因修复**：未预渲染的具体路径在冷 isolate 中缺少 SharedCacheControls，Next 16 会按 1 秒回退。旧 `withStoredRevalidate` 把 lastModified 改成查询标签之前的 now。2026-10-09 直接执行实际部署包复现：tag 查询延迟 1200ms 即错误 STALE，原生后台渲染写同一页面键，同时发队列消息；热 isolate 记住 86400 后又 HIT。实际 `/_not-found` 在 manifest 中且 TTL=false，不适用这个 1 秒解释。生产正常页 274 次、两个 404 键 532/568 次日写入的逐次因果仍未证实。完整证据见 `docs/cache-investigation-2026-10-09.md`。
   - ⚠️ 与 free-ai-api 同名方案的差异：本站 tag cache 是 D1 **next-mode**，`hasBeenRevalidated` 比较「tag 失效时间 > lastModified」，直接改 lastModified 会吞掉 revalidateTag。所以包装层先用**真实** lastModified 查 tag（失效/在 SWR 窗口就原样返回），确认没失效才改。拿不到 next-mode tag cache 时保守不改。
 - **失效**：`publishBlogPost` 在 purge_everything 之后 `revalidateTag('wp', { expire: 0 })`，失效全部 WP fetch 及依赖它的页面（文章、首页、归档、相关文章）。导航/应用变更沿用各自 tag。**WP 后台直接改文不经本站发布流程，只能等 86400s TTL 或手动发布一次/清缓存。**
 - **边缘整页缓存：Workers Cache**（https://developers.cloudflare.com/workers/cache/）。zone 的 Cache Rules / purge_everything 对 Worker 响应都无效，只能用 Worker 自己的缓存。
@@ -562,6 +566,10 @@ incremental cache 与 D1 tag cache 的组合）。边缘未命中的请求
 恢复条件：在官方 Next/OpenNext 链路验证正常页面的一天 TTL、404 不写入、发布失效与队列绕过
 边缘缓存之后，再显式恢复官方缓存配置和 site-cache 绑定；不再恢复自定义时间戳包装。
 当前仍全关，不会到月末自动恢复。
+
+2026-10-09 独立调查确认：区域 lazy update 只读 R2、写 Cache API，不能直接解释 R2 PutObject；
+404 的 HTTP no-store 也不会阻止原生 ISR 首次写入。恢复须同时验证跨 isolate TTL、写入前排除 404
+（含部署上传）、segment prefetch 和 DO HEAD 绕过 Workers Cache，不能只恢复官方 R2 配置。
 
 
 已发布版本 `ff29457c-d900-443c-a215-3b696b56bbd9`。线上 API 核对 `site-cache` 绑定已移除、

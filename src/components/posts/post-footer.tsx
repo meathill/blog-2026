@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { termPublicPath } from '@/lib/public-slug';
 import type { WPCategory, WPTag } from '@/lib/wordpress';
 
 interface PostFooterProps {
@@ -37,30 +38,44 @@ export default function PostFooter({ categories, tags }: PostFooterProps) {
 
           {categories.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <Link
-                  prefetch={false}
-                  key={cat.id}
-                  href={`/category/${cat.slug}`}
-                  className="px-3 py-1 text-xs font-medium rounded-full bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all"
-                >
-                  {cat.name}
-                </Link>
-              ))}
+              {categories.map((cat) => {
+                const href = termPublicPath('category', cat.slug);
+                const className =
+                  'px-3 py-1 text-xs font-medium rounded-full bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all';
+                if (!href) {
+                  return (
+                    <span key={cat.id} className={className}>
+                      {cat.name}
+                    </span>
+                  );
+                }
+                return (
+                  <Link prefetch={false} key={cat.id} href={href} className={className}>
+                    {cat.name}
+                  </Link>
+                );
+              })}
             </div>
           )}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2 w-1/2">
-              {tags.map((tag) => (
-                <Link
-                  prefetch={false}
-                  key={tag.id}
-                  href={`/tag/${tag.slug}`}
-                  className="px-3 py-1 text-xs font-medium rounded-full bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all"
-                >
-                  #{tag.name}
-                </Link>
-              ))}
+              {tags.map((tag) => {
+                const href = termPublicPath('tag', tag.slug);
+                const className =
+                  'px-3 py-1 text-xs font-medium rounded-full bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] border border-[var(--surface-border)] hover:border-[var(--accent)]/30 transition-all';
+                if (!href) {
+                  return (
+                    <span key={tag.id} className={className}>
+                      #{tag.name}
+                    </span>
+                  );
+                }
+                return (
+                  <Link prefetch={false} key={tag.id} href={href} className={className}>
+                    #{tag.name}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

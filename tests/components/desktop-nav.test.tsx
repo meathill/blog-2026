@@ -5,9 +5,20 @@ import { DesktopNav } from '@/components/layout/header/desktop-nav';
 import type { NavItem } from '@/components/layout/header/types';
 
 vi.mock('@/i18n/routing', () => ({
-  Link({ href, children, ...props }: { href: string; children: ReactNode; className?: string; onClick?: () => void }) {
+  Link({
+    href,
+    children,
+    prefetch,
+    ...props
+  }: {
+    href: string;
+    children: ReactNode;
+    className?: string;
+    onClick?: () => void;
+    prefetch?: boolean;
+  }) {
     return (
-      <a href={href} {...props}>
+      <a href={href} data-prefetch={String(prefetch)} {...props}>
         {children}
       </a>
     );
@@ -15,6 +26,15 @@ vi.mock('@/i18n/routing', () => ({
 }));
 
 describe('DesktopNav', () => {
+  it('主导航链接关闭预取', () => {
+    render(<DesktopNav items={createItems()} />);
+
+    expect(screen.getByRole('link', { name: '关于' })).toHaveAttribute('data-prefetch', 'false');
+
+    fireEvent.click(screen.getByRole('button', { name: '技术' }));
+    expect(screen.getByRole('link', { name: 'JavaScript' })).toHaveAttribute('data-prefetch', 'false');
+  });
+
   it('切换不同 dropdown 时应自动关闭前一个菜单', () => {
     render(<DesktopNav items={createItems()} />);
 

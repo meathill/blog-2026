@@ -1,7 +1,7 @@
-import type { NextConfig } from 'next';
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
-import pkg from './package.json';
+import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import pkg from './package.json';
 
 initOpenNextCloudflareForDev();
 
@@ -65,11 +65,22 @@ const nextConfig: NextConfig = {
       },
       {
         // API 由业务处理，不交给 Workers Cache 的默认启发式缓存。
-        source: '/api/:path*',
+        // /api/og/* 排除在外：成功图由路由写可缓存的 Cloudflare-CDN-Cache-Control；
+        // 失败和 ?refresh=1 在响应里标 no-store。Workers cache key 含查询串。
+        source: '/api/:path((?!og/).*)',
         headers: [{ key: 'Cloudflare-CDN-Cache-Control', value: 'no-store' }],
       },
       {
         source: '/favicon.webp',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/favicon.ico',
         headers: [
           {
             key: 'Cache-Control',

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { Inter } from 'next/font/google';
 import ThirdPartyScripts from '@/components/ThirdPartyScripts';
 import { routing } from '@/i18n/routing';
 import { buildRootMetadata } from '@/lib/seo/root-metadata';
@@ -50,6 +50,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
   return (
     <html lang={locale}>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.webp" type="image/webp" />
         <link rel="apple-touch-icon" href="/favicon.webp" />
       </head>

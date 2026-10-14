@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { PostSummaryItem } from '@/components/posts/post-summary-item';
-import { calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 import { getPostPath } from '@/lib/post-utils';
+import { rememberCategorySlug } from '@/lib/public-slug';
+import { calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
 
 export function PostList({
   posts,
@@ -36,9 +37,10 @@ export function PostList({
 
   // 创建分类 ID 到名称 / slug 的映射
   const categoryMap = new Map(categories.map((cat: any) => [cat.id, cat.name]));
-  const categorySlugById = new Map<number, string>(
-    categories.map((cat: any) => [cat.id, decodeURIComponent(cat.slug)]),
-  );
+  const categorySlugById = new Map<number, string>();
+  for (const cat of categories) {
+    rememberCategorySlug(categorySlugById, cat.id, cat.slug);
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-16">

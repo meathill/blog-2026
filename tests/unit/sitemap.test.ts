@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import sitemap from '@/app/sitemap';
 
 // Mock dependencies
@@ -193,6 +193,31 @@ describe('Sitemap Generator', () => {
   });
 
   // Issue #13 构建超时回归：只有第一页需要准确总数，后续页不应再触发计数
+  it('does not emit /tag/null, /category/null or /posts/*/null', async () => {
+    mockGetCategories.mockResolvedValue([
+      { id: 101, slug: 'cat-1', count: 5 },
+      { id: 103, slug: null, count: 4 },
+    ]);
+    mockGetPosts.mockImplementation((params) => {
+      const page = params?.page || 1;
+      if (page === 1) {
+        return Promise.resolve({
+          posts: [
+            { slug: 'post-1', date: '2023-01-01', modified: '2023-02-01', categories: [101] },
+            { slug: null, date: '2023-01-02', modified: '2023-01-02', categories: [101] },
+          ],
+          total: 2,
+          totalPages: 1,
+        });
+      }
+      return Promise.resolve({ posts: [], total: 2, totalPages: 1 });
+    });
+
+    const result = await sitemap();
+    expect(result.some((item) => item.url.includes('/null'))).toBe(false);
+    expect(result.some((item) => item.url === `${SITE_URL}/posts/cat-1/post-1`)).toBe(true);
+  });
+
   it('should request an accurate total only for the first posts page', async () => {
     await sitemap();
 

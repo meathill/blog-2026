@@ -1,12 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
-import {
-  OG_CACHE_CONTROL,
-  OG_SIZE,
-  getOrCreatePostOgJpeg,
-  regeneratePostOg,
-  transcodeToJpeg,
-} from '@/lib/og/post-image';
+import { ogImageHeaders } from '@/lib/og/cache-headers';
+import { getOrCreatePostOgJpeg, OG_SIZE, regeneratePostOg, transcodeToJpeg } from '@/lib/og/post-image';
 
 // Image metadata
 export const size = OG_SIZE;
@@ -36,7 +31,7 @@ async function respondPlaceholder(text: string, status: number): Promise<Respons
   const { bytes, contentType: type } = await transcodeToJpeg(placeholder(text));
   return new Response(bytes, {
     status,
-    headers: { 'Content-Type': type, 'Cache-Control': OG_CACHE_CONTROL },
+    headers: ogImageHeaders(type, false),
   });
 }
 
@@ -56,9 +51,6 @@ export async function GET(request: NextRequest) {
   }
 
   return new Response(image.bytes, {
-    headers: {
-      'Content-Type': image.contentType,
-      'Cache-Control': OG_CACHE_CONTROL,
-    },
+    headers: ogImageHeaders(image.contentType, !refresh),
   });
 }

@@ -1,11 +1,12 @@
+import { eq } from 'drizzle-orm';
 import type { MetadataRoute } from 'next';
 import { unstable_cache } from 'next/cache';
-import { getPosts, getCategories } from '@/lib/wordpress';
-import { getDb } from '@/lib/db';
 import { apps } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { getDb } from '@/lib/db';
+import { isPublicSlug, rememberCategorySlug } from '@/lib/public-slug';
 import { getAllSkills } from '@/lib/skills';
 import { TECH_SECTION_SLUGS } from '@/lib/tech-sections';
+import { getCategories, getPosts } from '@/lib/wordpress';
 
 // ISR 改造（2026-09-27）：sitemap 不在构建期生成（构建期 0 次 WP 请求），改为请求时生成。
 // 无动态段的 metadata route 只要声明 revalidate 就会在 build 时预渲染，所以这里用 force-dynamic，
@@ -133,10 +134,10 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const categories = await getCategories();
     categories.forEach((cat) => {
-      categoryMap.set(cat.id, cat.slug);
+      rememberCategorySlug(categoryMap, cat.id, cat.slug);
     });
     categoryPages = categories
-      .filter((cat) => cat.count > 0)
+      .filter((cat) => cat.count > 0 && isPublicSlug(cat.slug))
       .map((cat) => ({
         url: `${SITE_URL}/category/${cat.slug}`,
         lastModified: new Date(),
@@ -185,7 +186,8 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    postPages = Array.from(allPostsMap.values()).map((post: any) => {
+    postPages = Array.from(allPostsMap.values()).flatMap((post: any) => {
+      if (!isPublicSlug(post.slug)) return [];
       let categorySlug = 'uncategorized';
       if (post.categories && post.categories.length > 0) {
         const catId = post.categories.find((id: number) => categoryMap.has(id));
@@ -194,18 +196,20 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
       const url = `${SITE_URL}/posts/${categorySlug}/${post.slug}`;
-      return {
-        url,
-        lastModified: safeDate(post.modified || post.date),
-        changeFrequency: 'weekly' as const,
-        priority: 0.8,
-        alternates: {
-          languages: {
-            zh: url,
-            en: `${SITE_URL}/en/posts/${categorySlug}/${post.slug}`,
+      return [
+        {
+          url,
+          lastModified: safeDate(post.modified || post.date),
+          changeFrequency: 'weekly' as const,
+          priority: 0.8,
+          alternates: {
+            languages: {
+              zh: url,
+              en: `${SITE_URL}/en/posts/${categorySlug}/${post.slug}`,
+            },
           },
         },
-      };
+      ];
     });
   } catch (error) {
     console.warn('Failed to fetch posts for sitemap, skipping...', error);
@@ -216,18 +220,20 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const db = await getDb();
     const allApps = await db.select().from(apps).where(eq(apps.status, 'published'));
-    appPages = allApps.map((app) => ({
-      url: `${SITE_URL}/app/${app.slug}`,
-      lastModified: safeDate(app.updatedAt),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-      alternates: {
-        languages: {
-          zh: `${SITE_URL}/app/${app.slug}`,
-          en: `${SITE_URL}/en/app/${app.slug}`,
+    appPages = allApps
+      .filter((app) => isPublicSlug(app.slug))
+      .map((app) => ({
+        url: `${SITE_URL}/app/${app.slug}`,
+        lastModified: safeDate(app.updatedAt),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+        alternates: {
+          languages: {
+            zh: `${SITE_URL}/app/${app.slug}`,
+            en: `${SITE_URL}/en/app/${app.slug}`,
+          },
         },
-      },
-    }));
+      }));
   } catch (error) {
     console.warn('Failed to fetch apps for sitemap, skipping...', error);
   }

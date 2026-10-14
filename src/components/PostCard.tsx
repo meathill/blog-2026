@@ -1,10 +1,11 @@
 import { ArrowRightIcon, CalendarIcon, ClockIcon } from 'lucide-react';
-import { Link } from '@/i18n/routing';
-import { calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
-import { getPostPath } from '@/lib/post-utils';
-import { cn } from '@/lib/utils';
-import { WPPost } from '@/lib/wordpress/types';
 import Image from 'next/image';
+import { Link } from '@/i18n/routing';
+import { getPostPath } from '@/lib/post-utils';
+import { termPublicPath } from '@/lib/public-slug';
+import { cn } from '@/lib/utils';
+import { calculateReadingTime, formatDate, stripHtml } from '@/lib/wordpress';
+import { WPPost } from '@/lib/wordpress/types';
 
 interface PostCardProps {
   post: WPPost;
@@ -19,8 +20,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
   const href = getPostPath(post);
 
   // 获取标签 (wp:term[1] 通常是标签，[0] 是分类)
-  // @ts-ignore
-  const tags = (post._embedded?.['wp:term']?.[1] || []).filter((tag: any) => tag.name?.trim());
+  const tags = (post._embedded?.['wp:term']?.[1] ?? []).filter((tag) => tag.name?.trim());
 
   // 获取缩略图
   const thumbnail = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
@@ -48,33 +48,30 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
       {/* 缩略图 */}
       {thumbnail && (
         <div className="mb-4 overflow-hidden rounded-t-xl -mx-6 -mt-6 md:-mx-8 md:-mt-8 relative h-48 md:h-64">
-          <Link prefetch={false} href={href} className="block w-full h-full relative">
-            <Image
-              src={thumbnail}
-              alt={title}
-              fill
-              loading="lazy"
-              className="object-cover transition-transform group-hover:scale-105"
-              quality={thumbnailQuality}
-              sizes={thumbnailSizes}
-            />
-          </Link>
+          <PostCardCover href={href} src={thumbnail} alt={title} quality={thumbnailQuality} sizes={thumbnailSizes} />
         </div>
       )}
 
       {/* Tags */}
       {tags && tags.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          {tags.map((tag: any) => (
-            <Link
-              prefetch={false}
-              key={tag.id}
-              href={`/tag/${tag.slug}`}
-              className="px-3 py-1 text-xs font-medium rounded-md bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 transition-colors z-10 relative"
-            >
-              {tag.name}
-            </Link>
-          ))}
+          {tags.map((tag: { id: number; name: string; slug?: string | null }) => {
+            const tagHref = termPublicPath('tag', tag.slug);
+            const className =
+              'px-3 py-1 text-xs font-medium rounded-md bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 transition-colors z-10 relative';
+            if (!tagHref) {
+              return (
+                <span key={tag.id} className={className}>
+                  {tag.name}
+                </span>
+              );
+            }
+            return (
+              <Link prefetch={false} key={tag.id} href={tagHref} className={className}>
+                {tag.name}
+              </Link>
+            );
+          })}
         </div>
       )}
 
@@ -85,9 +82,13 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
           featured ? 'text-xl md:text-2xl' : 'text-lg',
         )}
       >
-        <Link prefetch={false} href={href} className="hover:no-underline text-[var(--text-primary)]">
-          {title}
-        </Link>
+        {href ? (
+          <Link prefetch={false} href={href} className="hover:no-underline text-[var(--text-primary)]">
+            {title}
+          </Link>
+        ) : (
+          <span className="text-[var(--text-primary)]">{title}</span>
+        )}
       </h3>
 
       {/* 摘要 */}
@@ -106,16 +107,50 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
       </div>
 
       {/* 悬浮时显示的阅读更多 */}
-      <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Link
-          prefetch={false}
-          href={href}
-          className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:gap-2 transition-all"
-        >
-          阅读全文
-          <ArrowRightIcon size={14} />
-        </Link>
-      </div>
+      {href && (
+        <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Link
+            prefetch={false}
+            href={href}
+            className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:gap-2 transition-all"
+          >
+            阅读全文
+            <ArrowRightIcon size={14} />
+          </Link>
+        </div>
+      )}
     </article>
+  );
+}
+
+function PostCardCover({
+  href,
+  src,
+  alt,
+  quality,
+  sizes,
+}: {
+  href: string | null;
+  src: string;
+  alt: string;
+  quality: number;
+  sizes: string;
+}) {
+  const image = (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      loading="lazy"
+      className="object-cover transition-transform group-hover:scale-105"
+      quality={quality}
+      sizes={sizes}
+    />
+  );
+  if (!href) return image;
+  return (
+    <Link prefetch={false} href={href} className="block w-full h-full relative">
+      {image}
+    </Link>
   );
 }

@@ -1,5 +1,6 @@
-import { defineRouting } from 'next-intl/routing';
 import { createNavigation } from 'next-intl/navigation';
+import { defineRouting } from 'next-intl/routing';
+import { type ComponentProps, createElement } from 'react';
 
 export const routing = defineRouting({
   // A list of all locales that are supported
@@ -20,4 +21,14 @@ export const routing = defineRouting({
   localeCookie: false,
 });
 
-export const { Link, redirect, usePathname, useRouter } = createNavigation(routing);
+const { Link: IntlLink, redirect, usePathname, useRouter } = createNavigation(routing);
+
+type IntlLinkProps = ComponentProps<typeof IntlLink>;
+
+// Issue #16：主导航默认预取会打出整页 RSC（/、/about、/skills、/app 及 /en），
+// 占 Workers CPU。默认关闭；个别链接仍可传 prefetch={true}。
+export function Link({ prefetch = false, ...props }: IntlLinkProps) {
+  return createElement(IntlLink, { ...props, prefetch });
+}
+
+export { redirect, usePathname, useRouter };

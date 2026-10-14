@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  extractTOC,
-  hasCodeBlocks,
-  hasMermaidBlocks,
   extractFaq,
-  selectRelatedPosts,
+  extractTOC,
   getPostPath,
   getPrimaryCategorySlug,
+  hasCodeBlocks,
+  hasMermaidBlocks,
+  selectRelatedPosts,
 } from '../../src/lib/post-utils';
 
 describe('post-utils', () => {
@@ -202,6 +202,27 @@ describe('post-utils', () => {
 
     it('都没有时回落 uncategorized', () => {
       expect(getPostPath({ slug: 'orphan' })).toBe('/posts/uncategorized/orphan');
+    });
+
+    it('空 slug 不生成 /posts/.../null', () => {
+      expect(getPostPath({ slug: null })).toBeNull();
+      expect(getPostPath({ slug: 'null' })).toBeNull();
+      expect(getPostPath({ slug: '  ' })).toBeNull();
+    });
+
+    it('分类 slug 为空时回落 uncategorized，不用 "null"', () => {
+      const post = {
+        slug: 'hello',
+        categories: [2],
+        _embedded: {
+          'wp:term': [[{ id: 2, name: '空', slug: null }]],
+        },
+      };
+      expect(getPrimaryCategorySlug(post)).toBe('uncategorized');
+      expect(getPostPath(post)).toBe('/posts/uncategorized/hello');
+      expect(getPostPath({ slug: 'hello', categories: [5] }, new Map([[5, 'null']]))).toBe(
+        '/posts/uncategorized/hello',
+      );
     });
   });
 });

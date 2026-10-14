@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/routing';
+import { termPublicPath } from '@/lib/public-slug';
 import { getTags } from '@/lib/wordpress';
 
 function getTagSize(count: number): string {
@@ -19,24 +20,35 @@ export default async function TagCloud() {
         </h2>
 
         <div className="flex flex-wrap justify-center items-center gap-3">
-          {tags.map((tag) => (
-            <Link
-              prefetch={false}
-              key={tag.id}
-              href={`/tag/${tag.slug}`}
-              className={`
+          {tags.map((tag) => {
+            const href = termPublicPath('tag', tag.slug);
+            const className = `
                 px-4 py-2 rounded-full
                 bg-[var(--surface)] border border-[var(--surface-border)]
                 text-[var(--text-secondary)]
                 hover:border-amber-600 hover:text-amber-600 hover:bg-amber-600/5
                 transition-all duration-200
                 ${getTagSize(tag.count)}
-              `}
-            >
-              {tag.name}
-              <span className="ml-1 text-[var(--text-muted)] text-xs">({tag.count})</span>
-            </Link>
-          ))}
+              `;
+            const label = (
+              <>
+                {tag.name}
+                <span className="ml-1 text-[var(--text-muted)] text-xs">({tag.count})</span>
+              </>
+            );
+            if (!href) {
+              return (
+                <span key={tag.id} className={className}>
+                  {label}
+                </span>
+              );
+            }
+            return (
+              <Link prefetch={false} key={tag.id} href={href} className={className}>
+                {label}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

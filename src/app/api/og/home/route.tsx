@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
-import { OG_CACHE_CONTROL, OG_SIZE, transcodeToJpeg } from '@/lib/og/post-image';
+import { ogImageHeaders } from '@/lib/og/cache-headers';
+import { OG_SIZE, transcodeToJpeg } from '@/lib/og/post-image';
 
 // Satori 默认字体不含 CJK 字形，站点级 OG 图固定用英文文案。
 function renderHome(): ImageResponse {
@@ -57,9 +58,6 @@ function renderHome(): ImageResponse {
 export async function GET() {
   const image = await transcodeToJpeg(renderHome());
   return new Response(image.bytes, {
-    headers: {
-      'Content-Type': image.contentType,
-      'Cache-Control': OG_CACHE_CONTROL,
-    },
+    headers: ogImageHeaders(image.contentType, true),
   });
 }

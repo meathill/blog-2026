@@ -1,5 +1,5 @@
-import { BrandSiteSwitcher } from 'meathill-brand-react';
 import { SearchIcon } from 'lucide-react';
+import { BrandSiteSwitcher } from 'meathill-brand-react';
 import { getTranslations } from 'next-intl/server';
 import { DesktopNav } from '@/components/layout/header/desktop-nav';
 import HeaderClientShell from '@/components/layout/header/header-client-shell';
@@ -15,6 +15,7 @@ export default async function Header({ navItems }: HeaderProps) {
   const brand = (
     <Link
       href="/"
+      prefetch={false}
       className="text-xl font-bold text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
     >
       Meathill Studio
