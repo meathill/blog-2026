@@ -614,3 +614,29 @@ PutObject，覆盖 23 小时。此前局部 1s 回退复现不能当作生产完
 本地 workerd 已验证：skills 200 + s-maxage=86400；无效 skill/solution 404 + private/no-store；
 API 显式 no-store；登录、后台、搜索 private/no-store。预览未连接生产 WordPress Access 配置，
 WP 依赖页面不算此轮成功样本，也没有模拟云端 Workers Cache 的命中层。
+
+## Issue #17：恢复 R2 与冷实例重复写入修复（2026-10-21）
+
+R2 已按用户决定恢复。保留 R2 incremental cache、regional cache、D1 next-mode tag cache、
+官方 DO queue 与 Workers Cache；404 页面及空 WP slug/深分页结果不进入增量缓存。
+
+10/20 的 header-only 修补没有解决新鲜度判断：10/20 23:08–10/21 16:00 北京时间，
+当前 build 有 16197 次 Put（页面 10520、fetch 5677），中文首页同键 429 次。
+此前几分钟归零的观察不能证明恢复成功；完整证据见 `docs/cache-probe-2026-10-21.md`。
+
+确认的两个缺陷及修复：
+- 按需 ISR 路径不在 prerender manifest，冷 Next 实例丢失路由 cacheControl，回退 1 秒。
+  `withStoredRevalidate` 在读取持久化条目时，恢复当前 Next 实例的路由配置；已有配置优先。
+  不修改 lastModified，不补剩余响应头，不绕过原生过期和 tag 失效。
+  原补头会在 STALE 时被 OpenNext 覆盖成 2 秒，因此已移除。
+- OpenNext 把写入策略编译到 middleware、server 和入口三个模块，模块变量 ALS 互不共享。
+  改为 `Symbol.for` 注册同一 ALS 容器；请求数据仍按异步上下文隔离，最终 404 不提交写入。
+
+验证：647 项测试、类型检查通过；不含环境文件的隔离副本完成 Next/OpenNext 构建及 Wrangler dry-run。
+`scripts/research/verify-built-isr.ts` 执行实际产物，临时本地 R2/D1、离线数据源：
+一天内冷读 HIT、0 Put；超过一天 STALE 并重建；404 为 0 Put；tag 失效 MISS 后重建；
+实际入口/server 两份模块的 404 写入保护生效。该脚本捕获 DO RPC，未运行完整 DO 调度。
+
+发布走 master 的 Cloudflare Workers Builds 自动链路。观察需按新 build 分开页面/fetch、
+首次写入/同键重写和 CPU；旧版本的全部历史爆量尚未完成归因。
+恢复前 10/17–19 CPU 9.61M ms / 49914 次，均值 192.5 ms，不能用不同流量样本直接断言节省。

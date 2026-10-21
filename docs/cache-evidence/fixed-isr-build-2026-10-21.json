@@ -1,0 +1,235 @@
+{
+  "buildId": "RKd9tnE8YJLFWN5YKDi3W",
+  "sourceHash": "1819da4eb52b797ac411a179e5c252b8a678aeccb53cd546824f87f82630e0e1",
+  "queueTransport": "捕获官方 RPC，不执行真实 DO；R2/D1 为本地",
+  "results": [
+    {
+      "path": "/skills",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86340, stale-while-revalidate=2592000",
+        "content-encoding": "identity",
+        "content-length": "69006",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"13ifu4h6i1y1fik\"",
+        "link": "<http://localhost/en/skills>; rel=\"alternate\"; hreflang=\"en\", <http://localhost/skills>; rel=\"alternate\"; hreflang=\"zh\", <http://localhost/skills>; rel=\"alternate\"; hreflang=\"x-default\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "HIT",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "events": [
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/c300c126c0ea33b3cc57bd2546e2f9b3634958a5e721647ea67f4b729a3bb2c2.cache"
+        },
+        {
+          "event": "restore",
+          "key": "/zh/skills",
+          "hasControls": true
+        },
+        {
+          "event": "compiled-gate",
+          "status": 404,
+          "writes": 0
+        }
+      ]
+    },
+    {
+      "path": "/skills",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=2, stale-while-revalidate=2592000",
+        "content-encoding": "identity",
+        "content-length": "69006",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"13ifu4h6i1y1fik\"",
+        "link": "<http://localhost/en/skills>; rel=\"alternate\"; hreflang=\"en\", <http://localhost/skills>; rel=\"alternate\"; hreflang=\"zh\", <http://localhost/skills>; rel=\"alternate\"; hreflang=\"x-default\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "STALE",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "events": [
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/c300c126c0ea33b3cc57bd2546e2f9b3634958a5e721647ea67f4b729a3bb2c2.cache"
+        },
+        {
+          "event": "restore",
+          "key": "/zh/skills",
+          "hasControls": true
+        },
+        {
+          "event": "queue",
+          "message": "/zh/skills"
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/a44055594c5ea6e677cee131bafbdc228b87464b1f866872e28cec5e914aa4a3.fetch"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/a44055594c5ea6e677cee131bafbdc228b87464b1f866872e28cec5e914aa4a3.fetch"
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/44caffb1475de52cff9de71ff5dd1592a289b6cbbfa12d111ee1d61d37df5162.fetch"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/44caffb1475de52cff9de71ff5dd1592a289b6cbbfa12d111ee1d61d37df5162.fetch"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/c300c126c0ea33b3cc57bd2546e2f9b3634958a5e721647ea67f4b729a3bb2c2.cache"
+        },
+        {
+          "event": "compiled-gate",
+          "status": 404,
+          "writes": 0
+        }
+      ]
+    },
+    {
+      "path": "/posts/offline-missing-cache-regression",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "identity",
+        "content-length": "26278",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"9iytsypqesjlx\"",
+        "link": "<http://localhost/en/posts/offline-missing-cache-regression>; rel=\"alternate\"; hreflang=\"en\", <http://localhost/posts/offline-missing-cache-regression>; rel=\"alternate\"; hreflang=\"zh\", <http://localhost/posts/offline-missing-cache-regression>; rel=\"alternate\"; hreflang=\"x-default\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "events": [
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/cda711d84c6618eee7cecdf91d5422f1b68919ac69dff20f62e1f7bd95d58465.cache"
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/a44055594c5ea6e677cee131bafbdc228b87464b1f866872e28cec5e914aa4a3.fetch"
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/80cc29582a5b6fa6132cde917ceff76c79f6f5e685cbfcedcc79617b6d5bc644.fetch"
+        },
+        {
+          "event": "external-fetch"
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/2dfdabc9f3389618c2bdfc1e2d4dc2b6bd0191665293d7d7d6a9ab2fbee0690f.fetch"
+        },
+        {
+          "event": "external-fetch"
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/44caffb1475de52cff9de71ff5dd1592a289b6cbbfa12d111ee1d61d37df5162.fetch"
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/4124bfefe2d7c5c8a725be14d39a90e18ee8cd7b0eb1cf6e07cfeef9c1347b0d.fetch"
+        },
+        {
+          "event": "external-fetch"
+        },
+        {
+          "event": "compiled-gate",
+          "status": 404,
+          "writes": 0
+        }
+      ]
+    },
+    {
+      "path": "/skills",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600",
+        "content-encoding": "identity",
+        "content-length": "71293",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"ngqvnl3zsx1h7j\"",
+        "link": "<http://localhost/en/skills>; rel=\"alternate\"; hreflang=\"en\", <http://localhost/skills>; rel=\"alternate\"; hreflang=\"zh\", <http://localhost/skills>; rel=\"alternate\"; hreflang=\"x-default\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "events": [
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/c300c126c0ea33b3cc57bd2546e2f9b3634958a5e721647ea67f4b729a3bb2c2.cache"
+        },
+        {
+          "event": "restore",
+          "key": "/zh/skills",
+          "hasControls": true
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/a44055594c5ea6e677cee131bafbdc228b87464b1f866872e28cec5e914aa4a3.fetch"
+        },
+        {
+          "event": "get",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/44caffb1475de52cff9de71ff5dd1592a289b6cbbfa12d111ee1d61d37df5162.fetch"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/a44055594c5ea6e677cee131bafbdc228b87464b1f866872e28cec5e914aa4a3.fetch"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/44caffb1475de52cff9de71ff5dd1592a289b6cbbfa12d111ee1d61d37df5162.fetch"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/RKd9tnE8YJLFWN5YKDi3W/c300c126c0ea33b3cc57bd2546e2f9b3634958a5e721647ea67f4b729a3bb2c2.cache"
+        },
+        {
+          "event": "compiled-gate",
+          "status": 404,
+          "writes": 0
+        }
+      ]
+    }
+  ]
+}

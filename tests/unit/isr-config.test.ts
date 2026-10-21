@@ -7,7 +7,7 @@ function readText(name: string): string {
 }
 
 describe('ISR 配置守卫', () => {
-  it('wrangler.jsonc 必须有 WORKER_SELF_REFERENCE 自引用（DO queue 回打依赖）', () => {
+  it('wrangler.jsonc 必须有自引用、D1 tag cache 与 site-cache 增量缓存绑定', () => {
     const raw = readText('wrangler.jsonc');
     // jsonc 带注释，只去掉整行注释（行内 // 可能是 URL，不能动）
     const json = raw.replace(/^\s*\/\/.*$/gm, '');
@@ -16,7 +16,7 @@ describe('ISR 配置守卫', () => {
       services?: { binding: string; service: string }[];
       durable_objects?: { bindings: { name: string; class_name: string }[] };
       d1_databases?: { binding: string }[];
-      r2_buckets?: { binding: string }[];
+      r2_buckets?: { binding: string; bucket_name: string }[];
     };
 
     expect(config.services ?? []).toEqual(
@@ -26,28 +26,43 @@ describe('ISR 配置守卫', () => {
       expect.arrayContaining([{ name: 'NEXT_CACHE_DO_QUEUE', class_name: 'DOQueueHandler' }]),
     );
     expect((config.d1_databases ?? []).map((d) => d.binding)).toContain('NEXT_TAG_CACHE_D1');
-    // 本月 R2 Class A 超额：博客暂时不能访问共享 site-cache；媒体桶仍保留。
-    expect((config.r2_buckets ?? []).map((b) => b.binding)).not.toContain('NEXT_INC_CACHE_R2_BUCKET');
+    // Issue #17：恢复 ISR / fetch 增量缓存，复用已有 site-cache 桶。
+    expect(config.r2_buckets ?? []).toEqual(
+      expect.arrayContaining([{ binding: 'NEXT_INC_CACHE_R2_BUCKET', bucket_name: 'site-cache' }]),
+    );
     expect((config.r2_buckets ?? []).map((b) => b.binding)).toContain('BUCKET');
   });
 
-  it('官方生成入口直接运行，Workers Cache 保留，R2 缓存保持关闭', () => {
+  it('自定义入口只包装缓存写入策略，Workers Cache 与 DO 导出保留', () => {
     const json = readText('wrangler.jsonc').replace(/^\s*\/\/.*$/gm, '');
     const config = JSON.parse(json) as {
       main: string;
       alias?: Record<string, string>;
       cache?: { enabled: boolean; cross_version_cache?: boolean };
     };
-    expect(config.main).toBe('.open-next/worker.js');
-    expect(config.alias).toBeUndefined();
+    expect(config.main).toBe('worker.ts');
+    expect(config.alias?.['open-next-generated-worker']).toBe('./.open-next/worker.js');
     expect(config.cache?.enabled).toBe(true);
     expect(config.cache?.cross_version_cache).not.toBe(true);
+    const worker = readText('worker.ts');
+    expect(worker).toContain('runWithCacheWritePolicy(() => handler.fetch(request, env, ctx))');
+    expect(worker).not.toContain('applyEdgeCachePolicy');
+    expect(worker).toMatch(/export \{ DOQueueHandler \} from 'open-next-generated-worker'/);
+    expect(readText('src/components/NotFoundContent.tsx')).toContain('data-blog-not-found="true"');
+  });
+
+  it('恢复 R2 增量缓存与 D1 tag cache，关闭 cache interception', () => {
     const source = readText('open-next.config.ts');
-    expect(source).toContain("incrementalCache: 'dummy'");
-    expect(source).toContain("tagCache: 'dummy'");
+    expect(source).toContain('createBlogIncrementalCache(r2IncrementalCache)');
+    expect(source).toContain('tagCache: d1TagCache');
     expect(source).toContain('do-queue');
-    expect(source).not.toContain("from './src/");
-    expect(source).not.toContain('edgeExternals');
+    expect(source).toContain('enableCacheInterception: false');
+    expect(source).toContain('edgeExternals');
+    expect(source).not.toContain("incrementalCache: 'dummy'");
+    expect(source).not.toContain("tagCache: 'dummy'");
+    expect(source).not.toMatch(/kv-incremental-cache/);
+    expect(readText('src/lib/blog-incremental-cache.ts')).toContain('withStoredRevalidate');
+    expect(readText('src/lib/isr-freshness-cache.ts')).not.toContain('lastModified: now');
   });
 
   it('Issue #14：公开页数据源 TTL 与页面 ISR 对齐（>= 1h），不再有 300/900s 短 TTL', () => {
