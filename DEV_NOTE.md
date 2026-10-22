@@ -529,6 +529,11 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 - 已核对 FPM master/worker 的运行二进制与已安装文件一致、无旧代码文件映射；
   `/dev/zero (deleted)` 属匿名共享内存，不代表仍加载旧版 PHP。FPM 配置检查通过，
   WordPress 文章 API、认证入口声明及主站 HTTP 抽检正常。
+- 随后按用户授权完成整机重启：boot ID 已更换，运行内核从 `7.0.0-1005-gcp` 切换至
+  `7.0.0-1014-gcp`，`reboot-required` 已清除。PHP-FPM/Caddy/Tunnel/wp-cron 自动启动，
+  PHP 配置与扩展检查通过，源站 API 和主站返回 200，无 failed systemd unit。
+  Cloudflared 冷启动触发 15s 启动超时并自动重试 6 次后恢复，最终实时连接数为 4；
+  后续重启验收需等 Tunnel 为 active 且连接注册成功。
 
 **坑与约定：**
 - Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
