@@ -559,7 +559,7 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
 
 
 
-## 本月 R2 增量缓存临时停用（2026-10-08）
+## R2 增量缓存临时停用（2026-10-08，历史止损方案）
 
 账号本周期 R2 Class A 免费额度已用完。线上 API 核对博客几个构建的 `site-cache`
 `PutObject` 合计约 96.70 万次，占该桶写入约 98.1%；高频 `.cache` 样本为博客 404 页面。
@@ -588,7 +588,9 @@ Workers Cache 保持开启；首页第二次 GET 为 `CF-Cache-Status: HIT`，�
 不存在文章 404。615 项测试、类型检查、格式和 Cloudflare 构建通过。
 
 
-## Wrangler / OpenNext 官方基线（2026-10-09，当前本地方案）
+## Wrangler / OpenNext 官方基线（2026-10-09，历史方案）
+
+以下记录仅描述 10/09 停用 R2 时的方案，已由下节 10/21 的恢复修复替代。
 
 入口采用官方 `.open-next/worker.js`，不再包 `worker.ts`，也不使用别名、自造时间戳新鲜度、
 请求级写入队列或自定义 R2 过滤 adapter。OpenNext 仅使用 `defineCloudflareConfig` 和官方 DO queue。
@@ -615,28 +617,37 @@ PutObject，覆盖 23 小时。此前局部 1s 回退复现不能当作生产完
 API 显式 no-store；登录、后台、搜索 private/no-store。预览未连接生产 WordPress Access 配置，
 WP 依赖页面不算此轮成功样本，也没有模拟云端 Workers Cache 的命中层。
 
-## Issue #17：恢复 R2 与冷实例重复写入修复（2026-10-21）
+## Issue #17：R2 ISR / Workers Cache 当前方案（2026-10-22，代码收尾）
 
-R2 已按用户决定恢复。保留 R2 incremental cache、regional cache、D1 next-mode tag cache、
-官方 DO queue 与 Workers Cache；404 页面及空 WP slug/深分页结果不进入增量缓存。
+**代码迭代已结束并上线；24 小时运行验收待完成。** 当前方案以本节及
+[收尾记录](docs/cache-isr-closeout-2026-10-22.md)为准，前面的停用方案保留作历史依据。
 
-10/20 的 header-only 修补没有解决新鲜度判断：10/20 23:08–10/21 16:00 北京时间，
-当前 build 有 16197 次 Put（页面 10520、fetch 5677），中文首页同键 429 次。
-此前几分钟归零的观察不能证明恢复成功；完整证据见 `docs/cache-probe-2026-10-21.md`。
+请求先经过 Workers Cache，边缘 HIT 不执行 Worker；MISS 时进入 Worker 并读取持久 ISR。
+有效条目直接返回，缺失时生成，过期和 tag 失效交给 Next/OpenNext 原生流程。
+保留 R2 + regional cache + D1 next-mode tag cache + 官方 DO queue；公开页 revalidate=86400。
+TTL 不保证边缘保留一天，也不覆盖 private/no-store。404 页面及空 WP slug/深分页结果不写增量缓存。
 
 确认的两个缺陷及修复：
-- 按需 ISR 路径不在 prerender manifest，冷 Next 实例丢失路由 cacheControl，回退 1 秒。
-  `withStoredRevalidate` 在读取持久化条目时，恢复当前 Next 实例的路由配置；已有配置优先。
-  不修改 lastModified，不补剩余响应头，不绕过原生过期和 tag 失效。
-  原补头会在 STALE 时被 OpenNext 覆盖成 2 秒，因此已移除。
-- OpenNext 把写入策略编译到 middleware、server 和入口三个模块，模块变量 ALS 互不共享。
-  改为 `Symbol.for` 注册同一 ALS 容器；请求数据仍按异步上下文隔离，最终 404 不提交写入。
+- 按需路径不在 prerender manifest，冷 Next 实例丢失路由 cacheControl，回退 1 秒。
+  `withStoredRevalidate` 在读取持久化条目时恢复当前 Next 实例的路由配置，已有配置优先；
+  不改 lastModified，不补响应头，不绕过原生过期或 tag 失效。
+  旧 header-only 包装没有改变判断，STALE 头还会被 OpenNext 改成 2 秒，因此已移除。
+- middleware、server、入口分别编译，模块级 ALS 不共享，最终状态无法限制另一模块的写入。
+  通过 `Symbol.for` 共享同一个 ALS 容器，请求上下文仍隔离，404 / notFound 标记拒绝待写入内容。
 
-验证：647 项测试、类型检查通过；不含环境文件的隔离副本完成 Next/OpenNext 构建及 Wrangler dry-run。
-`scripts/research/verify-built-isr.ts` 执行实际产物，临时本地 R2/D1、离线数据源：
-一天内冷读 HIT、0 Put；超过一天 STALE 并重建；404 为 0 Put；tag 失效 MISS 后重建；
-实际入口/server 两份模块的 404 写入保护生效。该脚本捕获 DO RPC，未运行完整 DO 调度。
+修复提交 bfa796f；生产版本 305af306-24d0-43b1-9723-c1a0a76ad515，100% 流量；
+build PFf94JJlAqVr310FgZsqY，北京时间 10/21 17:35:59 自动部署。
+647 项测试、类型检查、Next/OpenNext 构建及 dry-run 通过；实际产物的冷读、过期、404、
+tag 失效、跨模块门禁通过，复现方法与 DO 验证边界见 [TESTING.md](TESTING.md)。
 
-发布走 master 的 Cloudflare Workers Builds 自动链路。观察需按新 build 分开页面/fetch、
-首次写入/同键重写和 CPU；旧版本的全部历史爆量尚未完成归因。
-恢复前 10/17–19 CPU 9.61M ms / 49914 次，均值 192.5 ms，不能用不同流量样本直接断言节省。
+截至 10/22 15:35，约 22 小时内：首页成功 Put 1 / Get 385，skills 成功 Put 1，全局 404 无 Put。
+Worker errors=0，Workers Cache 命中率约 44.7%；跨机房边缘 MISS / ISR HIT 与剩余 TTL 已实测。
+相较修复前约 17 小时首页 429 次成功 Put，当前持续重写异常未复现。
+
+统计必须分开成功/失败、新路径首次写入/持续重写，结合对象 uploaded/ETag 与 tag 记录。
+一次跨窗口疑似键的较早事件为 429 失败尝试，不能直接算作成功重写；短时轮询未见对象更新。
+不同窗口与流量构成不构成对照实验，也不能直接推断费用或相对停用 R2 时的 CPU 节省。
+历史旧版全局 404 等爆量仍有未解释部分，不作为本轮代码迭代的阻塞项。
+
+运行验收于北京时间 10/22 17:35:59 满 24 小时，随后按固定窗口核对并更新收尾记录、结束观察。
+文档推送也会触发自动部署，因此先本地提交，完成观察后再推送，保留本次 build 的验收窗口。

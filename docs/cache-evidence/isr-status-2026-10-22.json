@@ -1,0 +1,557 @@
+{
+  "schemaVersion": 1,
+  "status": "代码修复已结束；24小时运行验收待完成",
+  "codeCommit": "bfa796fe2846e5a5848c20941abdc8951ce25dcf",
+  "deployment": {
+    "status": "success",
+    "versionId": "305af306-24d0-43b1-9723-c1a0a76ad515",
+    "buildId": "PFf94JJlAqVr310FgZsqY",
+    "createdOn": "2026-10-21T09:35:59.217307Z",
+    "trafficPercent": 100,
+    "sourceVerified": {
+      "restoresRouteTtl": true,
+      "sharedAsyncContext": true,
+      "oldHeaderWrapper": false,
+      "workersCacheEnabled": true
+    }
+  },
+  "observationTargetEnd": "2026-10-22T09:35:59.217307Z",
+  "statusCheck": {
+    "at": "2026-10-22T07:45:31.780780+00:00",
+    "from": "2026-10-21T09:35:59Z",
+    "until": "2026-10-22T07:35:00Z",
+    "source": "用户询问状态时重新查询的累计窗口；不推进hourly samples检查点。",
+    "buildId": "PFf94JJlAqVr310FgZsqY",
+    "successfulPagePuts": 4599,
+    "failedPagePutAttempts": 4,
+    "successfulFetchPuts": 6451,
+    "worker": {
+      "requests": 13152,
+      "cpuMs": 2985192.179,
+      "averageCpuMs": 226.9762909823601,
+      "errors": 0
+    },
+    "workersCacheHitPercent": 44.66310726735207,
+    "tracked": {
+      "home": {
+        "successfulPuts": 1,
+        "successfulGets": 385,
+        "failedPutAttempts": 0
+      },
+      "skills": {
+        "successfulPuts": 1,
+        "successfulGets": 7,
+        "failedPutAttempts": 0
+      },
+      "tag": {
+        "successfulPuts": 4,
+        "successfulGets": 1,
+        "failedPutAttempts": 0
+      },
+      "notFound": {
+        "successfulPuts": 0,
+        "successfulGets": 0,
+        "failedPutAttempts": 0
+      },
+      "candidate": {
+        "successfulPuts": 1,
+        "successfulGets": 2,
+        "failedPutAttempts": 4
+      }
+    },
+    "oldComparison": {
+      "from": "2026-10-20T15:08:51Z",
+      "until": "2026-10-21T08:00:00Z",
+      "successfulPagePuts": 10520,
+      "successfulFetchPuts": 5677,
+      "homeSuccessfulPuts": 429,
+      "worker": {
+        "requests": 15115,
+        "cpuMs": 4115604.441,
+        "averageCpuMs": 272.28610261329806,
+        "errors": 0
+      }
+    },
+    "normalizedChange": {
+      "successfulPutsPerInvocationBefore": 1.071584518690043,
+      "successfulPutsPerInvocationAfter": 0.840176399026764,
+      "successfulPutsPerInvocationReductionPercent": 21.594948007102932,
+      "averageCpuReductionAgainstPreviousBrokenIsrPercent": 16.64051569142593
+    },
+    "limitations": [
+      "两个窗口时长与流量组成不同，归一化变化也不等同于受控因果或相对关闭R2时的CPU节省。",
+      "操作来自adaptive统计，成功与失败分别记录，不推断计费规则。",
+      "满24小时目标为北京时间2026-10-22 17:35:59，当前尚未到终点。"
+    ],
+    "raw": {
+      "cache": [
+        {
+          "dimensions": {
+            "cacheStatus": "hit"
+          },
+          "sum": {
+            "requests": 10122
+          }
+        },
+        {
+          "dimensions": {
+            "cacheStatus": "revalidated"
+          },
+          "sum": {
+            "requests": 19
+          }
+        },
+        {
+          "dimensions": {
+            "cacheStatus": "expired"
+          },
+          "sum": {
+            "requests": 544
+          }
+        },
+        {
+          "dimensions": {
+            "cacheStatus": "miss"
+          },
+          "sum": {
+            "requests": 9132
+          }
+        },
+        {
+          "dimensions": {
+            "cacheStatus": "bypass"
+          },
+          "sum": {
+            "requests": 2846
+          }
+        }
+      ],
+      "candidate": [
+        {
+          "dimensions": {
+            "actionStatus": "userError",
+            "actionType": "GetObject",
+            "responseStatusCode": 404
+          },
+          "sum": {
+            "requests": 2
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "userError",
+            "actionType": "PutObject",
+            "responseStatusCode": 429
+          },
+          "sum": {
+            "requests": 4
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "PutObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 1
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "GetObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 2
+          }
+        }
+      ],
+      "fetches": [
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 6451
+          }
+        }
+      ],
+      "home": [
+        {
+          "dimensions": {
+            "actionStatus": "userError",
+            "actionType": "GetObject",
+            "responseStatusCode": 404
+          },
+          "sum": {
+            "requests": 1
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "PutObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 1
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "GetObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 385
+          }
+        }
+      ],
+      "notFound": [
+        {
+          "dimensions": {
+            "actionStatus": "userError",
+            "actionType": "GetObject",
+            "responseStatusCode": 404
+          },
+          "sum": {
+            "requests": 461
+          }
+        }
+      ],
+      "oldFetches": [
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 5677
+          }
+        }
+      ],
+      "oldHome": [
+        {
+          "dimensions": {
+            "actionStatus": "userError",
+            "actionType": "GetObject",
+            "responseStatusCode": 404
+          },
+          "sum": {
+            "requests": 1
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "PutObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 429
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "GetObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 471
+          }
+        }
+      ],
+      "oldPages": [
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 10520
+          }
+        }
+      ],
+      "oldWorker": [
+        {
+          "dimensions": {
+            "status": "clientDisconnected"
+          },
+          "sum": {
+            "cpuTimeUs": 2603889,
+            "errors": 0,
+            "requests": 9
+          }
+        },
+        {
+          "dimensions": {
+            "status": "success"
+          },
+          "sum": {
+            "cpuTimeUs": 4113000552,
+            "errors": 0,
+            "requests": 15106
+          }
+        }
+      ],
+      "pages": [
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 4599
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "userError",
+            "responseStatusCode": 429
+          },
+          "sum": {
+            "requests": 4
+          }
+        }
+      ],
+      "skills": [
+        {
+          "dimensions": {
+            "actionStatus": "userError",
+            "actionType": "GetObject",
+            "responseStatusCode": 404
+          },
+          "sum": {
+            "requests": 1
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "PutObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 1
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "GetObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 7
+          }
+        }
+      ],
+      "tag": [
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "PutObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 4
+          }
+        },
+        {
+          "dimensions": {
+            "actionStatus": "success",
+            "actionType": "GetObject",
+            "responseStatusCode": 200
+          },
+          "sum": {
+            "requests": 1
+          }
+        }
+      ],
+      "worker": [
+        {
+          "dimensions": {
+            "status": "clientDisconnected"
+          },
+          "sum": {
+            "cpuTimeUs": 1493896,
+            "errors": 0,
+            "requests": 14,
+            "subrequests": 3
+          }
+        },
+        {
+          "dimensions": {
+            "status": "success"
+          },
+          "sum": {
+            "cpuTimeUs": 2983698283,
+            "errors": 0,
+            "requests": 13138,
+            "subrequests": 9582
+          }
+        }
+      ]
+    }
+  },
+  "representativeWorkerCacheMissIsrHit": [
+    {
+      "at": "2026-10-21T09:38:59.015645+00:00",
+      "path": "/skills",
+      "status": 200,
+      "headers": {
+        "cf-cache-status": "MISS",
+        "cache-control": "s-maxage=86320, stale-while-revalidate=2592000",
+        "x-nextjs-cache": "HIT",
+        "cf-ray": "a4df4ad4294aef09-LHR"
+      }
+    },
+    {
+      "path": "/skills",
+      "at": "2026-10-21T15:25:21.657073+00:00",
+      "status": 200,
+      "headers": {
+        "cf-cache-status": "MISS",
+        "cache-control": "s-maxage=65534, stale-while-revalidate=2592000",
+        "x-nextjs-cache": "HIT",
+        "cf-ray": "a4e1464a183e5b25-VIE"
+      }
+    }
+  ],
+  "latestFixedPathHttp": [
+    {
+      "path": "/skills",
+      "at": "2026-10-22T07:20:12.793043+00:00",
+      "status": 200,
+      "headers": {
+        "cf-cache-status": "HIT",
+        "age": "78076",
+        "cache-control": "s-maxage=86320, stale-while-revalidate=2592000",
+        "x-nextjs-cache": "HIT",
+        "cf-ray": "a4e6bd05ea296650-AMS"
+      }
+    },
+    {
+      "path": "/",
+      "at": "2026-10-22T07:20:12.793461+00:00",
+      "status": 200,
+      "headers": {
+        "cf-cache-status": "HIT",
+        "age": "78151",
+        "cache-control": "s-maxage=86306, stale-while-revalidate=2592000",
+        "x-nextjs-cache": "HIT",
+        "cf-ray": "a4e6bcfe5caed5a2-AMS"
+      }
+    },
+    {
+      "path": "/category/js",
+      "at": "2026-10-22T07:20:12.793557+00:00",
+      "status": 200,
+      "headers": {
+        "cf-cache-status": "HIT",
+        "age": "78129",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600",
+        "x-nextjs-cache": "MISS",
+        "cf-ray": "a4e6bd055c840bc2-AMS"
+      }
+    }
+  ],
+  "latestR2ObjectMetadata": {
+    "skills": {
+      "success": true,
+      "objects": [
+        {
+          "key": "incremental-cache/PFf94JJlAqVr310FgZsqY/c300c126c0ea33b3cc57bd2546e2f9b3634958a5e721647ea67f4b729a3bb2c2.cache",
+          "etag": "86d2b56368fcec23250e3d2ecf63d94c",
+          "last_modified": "2026-10-21T09:37:39.262Z",
+          "size": 160386,
+          "http_metadata": {},
+          "custom_metadata": {},
+          "storage_class": "Standard"
+        }
+      ]
+    },
+    "home": {
+      "success": true,
+      "objects": [
+        {
+          "key": "incremental-cache/PFf94JJlAqVr310FgZsqY/d83abd2e9b775e3d18d5b5cabbc7976e2a88fadcabe35ab3db6a1c79e0fdc1bc.cache",
+          "etag": "9c4db99b70aa255744070d51d756595e",
+          "last_modified": "2026-10-21T09:36:08.496Z",
+          "size": 520776,
+          "http_metadata": {},
+          "custom_metadata": {},
+          "storage_class": "Standard"
+        }
+      ]
+    },
+    "tag": {
+      "success": true,
+      "objects": [
+        {
+          "key": "incremental-cache/PFf94JJlAqVr310FgZsqY/c50c528117d70da3d0df1ae88f33fc3006a947fb6f8b701dc54f83d1ff16f29e.cache",
+          "etag": "20908b5fda3aa1d8c1ef0b844589f66b",
+          "last_modified": "2026-10-21T09:37:09.334Z",
+          "size": 109949,
+          "http_metadata": {},
+          "custom_metadata": {},
+          "storage_class": "Standard"
+        }
+      ]
+    },
+    "candidate": {
+      "success": true,
+      "objects": [
+        {
+          "key": "incremental-cache/PFf94JJlAqVr310FgZsqY/25ee35a85d479caa4514446a1d3999f0b400b420bd01cb601eb058a366d577dd.cache",
+          "etag": "4c772fbd790e82b063472844decc5347",
+          "last_modified": "2026-10-22T02:29:04.865Z",
+          "size": 256597,
+          "http_metadata": {},
+          "custom_metadata": {},
+          "storage_class": "Standard"
+        }
+      ]
+    }
+  },
+  "candidateAssessment": {
+    "key": "incremental-cache/PFf94JJlAqVr310FgZsqY/25ee35a85d479caa4514446a1d3999f0b400b420bd01cb601eb058a366d577dd.cache",
+    "writes": [
+      {
+        "dimensions": {
+          "actionStatus": "userError",
+          "datetimeMinute": "2026-10-21T19:43:00Z",
+          "responseStatusCode": 429
+        },
+        "sum": {
+          "requests": 4
+        }
+      },
+      {
+        "dimensions": {
+          "actionStatus": "success",
+          "datetimeMinute": "2026-10-22T02:29:00Z",
+          "responseStatusCode": 200
+        },
+        "sum": {
+          "requests": 1
+        }
+      }
+    ],
+    "watchSeconds": 644.069142,
+    "watchSnapshots": 6,
+    "anyObjectUpdateObserved": false,
+    "conclusion": "前一时点采样记录为429失败，后一时点成功；不能据此认定提前成功重写或根因。短时轮询未见对象更新。"
+  },
+  "limitations": [
+    "初期样本窗口部分重叠，禁止直接累加samples各项指标当作完整24小时总量；完整窗口需按同一build和时间重新查询。",
+    "分钟明细及操作数来自adaptive analytics，可能有抽样权重；未见重复是已采集样本范围的结论，不代表逐次请求全量审计。",
+    "PutObject操作数必须按actionStatus/responseStatusCode区分成功与失败；失败尝试不能直接作为成功重写次数。跨分钟候选需核对操作状态、对象元数据及合法失效，不能自动判为持续故障。",
+    "24小时后出现刷新时，按具体对象last_modified加86400秒判断是否正常到期，不能把到期重建误报为提前重写；终审使用固定24小时窗口重查聚合。"
+  ]
+}

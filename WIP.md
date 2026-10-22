@@ -32,12 +32,6 @@
 
 
 
-- [x] 入口改回 .open-next/worker.js，移除自定义别名与入口
-- [x] 仅用官方 OpenNext 配置，保留当前 R2 全关与业务资源
-- [x] 由 Next 原生 headers() 保护 API 缓存边界，发布走原生缓存清理 API
-- [x] 移除无用的缓存包装与对应实现测试，补充配置/响应边界验证
-- [x] 类型、548 项测试、构建、Worker dry-run 与本地预览通过；仅本地保存，不推送部署
-
 # WIP: 处理 issue #6 / #7 / #8
 
 ## WP 源站抖动导致文章页 500（2026-10-05，已完成待部署）
@@ -111,36 +105,13 @@
 - [x] 全量校验：format / typecheck / 469 测试 / build 通过
 - [ ] 待部署后验证：生产 `_rsc` 不再跑飞 + Worker 请求量回落，再关 issue
 
-## ISR 恢复 + 保留 R2（2026-09-27）
+## R2 ISR / Workers Cache（2026-10-22，代码迭代结束）
 
-- [x] `wrangler.jsonc`：补 `services: WORKER_SELF_REFERENCE` 自引用（DO queue 构造缺它会抛 `IgnorableError`，time-based revalidate 发不出去）；incremental cache 保持 R2，不迁 KV（官方明确不推荐 KV，最终一致）
-- [x] 测试：`tests/unit/isr-config.test.ts` 守卫 wrangler 绑定 + open-next R2/queue/tag 配置
-- [x] 校验：format / typecheck / 498 测试 / `next build` / `opennextjs-cloudflare build` 通过；`pnpm cf-typegen` 同步 `env.d.ts`（gitignored，内有 `WORKER_SELF_REFERENCE`）
-- [x] 文档：`DEV_NOTE.md` 记 ISR 决策
-- [ ] 待部署后验证：`NEXT_PRIVATE_DEBUG_CACHE=1` 看 MISS→HIT、改文看 300s/86400s 窗口、R2 `site-cache` 对象增长
-## 缓存重复写入独立调查（2026-10-09）
+代码 bfa796f 已上线：冷实例恢复路由 TTL、跨模块共享 ALS；647 项测试、类型/构建与实际产物验证通过。
+Workers Cache HIT 与边缘 MISS / ISR HIT 已实测；当前方案和约22小时证据见
+[收尾记录](docs/cache-isr-closeout-2026-10-22.md)及 DEV_NOTE。旧的关闭 R2 / 独立账号恢复前计划已由现行方案替代。
 
-- [x] 核对当前/历史部署、SDK 实现与 R2 原始样本，按页面/fetch 拆分统计
-- [x] 实际历史包复现慢 tag → 错误 STALE → 原生后台 Put；队列 HEAD 手动回放再次 Put
-- [x] 完整 manifest 验证全局 404 正常访问只读，否定空 manifest 的历史归因
-- [x] 当前原生止损线上核对：R2 关闭，公开 query MISS → HIT；548 测试/typecheck/Next build 通过
-- [ ] 恢复前补齐历史异常 404 因果、跨 isolate TTL、原生候选与真实 DO/Workers Cache 绕过验收
-- 证据与复现：`docs/cache-investigation-2026-10-09.md`；未将已复现缺陷等同于全部线上写入根因。
-- 约束：不读取 .env，不改生产数据库，不恢复生产 R2，不部署、不 push；保留无关 WIP。
-## 本地与隔离账号缓存验收（2026-10-09）
+- [ ] 北京时间 10/22 17:35:59 满24小时并留出统计延迟后，重查固定窗口、更新收尾文档、结束 r2-isr 自动观察。
+- [ ] 验收结束后推送本轮文档提交并核对自动部署；此前只本地提交，保留当前 build 的观察窗口。
 
-- [x] 独立安装锁定依赖，原生 Next/OpenNext 构建、冷 isolate / TTL / 404 / 分段 RSC 矩阵通过预期行为断言
-- [x] 真实 DO：8 个过期请求去重为 1 次重建；500 写旧页面后重试；页面重建不重复刷新一天 fetch 缓存
-- [x] SDK 最小候选：运行时与部署枚举都过滤 404 页面对象；先取数据再 404 仍有 .fetch Put，严格零写入要求尚未满足
-- [ ] 本地验证通过后，在免费账号 07ee1a1a1cf0da549eaaf6d3c5c80b62 创建独立 Worker 与测试资源；限制不足时先汇报，不自动换账号或升级
-- [ ] 验证 Workers Cache HIT、query、RSC、队列 HEAD 和实际 R2 写入，整理证据
-- 线上延期：账号 R2 未启用（只读 API 10042），用户明确决定稍后开通。当前没有线上资源或部署。
-- 结果与复现：`docs/cache-investigation-2026-10-09.md` 后续本地验收；`scripts/research/cache-lab/README.md`。
-- 授权范围：可部署独立测试环境；不部署生产博客、不访问生产 site-cache 或业务数据库、不 push。
-## 继续定位历史爆量（2026-10-09）
-
-- [x] 实际高频全局 404 条目执行 70 个本地请求变体，Put=0；否定普通请求/慢 tag 会重写 false TTL 404 的解释
-- [ ] 关联生产或历史原版线上复现的单次 MISS/重建调用者/Put，仍未解释 568 次全局 404 写入
-- [ ] 将正常页面的错误 STALE / 失败回退机制与历史实际流量分开，不把候选验收当作根因证明
-- [ ] 明确每个历史样本能解释的写入与仍不可归因的部分
-- 目标仍是历史大量写入的原因；不恢复生产 R2，线上测试按用户决定等待测试账号开通。
+历史全部爆量的归因边界保留在收尾记录，不再作为本轮代码任务。无关文章与产品 WIP 保持原样。
