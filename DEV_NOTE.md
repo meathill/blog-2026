@@ -468,8 +468,9 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   迁移都优先用 `sudo -u www-data wp ... --path=/var/www/blog`,不必再绕
   `scripts/seo/runner.php` 那套裸 `wp-load.php` + `WP_CLI` shim(那套仍保留给
   SEO 文案脚本用,两者不冲突)。
-- ⚠️ `wp db export`/`wp core update` 会在 `/var/www/.wp-cli/cache/` 建缓存目录,
-  www-data 对 `/var/www` 本身无写权限,会报 permission warning(不影响功能,未处理)。
+- `wp db export`/`wp core update` 使用 `/var/www/.wp-cli/cache/` 缓存目录。
+  2026-10-22 已创建 `.wp-cli` 与 `cache`，所有者 `www-data:www-data`、权限 750，
+  修复 www-data 无法创建缓存目录的 permission warning。
 - 验证 Application Passwords 401 修复(见上)没被这次核心更新带崩:直接在服务器 CLI 跑
   `is_ssl()` 测不出真实结果(裸 CLI 天然没有 HTTPS 概念,当初就是这个坑),得走真实
   Caddy→FPM 请求路径测,且 Caddy 只把 `/wp-json* /wp-admin* /wp-login.php /wp-cron.php
@@ -493,6 +494,29 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   正文内容的来源,不要泛化到"WP 插件都能随便删"。
 - **核心版本决定(2026-07-20)**:暂不升级到 7.0.x,等 **7.2** 前后再评估,除非官方提前终止
   6.x 分支的安全维护(WP 历来对旧大版本长期出安全补丁,目前没有 6.x 停止维护的迹象)。
+  此为历史决定；2026-10-22 实测核心已是 7.1.3，本轮未替换核心文件。
+
+**WordPress 依赖维护（2026-10-22）：**
+
+- SSH 直连在握手前断开，本轮通过已有 Google Cloud IAP 隧道与密钥连接，
+  复用该 IP 已保存的主机公钥校验。站点仍是 `/var/www/blog`，WP-CLI 2.12.0。
+- 核心 7.1.3 的同分支更新检查无可用更新；插件更新：Akismet 5.7 → 5.7.2、
+  Gutenberg 23.5.3 → 24.2.0、Jetpack 16.0.2 → 16.3.1、Jetpack Boost 4.6.3 → 4.8.1、
+  WP Super Cache 3.1.1 → 3.1.4。
+- 主题更新：Twenty Twenty 3.0 → 3.2、Twenty Twenty-Five 1.4 → 1.5、
+  Twenty Twenty-Four 1.4 → 1.6、Twenty Twenty-Three 1.6 → 1.7。
+  同步更新 Akismet、Jetpack、Jetpack Boost 的 3 个中文语言包；核心与主题语言包已是最新。
+- 验收发现数据库版本落后于现有核心文件。官方 `wp core update-db --dry-run` 确认后，
+  在维护模式下执行数据库升级 60717 → 61833，再 dry-run 确认无需升级。
+  插件/主题更新与数据库升级后均重启 PHP-FPM，清除 OPcache/APCu 旧缓存。
+- 回滚备份保留在服务器 `/var/www/backups/2026-10-22-wordpress-dependencies/`，
+  目录 700、文件 600，仅 root 可读；包含完整数据库、站点文件（排除媒体 uploads、
+  运行缓存与环境文件）、升级前版本清单及 SHA256SUMS，归档已通过 gzip 校验。
+- 核心与 5 个更新插件通过官方校验和检查；源站文章 API 的单篇样本升级前后相同，
+  Application Passwords 仍可用、匿名 `/users/me` 返回 401；主站首页及文章最终返回 200。
+  强制复查插件/主题更新均无待更新项，启停状态保持原样；`wp-config.php` 与对象缓存
+  drop-in 哈希未变，相关服务正常，验收窗口的 PHP-FPM/Caddy 错误级别日志无记录。
+  HTTP 抽检不替代登录后台编辑与真实发布验收。
 
 **坑与约定：**
 - Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
