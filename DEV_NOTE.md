@@ -518,6 +518,18 @@ WP 的 DB 在 TiDB Cloud，账单暴涨后做的收口。脚本与权限清单�
   drop-in 哈希未变，相关服务正常，验收窗口的 PHP-FPM/Caddy 错误级别日志无记录。
   HTTP 抽检不替代登录后台编辑与真实发布验收。
 
+**PHP 紧急安全补丁核验（2026-10-22）：**
+
+- [Ubuntu USN-8948-1](https://ubuntu.com/security/notices/USN-8948-1) 修复
+  CVE-2026-109618 / CVE-2026-109619（远程代码执行）。Ubuntu 26.04 的修复包为
+  `8.5.4-0ubuntu1.5`；发行版回补补丁，不能仅凭 `php -v` 的 8.5.4 判断未修复。
+- 服务器日志显示北京时间 2026-10-22 14:03 已安装该版本；PHP-FPM、CLI 及配套核心扩展
+  均为该修订，本机 changelog 明确包含两项 CVE 修复。刷新 APT 索引并模拟更新，
+  14 个已安装 PHP 相关包均无可用更新，本次未再次安装或更换软件源。
+- 已核对 FPM master/worker 的运行二进制与已安装文件一致、无旧代码文件映射；
+  `/dev/zero (deleted)` 属匿名共享内存，不代表仍加载旧版 PHP。FPM 配置检查通过，
+  WordPress 文章 API、认证入口声明及主站 HTTP 抽检正常。
+
 **坑与约定：**
 - Rulesets API 的 `PUT entrypoint` 会**替换整个 rules 数组**，必须 GET→按 `ref` 合并→PUT
   （脚本已封装，规则 ref：`blog2026_*`）。
