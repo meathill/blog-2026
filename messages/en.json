@@ -41,9 +41,9 @@
   },
   "Solutions": {
     "title": "Solutions",
-    "subtitle": "20+ years of full-stack experience, aimed at your hardest engineering problems.",
+    "subtitle": "Full-stack development, US company formation, and global payments, tailored to your business.",
     "home_title": "What I can solve for you",
-    "home_subtitle": "The three things people most often come to me for.",
+    "home_subtitle": "From building your product to setting up a US company and accepting payments.",
     "view_all": "View all solutions",
     "learn_more": "Learn more",
     "nav_label": "Solutions"
@@ -68,7 +68,7 @@
   },
   "Contact": {
     "title": "Let's talk about your project",
-    "desc": "Whether it's a Cloudflare migration, an AI billing system, or a cross-platform app — tell me what you need and I'll come back with a clear plan and quote.",
+    "desc": "From product development to US company formation and global payments, tell me what you need and I'll come back with a clear plan and quote.",
     "email_button": "Email me",
     "github_button": "View GitHub"
   },

@@ -8,6 +8,7 @@ import { getCategoryBySlug, getPostsByCategory } from '@/lib/wordpress';
 import PostCard from '@/components/PostCard';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import JsonLd from '@/components/JsonLd';
+import CompanyRegistrationDetails from '@/components/solutions/company-registration-details';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -112,22 +113,32 @@ export default async function SolutionDetailPage({ params }: PageProps) {
           </p>
         </header>
 
-        <section className="mb-10 rounded-xl border border-border bg-card p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-600 mb-3">{t('problem_label')}</h2>
-          <p className="text-[var(--text-secondary)] leading-relaxed">{localize(solution.problem, locale)}</p>
-        </section>
+        {solution.slug === 'us-company-registration' ? (
+          <CompanyRegistrationDetails locale={locale} />
+        ) : (
+          <>
+            <section className="mb-10 rounded-xl border border-border bg-card p-6">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-600 mb-3">
+                {t('problem_label')}
+              </h2>
+              <p className="text-[var(--text-secondary)] leading-relaxed">{localize(solution.problem, locale)}</p>
+            </section>
 
-        <section className="mb-12">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-600 mb-4">{t('outcomes_label')}</h2>
-          <ul className="space-y-3">
-            {solution.outcomes.map((outcome) => (
-              <li key={outcome.zh} className="flex items-start gap-3">
-                <CheckIcon size={20} className="mt-0.5 shrink-0 text-amber-600" />
-                <span className="text-[var(--text-secondary)] leading-relaxed">{localize(outcome, locale)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+            <section className="mb-12">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-600 mb-4">
+                {t('outcomes_label')}
+              </h2>
+              <ul className="space-y-3">
+                {solution.outcomes.map((outcome) => (
+                  <li key={outcome.zh} className="flex items-start gap-3">
+                    <CheckIcon size={20} className="mt-0.5 shrink-0 text-amber-600" />
+                    <span className="text-[var(--text-secondary)] leading-relaxed">{localize(outcome, locale)}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
 
         <section className="rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 p-8 text-center text-white">
           <h2 className="text-2xl font-bold mb-2">{t('cta_title')}</h2>

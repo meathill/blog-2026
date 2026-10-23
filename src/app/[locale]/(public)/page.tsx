@@ -52,8 +52,8 @@ export default async function Home({ params }: HomeProps) {
       <ValueStrip />
       <Products />
       <Solutions />
-      <Tools />
       <RecentPosts />
+      <Tools />
       <ContactCTA />
     </>
   );

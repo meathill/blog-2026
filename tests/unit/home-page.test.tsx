@@ -3,18 +3,30 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import Home, { generateMetadata } from '../../src/app/[locale]/(public)/page';
 import { SITE_URL } from '../../src/lib/constants';
 
-// 首页各版块与 WP/D1 有数据依赖，测试只关心 head 与 JSON-LD 注入
+// 首页各版块与 WP/D1 有数据依赖，用标记验证顺序，同时检查 head 与 JSON-LD。
 vi.mock('../../src/components/home/Hero', () => ({ default: () => null }));
 vi.mock('../../src/components/home/ValueStrip', () => ({ default: () => null }));
 vi.mock('../../src/components/home/Products', () => ({ default: () => null }));
-vi.mock('../../src/components/home/Solutions', () => ({ default: () => null }));
-vi.mock('../../src/components/home/Tools', () => ({ default: () => null }));
-vi.mock('../../src/components/home/RecentPosts', () => ({ default: () => null }));
+vi.mock('../../src/components/home/Solutions', () => ({ default: () => <section aria-label="解决方案" /> }));
+vi.mock('../../src/components/home/Tools', () => ({ default: () => <section aria-label="在线工具" /> }));
+vi.mock('../../src/components/home/RecentPosts', () => ({ default: () => <section aria-label="博客" /> }));
 vi.mock('../../src/components/home/ContactCTA', () => ({ default: () => null }));
 
 function params(locale: string) {
   return { params: Promise.resolve({ locale }) };
 }
+
+describe('首页版块顺序', () => {
+  it.each(['zh', 'en'])('%s 首页先展示方案和博客，再展示在线工具', async (locale) => {
+    const html = renderToStaticMarkup(await Home(params(locale)));
+    const page = new DOMParser().parseFromString(html, 'text/html');
+    expect(Array.from(page.querySelectorAll('section'), (section) => section.getAttribute('aria-label'))).toEqual([
+      '解决方案',
+      '博客',
+      '在线工具',
+    ]);
+  });
+});
 
 describe('Home generateMetadata', () => {
   it('zh 首页 canonical 为站点根，含 zh/en/x-default hreflang', async () => {

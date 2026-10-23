@@ -29,7 +29,7 @@ export default async function Solutions() {
           </Link>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {solutions.map((solution) => (
             <SolutionCard key={solution.slug} solution={solution} locale={locale} learnMoreLabel={t('learn_more')} />
           ))}

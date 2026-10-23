@@ -41,9 +41,9 @@
   },
   "Solutions": {
     "title": "解决方案",
-    "subtitle": "用 20+ 年全栈经验，解决最棘手的工程问题。",
+    "subtitle": "全栈开发、美国公司注册与出海收款，按你的业务需要提供支持。",
     "home_title": "我能帮你解决什么",
-    "home_subtitle": "三个最常被找上门的方向。",
+    "home_subtitle": "从产品开发到美国公司注册与出海收款。",
     "view_all": "查看全部方案",
     "learn_more": "了解更多",
     "nav_label": "方案"
@@ -68,7 +68,7 @@
   },
   "Contact": {
     "title": "聊聊你的项目",
-    "desc": "无论是 Cloudflare 迁移、AI 计费系统还是跨端应用，告诉我你的需求，我会给出清晰的方案和报价。",
+    "desc": "从产品开发到美国公司注册与出海收款，聊聊你的需求，我会给出清晰的方案和报价。",
     "email_button": "发邮件聊聊",
     "github_button": "查看 GitHub"
   },

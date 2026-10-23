@@ -61,7 +61,7 @@ export default async function SolutionsListPage({ params }: { params: Promise<{ 
         <p className="text-lg text-zinc-600 dark:text-zinc-400">{t('subtitle')}</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3 max-w-6xl mx-auto">
+      <div className="grid gap-6 md:grid-cols-2 max-w-6xl mx-auto">
         {solutions.map((solution) => (
           <SolutionCard key={solution.slug} solution={solution} locale={locale} learnMoreLabel={t('learn_more')} />
         ))}

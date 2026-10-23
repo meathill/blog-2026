@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { CloudIcon, SmartphoneIcon, SparklesIcon } from 'lucide-react';
+import { Building2Icon, CloudIcon, SmartphoneIcon, SparklesIcon } from 'lucide-react';
 
 interface Localized {
   zh: string;
@@ -95,6 +95,36 @@ const SOLUTIONS: Solution[] = [
       { zh: '国内网络环境下的开发与发布实践', en: 'Dev and release practices for restricted-network regions' },
     ],
     categorySlug: 'react-native',
+  },
+  {
+    slug: 'us-company-registration',
+    icon: Building2Icon,
+    title: {
+      zh: '美国公司注册与出海收款',
+      en: 'US Company Formation & Global Payments',
+    },
+    tagline: {
+      zh: '通过 Mizu Financial，以 $499 一次性套餐办理美国公司注册、EIN、银行开户协助与 Stripe 收款配置。',
+      en: 'US company formation through Mizu Financial: $499 for a Wyoming LLC, EIN, bank application support, and Stripe setup.',
+    },
+    problem: {
+      zh: '产品准备面向海外用户，却卡在美国公司怎么注册、EIN 怎么申请、银行和 Stripe 怎么接上？',
+      en: 'Ready to sell internationally, but unsure how to form a US company, apply for an EIN, or connect banking and Stripe?',
+    },
+    outcomes: [
+      {
+        zh: '梳理美国 LLC 注册与 EIN 申请的材料和流程',
+        en: 'Prepare the documents and steps for US LLC formation and an EIN application',
+      },
+      {
+        zh: '协助准备美国商业银行开户与 Stripe 申请资料',
+        en: 'Get help preparing US business bank account and Stripe applications',
+      },
+      {
+        zh: '衔接公司主体、收款账户与产品支付系统',
+        en: 'Connect your company, payment accounts, and product billing system',
+      },
+    ],
   },
 ];
 
