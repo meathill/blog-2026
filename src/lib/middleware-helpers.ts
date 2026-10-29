@@ -14,6 +14,7 @@ export const TOP_LEVEL_ROUTES = [
   '_next',
   'admin',
   'tech',
+  'cloudflare-billing-helper',
 ];
 
 /**

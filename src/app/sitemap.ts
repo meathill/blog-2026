@@ -91,6 +91,19 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
       },
     },
     {
+      url: `${SITE_URL}/cloudflare-billing-helper`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/cloudflare-billing-helper`,
+          en: `${SITE_URL}/en/cloudflare-billing-helper`,
+          'x-default': `${SITE_URL}/cloudflare-billing-helper`,
+        },
+      },
+    },
+    {
       url: `${SITE_URL}/tech`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
