@@ -226,7 +226,10 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
       </section>
 
       {/* 隐私 */}
-      <section className="mx-auto mt-20 max-w-3xl rounded-xl border border-emerald-600/20 bg-emerald-500/5 p-6 md:p-8">
+      <section
+        id="privacy"
+        className="mx-auto mt-20 max-w-3xl scroll-mt-24 rounded-xl border border-emerald-600/20 bg-emerald-500/5 p-6 md:p-8"
+      >
         <h2 className="mb-3 flex items-center gap-2 text-xl font-bold">
           <LockIcon size={20} className="text-emerald-600" aria-hidden="true" />
           {content.privacyTitle}
