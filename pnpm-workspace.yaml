@@ -11,3 +11,6 @@ allowBuilds:
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+minimumReleaseAgeExclude:
+  - meathill-brand-react@0.2.0
+  - meathill-brand@0.2.0

@@ -63,11 +63,11 @@ importers:
         specifier: ^18.0.7
         version: 18.0.7
       meathill-brand:
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0
       meathill-brand-react:
-        specifier: ^0.1.0
-        version: 0.1.0(meathill-brand@0.1.0)(react@19.2.8)
+        specifier: ^0.2.0
+        version: 0.2.0(meathill-brand@0.2.0)(react@19.2.8)
       mermaid:
         specifier: ^11.16.0
         version: 11.16.0
@@ -4535,14 +4535,14 @@ packages:
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
-  meathill-brand-react@0.1.0:
-    resolution: {integrity: sha512-VWLUT5z3M3cXjRKNv5vHHOgAmBmfo9gjFceYLSK5APYgGC0ckHtgrfhT5o5HwbISkscjtbv45fSLEHaTp4O7rg==}
+  meathill-brand-react@0.2.0:
+    resolution: {integrity: sha512-13w4rTe9QmZv8eOA3RkFp+Ev7yFBHk9Ua8l6kNvSFyWQ+oqG1zmIc2Ad431p4IhWAl/gVDmH3HhlDtkVdYK7zg==}
     peerDependencies:
-      meathill-brand: ^0.1.0
+      meathill-brand: ^0.2.0
       react: '>=18'
 
-  meathill-brand@0.1.0:
-    resolution: {integrity: sha512-ua09wnW8UeGtmkFESdPse6xnjq2Ixny4Qjlobp+nTUk9CBigx+Jb0Bp0xk58MxVlstDAeErGqi6GAl7+9kOpuw==}
+  meathill-brand@0.2.0:
+    resolution: {integrity: sha512-yV8OUeZkPinPn/fqrMGQdqncq6q8l09XX0/k7wVpnMV9a0y2hBwnaGR1hOoCaJCcDwIaiPD1Paiz9GRV039glQ==}
 
   media-typer@1.1.1:
     resolution: {integrity: sha512-yz3xRaG20c6/BOzvYoDaGtPmGscs7YivItZEEqe6GbwNfHuxu9YNmvnEkMzKldAGY4/80pRcQRZSEnhquk9XuQ==}
@@ -9810,12 +9810,12 @@ snapshots:
 
   mdn-data@2.27.1: {}
 
-  meathill-brand-react@0.1.0(meathill-brand@0.1.0)(react@19.2.8):
+  meathill-brand-react@0.2.0(meathill-brand@0.2.0)(react@19.2.8):
     dependencies:
-      meathill-brand: 0.1.0
+      meathill-brand: 0.2.0
       react: 19.2.8
 
-  meathill-brand@0.1.0: {}
+  meathill-brand@0.2.0: {}
 
   media-typer@1.1.1: {}
 
