@@ -139,6 +139,19 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
         },
       },
     },
+    {
+      url: `${SITE_URL}/friend`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+      alternates: {
+        languages: {
+          zh: `${SITE_URL}/friend`,
+          en: `${SITE_URL}/en/friend`,
+          'x-default': `${SITE_URL}/friend`,
+        },
+      },
+    },
   ];
 
   // 获取所有分类

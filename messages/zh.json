@@ -83,6 +83,7 @@
     "toggle_menu": "菜单"
   },
   "Footer": {
+    "friends": "友链",
     "brand_desc": "Meathill LLC —— 20+ 年全栈开发经验的一人公司，远程交付 Cloudflare 全栈、AI 应用与跨端项目。",
     "quick_links": "快速链接",
     "archives": "文章归档",
@@ -97,6 +98,10 @@
     "label": "语言",
     "en": "English",
     "zh": "中文"
+  },
+  "Friends": {
+    "title": "友情链接",
+    "description": "网络上的朋友，欢迎去他们的个人网站逛逛。"
   },
   "Skills": {
     "title": "Skills",

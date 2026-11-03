@@ -76,6 +76,12 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 
+  it.each(['/friend', '/en/friend', '/zh/friend'])('友链页 %s 不进入旧文章重定向', async (pathname) => {
+    const req = new NextRequest(new URL(pathname, BASE_URL));
+    await middleware(req);
+    expect(mockIntlMiddleware).toHaveBeenCalledWith(req);
+  });
+
   // Issue #19：/en/posts/* 是无译文的中文重复页，一律 301 去掉 /en 前缀归一回 /posts/*
   it('should 301 /en/posts/* to /posts/* (strip en prefix)', async () => {
     const cases: Array<[string, string]> = [

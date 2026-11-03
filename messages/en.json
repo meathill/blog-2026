@@ -83,6 +83,7 @@
     "toggle_menu": "Toggle menu"
   },
   "Footer": {
+    "friends": "Friends",
     "brand_desc": "Meathill LLC — a one-person studio with 20+ years of full-stack experience, delivering Cloudflare, AI, and cross-platform projects remotely.",
     "quick_links": "Quick Links",
     "archives": "Archives",
@@ -97,6 +98,10 @@
     "label": "Language",
     "en": "English",
     "zh": "中文"
+  },
+  "Friends": {
+    "title": "Friends",
+    "description": "Friends around the web. Take a look at their personal websites."
   },
   "Skills": {
     "title": "Skills",

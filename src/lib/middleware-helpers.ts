@@ -2,6 +2,7 @@ import { routing } from '@/i18n/routing';
 
 export const TOP_LEVEL_ROUTES = [
   'about',
+  'friend',
   'app',
   'skills',
   'solutions',

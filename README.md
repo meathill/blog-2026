@@ -20,6 +20,7 @@
 - 后台搜索 + WordPress 老文章导入：`/admin/blog` 支持按标题/Slug/摘要搜索本地 D1 文章；
   有搜索词时联合搜索 WordPress，展示尚未导入本地的老文章，点「导入并编辑」写入 D1
 - 应用（Apps）管理与标签管理
+- 友情链接：`/friend`（英文 `/en/friend`），footer 固定入口；链接列表维护在 `src/app/[locale]/(public)/friend/page.tsx`
 
 ## 技术栈
 

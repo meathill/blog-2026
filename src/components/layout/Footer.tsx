@@ -3,6 +3,7 @@ import { GithubIcon, TwitterIcon, YoutubeIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import type { NavItem } from '@/components/layout/header/types';
+import { Link } from '@/i18n/routing';
 
 const socialLinks = [
   { href: 'https://github.com/meathill', label: 'GitHub', icon: GithubIcon },
@@ -38,6 +39,9 @@ export default async function Footer({ navItems }: FooterProps) {
             {link.label}
           </a>
         ))}
+        <Link href="/friend" className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)]">
+          {t('friends')}
+        </Link>
       </div>
       <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
         <LanguageSwitcher />

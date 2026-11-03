@@ -135,9 +135,24 @@ describe('Sitemap Generator', () => {
     const post1 = result.find((item) => item.url === `${SITE_URL}/posts/cat-1/post-1`);
     expect(post1?.lastModified).toEqual(new Date('2023-02-01'));
 
-    // Validate count: static 11 条中 /posts 不再声明 en（issue #19）→ 10×2 + 1
-    // + posts(3, 无 en) + category(1)×2 + app(1)×2 + skill(1)×2 = 30（标签已移除）
-    expect(result.length).toBe(30);
+    // 静态 12 条中 /posts 无 en：11×2 + 1；文章 3 + 分类/应用/skill 各 2 = 32
+    expect(result.length).toBe(32);
+    for (const path of ['/friend', '/en/friend']) {
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            url: `${SITE_URL}${path}`,
+            alternates: {
+              languages: {
+                zh: `${SITE_URL}/friend`,
+                en: `${SITE_URL}/en/friend`,
+                'x-default': `${SITE_URL}/friend`,
+              },
+            },
+          }),
+        ]),
+      );
+    }
 
     // /tech 频道页应出现在 sitemap 中，带正确 zh/en alternates
     expect(result).toEqual(
@@ -285,8 +300,8 @@ describe('Sitemap Generator', () => {
     const result = await sitemap();
 
     // Should distinctively return just static pages + mocked skills (which is 1 skill)
-    // /posts 不再声明 en（issue #19）→ 10×2 + 1 + 1×2 = 23
-    expect(result.length).toBe(23); // (11 static pages defined in sitemap.ts, 含 /tech + 4 个 section + /cloudflare-billing-helper + 1 skill page)，其中 /posts 无 en
+    // 静态 12 条（含友链）中 /posts 无 en，加 1 个 skill 的双语页面：11×2 + 1 + 1×2 = 25
+    expect(result.length).toBe(25);
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: SITE_URL })]));
   });
 });
