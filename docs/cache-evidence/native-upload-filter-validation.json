@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "before": [
+    {
+      "key": "/_not-found",
+      "buildId": "PceanzTg_IIjLUiz6vcJL",
+      "isFetch": false
+    },
+    {
+      "key": "/_global-error",
+      "buildId": "PceanzTg_IIjLUiz6vcJL",
+      "isFetch": false
+    }
+  ],
+  "after": [
+    {
+      "key": "/_global-error",
+      "buildId": "PceanzTg_IIjLUiz6vcJL",
+      "isFetch": false
+    }
+  ],
+  "note": "执行官方 getCacheAssets 及其最小补丁副本，未执行 populateR2 或任何线上上传"
+}

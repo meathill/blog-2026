@@ -73,5 +73,6 @@ build：`PFf94JJlAqVr310FgZsqY`，北京时间 10/21 17:35:59 自动部署。
 
 证据：[22 小时固定快照](cache-evidence/isr-status-2026-10-22.json)、
 [实际构建验证](cache-evidence/fixed-isr-build-2026-10-21.json)。
-逐小时可变台账保存在工作区 `docs/cache-evidence/isr-observation-2026-10-21.json`，
+逐小时可变台账当时保存在工作区 `docs/cache-evidence/isr-observation-2026-10-21.json`
+（未入库，2026-11-03 收尾清理时删除），
 不是以上两个固定快照的替代，也不能直接累加其中重叠窗口的指标。

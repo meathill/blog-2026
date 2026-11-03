@@ -1,0 +1,17 @@
+{
+  "version": "060c0f84-bcea-4991-86e2-f8e38e4fb8ba",
+  "sha256": "3679aa3ce40890bd83fdde2d72de256085e45fe50a2ab826020ffd757f449101",
+  "hasCustomWorkerPolicy": false,
+  "hasStoredRevalidateWrapper": false,
+  "buildIds": ["Ue8nPMDBSxGinq0k8n07n"],
+  "incrementalCache": "dummy",
+  "tagCache": "dummy",
+  "cacheEnabled": true,
+  "r2Bindings": [
+    {
+      "name": "BUCKET",
+      "bucket_name": "blog"
+    }
+  ],
+  "deployedAtCST": "2026-10-09T00:52:29+08:00"
+}

@@ -1,0 +1,248 @@
+{
+  "data": {
+    "viewer": {
+      "accounts": [
+        {
+          "category": [
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "PutObject",
+                "eyeballRegion": "APAC",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 120
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "WNAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 1
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "PutObject",
+                "eyeballRegion": "ENAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 154
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "ENAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 171
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "APAC",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 86
+              }
+            }
+          ],
+          "notfound": [
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "PutObject",
+                "eyeballRegion": "APAC",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 212
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "SAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 40
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "EEUR",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 28
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "WEUR",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 356
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "WNAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 442
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "PutObject",
+                "eyeballRegion": "ENAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 57
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "ENAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 938
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "PutObject",
+                "eyeballRegion": "WNAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 299
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "APAC",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 1194
+              }
+            }
+          ],
+          "post404": [
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "PutObject",
+                "eyeballRegion": "APAC",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 202
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "SAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 5
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "WEUR",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 11
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "WNAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 10
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "PutObject",
+                "eyeballRegion": "ENAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 330
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "ENAM",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 324
+              }
+            },
+            {
+              "dimensions": {
+                "actionStatus": "success",
+                "actionType": "GetObject",
+                "eyeballRegion": "APAC",
+                "responseStatusCode": 200
+              },
+              "sum": {
+                "requests": 313
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}

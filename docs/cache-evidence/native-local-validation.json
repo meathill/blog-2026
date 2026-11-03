@@ -1,0 +1,2540 @@
+{
+  "passed": true,
+  "sourceSHA256": "fdad0f2a9dedfcb05a17ffa19fde568368750bca94e704e6e25257ccbd787e73",
+  "summaries": {
+    "original404": {
+      "contentWrites": 1,
+      "globalWrites": 1
+    },
+    "concurrent": {
+      "received": 8,
+      "executions": 1,
+      "writes": 1
+    },
+    "retry": [
+      {
+        "event": "worker-fetch",
+        "path": "/fast/retry",
+        "method": "GET"
+      },
+      {
+        "event": "queue-receive",
+        "path": "/fast/retry",
+        "id": "c26e16ca31cec8dcdc8776122d2c7884",
+        "lastModified": 1791514298183
+      },
+      {
+        "event": "queue-execute",
+        "path": "/fast/retry",
+        "id": "c26e16ca31cec8dcdc8776122d2c7884"
+      },
+      {
+        "event": "worker-fetch",
+        "path": "/fast/retry",
+        "method": "HEAD"
+      },
+      {
+        "event": "put",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/642567d107b111b046ba8b95a03a30549151a09ed43f4917996d4aaaf80b29d6.cache",
+        "cacheType": "cache",
+        "revalidate": 5,
+        "renderedAt": "1791514298180"
+      },
+      {
+        "event": "queue-result",
+        "path": "/fast/retry",
+        "status": 500,
+        "nextCache": null
+      },
+      {
+        "event": "queue-execute",
+        "path": "/fast/retry",
+        "id": "c26e16ca31cec8dcdc8776122d2c7884"
+      },
+      {
+        "event": "worker-fetch",
+        "path": "/fast/retry",
+        "method": "HEAD"
+      },
+      {
+        "event": "put",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/642567d107b111b046ba8b95a03a30549151a09ed43f4917996d4aaaf80b29d6.cache",
+        "cacheType": "cache",
+        "revalidate": 5,
+        "renderedAt": "1791514306464"
+      },
+      {
+        "event": "queue-result",
+        "path": "/fast/retry",
+        "status": 200,
+        "nextCache": "REVALIDATED"
+      }
+    ],
+    "fetchCache": {
+      "initialWrites": 1,
+      "laterFetchWrites": 0,
+      "sourceRequests": 1,
+      "sourceAfterFirst": 1
+    },
+    "missingWithData": {
+      "pageWrites": 0,
+      "fetchWrites": 1,
+      "limitation": "SDK 页面过滤不阻止先发生的数据缓存写入，因此不是所有 404 请求零 R2 写入"
+    },
+    "filter404": {
+      "contentWrites": 0,
+      "globalWrites": 0
+    },
+    "outerCache": "dispatchFetch 探针不能证明真实 Cloudflare Workers Cache；以 worker-fetch 事件为准"
+  },
+  "results": [
+    {
+      "phase": "baseline",
+      "path": "/daily/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"9dy4qtxth047j\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": "1791514290249",
+      "bodyLength": 5455,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/d93b5ce6c16ca617f16e9559f220bd7b0faa19637761fcb4e907559d702b671c.cache",
+          "cacheType": "cache",
+          "revalidate": 86400,
+          "renderedAt": "1791514290249"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/daily/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86400, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "be5053cb7603674706a460ad55eaab9c",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514290249",
+      "bodyLength": 5455,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/daily/example?utm_source=test",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86400, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "be5053cb7603674706a460ad55eaab9c",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514290249",
+      "bodyLength": 5455,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/posts/present",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"2mjai72zms47h\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": "1791514290751",
+      "bodyLength": 5453,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/posts/present",
+          "method": "GET"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/167e574756d6098eea523c2942c982d3ecf794431e9e9e90840555fa4b3dc4c8.cache",
+          "cacheType": "cache",
+          "revalidate": 86400,
+          "renderedAt": "1791514290751"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/posts/missing",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"i1yax9e7ss45g\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": null,
+      "bodyLength": 5380,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/posts/missing",
+          "method": "GET"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/12eeb3e4e2676719f85e5103ee076ef92a8167ae4ce4ce51fa973224fb88fad2.cache",
+          "cacheType": "cache",
+          "revalidate": 86400,
+          "status": 404
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/unknown-route",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"15tbudldgqp5a9\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": null,
+      "bodyLength": 6849,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/unknown-route",
+          "method": "GET"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/788bf135b9183609ebaaaee23581117c732cf58ae8996c7a8a18600233a8d6d4.cache",
+          "cacheType": "cache",
+          "revalidate": false
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/posts/missing",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "1c206d157199e00b9bbf7280730fe7fb",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": null,
+      "bodyLength": 5380,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/posts/missing",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/unknown-route",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"15tbudldgqp5a9\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "HIT",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": null,
+      "bodyLength": 6849,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/unknown-route",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=5, stale-while-revalidate=31535995",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"u1c9arx2it47f\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514291549"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "5abd57248981a2910e6ea84571b1b290",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514297816"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "5abd57248981a2910e6ea84571b1b290",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514297816"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "5abd57248981a2910e6ea84571b1b290",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514297816"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "5abd57248981a2910e6ea84571b1b290",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514297816"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "5abd57248981a2910e6ea84571b1b290",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514297816"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "5abd57248981a2910e6ea84571b1b290",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514297816"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "5abd57248981a2910e6ea84571b1b290",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514297816"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "5abd57248981a2910e6ea84571b1b290",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514291549",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/example",
+          "id": "fc69a2eff0077337a7665520e6700ce5",
+          "lastModified": 1791514291553
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514297816"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=5, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "8d44c5e10528f5ade7ed4a6abaaae6ac",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514297816",
+      "bodyLength": 5451,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/example",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/retry",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=5, stale-while-revalidate=31535995",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"16e7x5in9uz477\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": "1791514298180",
+      "bodyLength": 5443,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/retry",
+          "method": "GET"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/642567d107b111b046ba8b95a03a30549151a09ed43f4917996d4aaaf80b29d6.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514298180"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/retry",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "71032e7eed30bd7431209de49858e997",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514298180",
+      "bodyLength": 5443,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/retry",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/fast/retry",
+          "id": "c26e16ca31cec8dcdc8776122d2c7884",
+          "lastModified": 1791514298183
+        },
+        {
+          "event": "queue-execute",
+          "path": "/fast/retry",
+          "id": "c26e16ca31cec8dcdc8776122d2c7884"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/fast/retry",
+          "method": "HEAD"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/642567d107b111b046ba8b95a03a30549151a09ed43f4917996d4aaaf80b29d6.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514298180"
+        },
+        {
+          "event": "queue-result",
+          "path": "/fast/retry",
+          "status": 500,
+          "nextCache": null
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/fast/retry",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=5, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "61d855ffc26fd52c105d7eebf57fcb2d",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514306464",
+      "bodyLength": 5443,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/fast/retry",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/data/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=5, stale-while-revalidate=31535995",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"y4hz08nlpw48v\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": "1791514306693",
+      "bodyLength": 5503,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/data/example",
+          "method": "GET"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c27104bf386390e4b0e6e2ddca07d93c1cda1ab11e9287e36f7d724fc565b8b6.fetch",
+          "cacheType": "fetch",
+          "revalidate": 86400
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/71300480e2fd3a9f0ddcbd33d3c7811e34537a95768131cdfd7b11a6557a4a91.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514306693"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/data/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=5, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "d7e860fcce2be61ac19541483be74ef6",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514306693",
+      "bodyLength": 5503,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/data/example",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/data/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "d7e860fcce2be61ac19541483be74ef6",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514306693",
+      "bodyLength": 5503,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/data/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/data/example",
+          "id": "1aeccbbc97d4be55244a9a757c7d4cf1",
+          "lastModified": 1791514306698
+        },
+        {
+          "event": "queue-execute",
+          "path": "/data/example",
+          "id": "1aeccbbc97d4be55244a9a757c7d4cf1"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/data/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/71300480e2fd3a9f0ddcbd33d3c7811e34537a95768131cdfd7b11a6557a4a91.cache",
+          "cacheType": "cache",
+          "revalidate": 5,
+          "renderedAt": "1791514313108"
+        },
+        {
+          "event": "queue-result",
+          "path": "/data/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "baseline",
+      "path": "/daily/example?_rsc=probe",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86377, stale-while-revalidate=2592000",
+        "content-type": "text/x-component",
+        "etag": "a3584f8d285b81b05b80833f2e6636af",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-postponed": "2",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": null,
+      "bodyLength": 376,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "cold-isolate",
+      "path": "/daily/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86377, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "be5053cb7603674706a460ad55eaab9c",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514290249",
+      "bodyLength": 5455,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "simulated-age-before-day",
+      "path": "/daily/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=76, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "be5053cb7603674706a460ad55eaab9c",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514290249",
+      "bodyLength": 5455,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "simulated-age-after-day",
+      "path": "/daily/example",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "be5053cb7603674706a460ad55eaab9c",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "STALE"
+      },
+      "renderedAt": "1791514290249",
+      "bodyLength": 5455,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        },
+        {
+          "event": "queue-receive",
+          "path": "/daily/example",
+          "id": "b5535f4ce9199ea278c51b61e5a03c9d",
+          "lastModified": 1791427790272
+        },
+        {
+          "event": "queue-execute",
+          "path": "/daily/example",
+          "id": "b5535f4ce9199ea278c51b61e5a03c9d"
+        },
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "HEAD"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/d93b5ce6c16ca617f16e9559f220bd7b0faa19637761fcb4e907559d702b671c.cache",
+          "cacheType": "cache",
+          "revalidate": 86400,
+          "renderedAt": "1791514314165"
+        },
+        {
+          "event": "queue-result",
+          "path": "/daily/example",
+          "status": 200,
+          "nextCache": "REVALIDATED"
+        }
+      ]
+    },
+    {
+      "phase": "sdk-filter-404",
+      "path": "/posts/missing",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"i1yax9e7ss45g\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": null,
+      "bodyLength": 5380,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/posts/missing",
+          "method": "GET"
+        },
+        {
+          "event": "skip-404",
+          "key": "/posts/missing"
+        }
+      ]
+    },
+    {
+      "phase": "sdk-filter-404",
+      "path": "/unknown-route",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"15tbudldgqp5a9\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": null,
+      "bodyLength": 6849,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/unknown-route",
+          "method": "GET"
+        },
+        {
+          "event": "skip-404",
+          "key": "/_not-found"
+        }
+      ]
+    },
+    {
+      "phase": "sdk-filter-404",
+      "path": "/data/missing",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"4pqc1eh7b45e\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": null,
+      "bodyLength": 5378,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/data/missing",
+          "method": "GET"
+        },
+        {
+          "event": "put",
+          "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/31b836590314834db7841c95c35618ac72e375a555a6740934a2964bb5f06303.fetch",
+          "cacheType": "fetch",
+          "revalidate": 86400
+        },
+        {
+          "event": "skip-404",
+          "key": "/data/missing"
+        }
+      ]
+    },
+    {
+      "phase": "sdk-filter-404",
+      "path": "/posts/missing",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"i1yax9e7ss45g\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": null,
+      "bodyLength": 5380,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/posts/missing",
+          "method": "GET"
+        },
+        {
+          "event": "skip-404",
+          "key": "/posts/missing"
+        }
+      ]
+    },
+    {
+      "phase": "sdk-filter-404",
+      "path": "/unknown-route",
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"15tbudldgqp5a9\"",
+        "mf-content-encoding": "identity",
+        "transfer-encoding": "chunked",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "renderedAt": null,
+      "bodyLength": 6849,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/unknown-route",
+          "method": "GET"
+        },
+        {
+          "event": "skip-404",
+          "key": "/_not-found"
+        }
+      ]
+    },
+    {
+      "phase": "local-outer-cache-probe",
+      "path": "/daily/example?outer_probe=1",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86399, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "8701883609a04259643b28f6f3b99ca9",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514314165",
+      "bodyLength": 5455,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "phase": "local-outer-cache-probe",
+      "path": "/daily/example?outer_probe=1",
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86399, stale-while-revalidate=2592000",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "8701883609a04259643b28f6f3b99ca9",
+        "mf-content-encoding": "gzip",
+        "transfer-encoding": "chunked",
+        "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url",
+        "x-nextjs-stale-time": "300",
+        "x-opennext-cache": "HIT"
+      },
+      "renderedAt": "1791514314165",
+      "bodyLength": 5455,
+      "events": [
+        {
+          "event": "worker-fetch",
+          "path": "/daily/example",
+          "method": "GET"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/d93b5ce6c16ca617f16e9559f220bd7b0faa19637761fcb4e907559d702b671c.cache",
+      "cacheType": "cache",
+      "revalidate": 86400,
+      "renderedAt": "1791514290249"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/posts/present",
+      "method": "GET"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/167e574756d6098eea523c2942c982d3ecf794431e9e9e90840555fa4b3dc4c8.cache",
+      "cacheType": "cache",
+      "revalidate": 86400,
+      "renderedAt": "1791514290751"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/posts/missing",
+      "method": "GET"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/12eeb3e4e2676719f85e5103ee076ef92a8167ae4ce4ce51fa973224fb88fad2.cache",
+      "cacheType": "cache",
+      "revalidate": 86400,
+      "status": 404
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/unknown-route",
+      "method": "GET"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/788bf135b9183609ebaaaee23581117c732cf58ae8996c7a8a18600233a8d6d4.cache",
+      "cacheType": "cache",
+      "revalidate": false
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/posts/missing",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/unknown-route",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+      "cacheType": "cache",
+      "revalidate": 5,
+      "renderedAt": "1791514291549"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5",
+      "lastModified": 1791514291553
+    },
+    {
+      "event": "queue-execute",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "HEAD"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5",
+      "lastModified": 1791514291553
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5",
+      "lastModified": 1791514291553
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5",
+      "lastModified": 1791514291553
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5",
+      "lastModified": 1791514291553
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5",
+      "lastModified": 1791514291553
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5",
+      "lastModified": 1791514291553
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/example",
+      "id": "fc69a2eff0077337a7665520e6700ce5",
+      "lastModified": 1791514291553
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache",
+      "cacheType": "cache",
+      "revalidate": 5,
+      "renderedAt": "1791514297816"
+    },
+    {
+      "event": "queue-result",
+      "path": "/fast/example",
+      "status": 200,
+      "nextCache": "REVALIDATED"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/retry",
+      "method": "GET"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/642567d107b111b046ba8b95a03a30549151a09ed43f4917996d4aaaf80b29d6.cache",
+      "cacheType": "cache",
+      "revalidate": 5,
+      "renderedAt": "1791514298180"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/retry",
+      "method": "GET"
+    },
+    {
+      "event": "queue-receive",
+      "path": "/fast/retry",
+      "id": "c26e16ca31cec8dcdc8776122d2c7884",
+      "lastModified": 1791514298183
+    },
+    {
+      "event": "queue-execute",
+      "path": "/fast/retry",
+      "id": "c26e16ca31cec8dcdc8776122d2c7884"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/retry",
+      "method": "HEAD"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/642567d107b111b046ba8b95a03a30549151a09ed43f4917996d4aaaf80b29d6.cache",
+      "cacheType": "cache",
+      "revalidate": 5,
+      "renderedAt": "1791514298180"
+    },
+    {
+      "event": "queue-result",
+      "path": "/fast/retry",
+      "status": 500,
+      "nextCache": null
+    },
+    {
+      "event": "queue-execute",
+      "path": "/fast/retry",
+      "id": "c26e16ca31cec8dcdc8776122d2c7884"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/retry",
+      "method": "HEAD"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/642567d107b111b046ba8b95a03a30549151a09ed43f4917996d4aaaf80b29d6.cache",
+      "cacheType": "cache",
+      "revalidate": 5,
+      "renderedAt": "1791514306464"
+    },
+    {
+      "event": "queue-result",
+      "path": "/fast/retry",
+      "status": 200,
+      "nextCache": "REVALIDATED"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/fast/retry",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/data/example",
+      "method": "GET"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c27104bf386390e4b0e6e2ddca07d93c1cda1ab11e9287e36f7d724fc565b8b6.fetch",
+      "cacheType": "fetch",
+      "revalidate": 86400
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/71300480e2fd3a9f0ddcbd33d3c7811e34537a95768131cdfd7b11a6557a4a91.cache",
+      "cacheType": "cache",
+      "revalidate": 5,
+      "renderedAt": "1791514306693"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/data/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/data/example",
+      "method": "GET"
+    },
+    {
+      "event": "queue-receive",
+      "path": "/data/example",
+      "id": "1aeccbbc97d4be55244a9a757c7d4cf1",
+      "lastModified": 1791514306698
+    },
+    {
+      "event": "queue-execute",
+      "path": "/data/example",
+      "id": "1aeccbbc97d4be55244a9a757c7d4cf1"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/data/example",
+      "method": "HEAD"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/71300480e2fd3a9f0ddcbd33d3c7811e34537a95768131cdfd7b11a6557a4a91.cache",
+      "cacheType": "cache",
+      "revalidate": 5,
+      "renderedAt": "1791514313108"
+    },
+    {
+      "event": "queue-result",
+      "path": "/data/example",
+      "status": 200,
+      "nextCache": "REVALIDATED"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    },
+    {
+      "event": "queue-receive",
+      "path": "/daily/example",
+      "id": "b5535f4ce9199ea278c51b61e5a03c9d",
+      "lastModified": 1791427790272
+    },
+    {
+      "event": "queue-execute",
+      "path": "/daily/example",
+      "id": "b5535f4ce9199ea278c51b61e5a03c9d"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "HEAD"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/d93b5ce6c16ca617f16e9559f220bd7b0faa19637761fcb4e907559d702b671c.cache",
+      "cacheType": "cache",
+      "revalidate": 86400,
+      "renderedAt": "1791514314165"
+    },
+    {
+      "event": "queue-result",
+      "path": "/daily/example",
+      "status": 200,
+      "nextCache": "REVALIDATED"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/posts/missing",
+      "method": "GET"
+    },
+    {
+      "event": "skip-404",
+      "key": "/posts/missing"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/unknown-route",
+      "method": "GET"
+    },
+    {
+      "event": "skip-404",
+      "key": "/_not-found"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/data/missing",
+      "method": "GET"
+    },
+    {
+      "event": "put",
+      "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/31b836590314834db7841c95c35618ac72e375a555a6740934a2964bb5f06303.fetch",
+      "cacheType": "fetch",
+      "revalidate": 86400
+    },
+    {
+      "event": "skip-404",
+      "key": "/data/missing"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/posts/missing",
+      "method": "GET"
+    },
+    {
+      "event": "skip-404",
+      "key": "/posts/missing"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/unknown-route",
+      "method": "GET"
+    },
+    {
+      "event": "skip-404",
+      "key": "/_not-found"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    },
+    {
+      "event": "worker-fetch",
+      "path": "/daily/example",
+      "method": "GET"
+    }
+  ],
+  "objects": {
+    "objects": [
+      {
+        "storageClass": "",
+        "customMetadata": {},
+        "httpMetadata": {},
+        "uploaded": "2026-10-09T02:51:30.756Z",
+        "checksums": {
+          "md5": "64ea5c25aea10bd1f402334cccf67929"
+        },
+        "httpEtag": "\"64ea5c25aea10bd1f402334cccf67929\"",
+        "etag": "64ea5c25aea10bd1f402334cccf67929",
+        "size": 20961,
+        "version": "58fac591b5005d69a0ed494418706b1d",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/167e574756d6098eea523c2942c982d3ecf794431e9e9e90840555fa4b3dc4c8.cache"
+      },
+      {
+        "storageClass": "",
+        "customMetadata": {},
+        "httpMetadata": {},
+        "uploaded": "2026-10-09T02:51:54.898Z",
+        "checksums": {
+          "md5": "17da0af30f605cdc715f178e279f028a"
+        },
+        "httpEtag": "\"17da0af30f605cdc715f178e279f028a\"",
+        "etag": "17da0af30f605cdc715f178e279f028a",
+        "size": 293,
+        "version": "1776e69434ec6e881965920488c4b416",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/31b836590314834db7841c95c35618ac72e375a555a6740934a2964bb5f06303.fetch"
+      },
+      {
+        "storageClass": "",
+        "customMetadata": {},
+        "httpMetadata": {},
+        "uploaded": "2026-10-09T02:51:46.469Z",
+        "checksums": {
+          "md5": "42bf37edde8340c4be06f4e82b3405b2"
+        },
+        "httpEtag": "\"42bf37edde8340c4be06f4e82b3405b2\"",
+        "etag": "42bf37edde8340c4be06f4e82b3405b2",
+        "size": 20917,
+        "version": "0c1e4de70d2feac5cb814fe933cc628e",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/642567d107b111b046ba8b95a03a30549151a09ed43f4917996d4aaaf80b29d6.cache"
+      },
+      {
+        "storageClass": "",
+        "customMetadata": {},
+        "httpMetadata": {},
+        "uploaded": "2026-10-09T02:51:53.113Z",
+        "checksums": {
+          "md5": "a09434b2f6d1051cb04b0b7c22c688ac"
+        },
+        "httpEtag": "\"a09434b2f6d1051cb04b0b7c22c688ac\"",
+        "etag": "a09434b2f6d1051cb04b0b7c22c688ac",
+        "size": 21093,
+        "version": "c6a353976a3ae1af3a39935ec322e00c",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/71300480e2fd3a9f0ddcbd33d3c7811e34537a95768131cdfd7b11a6557a4a91.cache"
+      },
+      {
+        "storageClass": "",
+        "customMetadata": {},
+        "httpMetadata": {},
+        "uploaded": "2026-10-09T02:51:37.827Z",
+        "checksums": {
+          "md5": "397b7bb64679d7b3f840fd61e31f6b3a"
+        },
+        "httpEtag": "\"397b7bb64679d7b3f840fd61e31f6b3a\"",
+        "etag": "397b7bb64679d7b3f840fd61e31f6b3a",
+        "size": 20943,
+        "version": "79fe865171a7b9fe3d70063c69db5350",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c0c2b3503ac4589cf4c8cd10d3428efe1731d4f1a38beace7eebedfc0bc3fcfd.cache"
+      },
+      {
+        "storageClass": "",
+        "customMetadata": {},
+        "httpMetadata": {},
+        "uploaded": "2026-10-09T02:51:46.694Z",
+        "checksums": {
+          "md5": "ea6fe3ec7d4a0c118edc59ce20b82edd"
+        },
+        "httpEtag": "\"ea6fe3ec7d4a0c118edc59ce20b82edd\"",
+        "etag": "ea6fe3ec7d4a0c118edc59ce20b82edd",
+        "size": 293,
+        "version": "c572b8a37ce904feb96ce6910b7a86cd",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/c27104bf386390e4b0e6e2ddca07d93c1cda1ab11e9287e36f7d724fc565b8b6.fetch"
+      },
+      {
+        "storageClass": "",
+        "customMetadata": {},
+        "httpMetadata": {},
+        "uploaded": "2026-10-09T02:51:54.185Z",
+        "checksums": {
+          "md5": "ffb8442cc4d9ffa5be3ad684e99a2fe0"
+        },
+        "httpEtag": "\"ffb8442cc4d9ffa5be3ad684e99a2fe0\"",
+        "etag": "ffb8442cc4d9ffa5be3ad684e99a2fe0",
+        "size": 20966,
+        "version": "80d9ea0a6bd4bb433773e7c7fabbb779",
+        "key": "incremental-cache/DzOPbidFC2oHl2XrH-DZX/d93b5ce6c16ca617f16e9559f220bd7b0faa19637761fcb4e907559d702b671c.cache"
+      }
+    ],
+    "truncated": false,
+    "delimitedPrefixes": []
+  },
+  "notes": [
+    "普通阶段只增加日志；两次年龄测试仅模拟旧对象上传时间",
+    "sdk-filter-404 为独立本地 SDK 补丁候选，没有修改产品配置",
+    "并发请求的单条 events 窗口互相重叠，总数以全局 events/summary 为准"
+  ],
+  "productionRestoreAccepted": false,
+  "acceptanceGaps": [
+    "最终为 404 的请求仍可能写 fetch 数据缓存",
+    "真实 Workers Cache / Service Binding / 多地域尚未线上验收"
+  ]
+}

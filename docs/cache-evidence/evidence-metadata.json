@@ -1,0 +1,18 @@
+{
+  "historicalVersion": "5c49234d-6ae7-4dac-a86a-8930f1ed10b9",
+  "sourceSHA256": "a0a34118d222432b7b851dbf307465a3f8880d41f4be99d822f96606cf177502",
+  "inputCacheSHA256": "7eabef80d18d30910a1f3a0d7daaff6c2fe0926754a6d732a389bc06af39722c",
+  "tagCheck": {
+    "buildId": "IKi4FcCP-pi2RxE66B9bf",
+    "matchingRows": [],
+    "rowsWritten": 0,
+    "rowsRead": 218
+  },
+  "samplingWindowUTC": ["2026-10-07T09:00:00Z", "2026-10-08T09:00:00Z"],
+  "testResult": {
+    "files": 67,
+    "tests": 548,
+    "typecheck": "passed",
+    "nextBuild": "passed"
+  }
+}

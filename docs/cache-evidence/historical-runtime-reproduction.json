@@ -1,0 +1,518 @@
+{
+  "sourceVersion": "5c49234d-6ae7-4dac-a86a-8930f1ed10b9",
+  "queueTransport": "捕获 RPC 后手动回放官方 HEAD；没有运行 DO 调度器",
+  "results": [
+    {
+      "probe": {
+        "path": "/category/js"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86399, stale-while-revalidate=2592000",
+        "cache-tag": "html",
+        "cloudflare-cdn-cache-control": "max-age=3600, stale-while-revalidate=86400",
+        "content-encoding": "identity",
+        "content-length": "202864",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"23ax7nqpla4ae2\"",
+        "link": "<http://localhost:8787/en/category/js>; rel=\"alternate\"; hreflang=\"en\", <http://localhost:8787/category/js>; rel=\"alternate\"; hreflang=\"zh\", <http://localhost:8787/category/js>; rel=\"alternate\"; hreflang=\"x-default\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, next-action, x-prerender-revalidate",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-edge-cache": "cache",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "HIT",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "trace": [
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/12bf92bbb0f0b82e34d782634de3f1e180f072db49705a9f2f6899f6ab04f106.cache",
+          "found": true
+        },
+        {
+          "event": "stored-wrapper",
+          "now": 1791510453504,
+          "lastModified": 1791510453451,
+          "revalidate": 86400
+        },
+        {
+          "event": "tags",
+          "rows": 0
+        },
+        {
+          "event": "next-calculate",
+          "path": "/zh/category/js",
+          "lastModified": 1791510453504,
+          "now": 1791510453507
+        }
+      ]
+    },
+    {
+      "probe": {
+        "path": "/category/js?utm_source=test"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86399, stale-while-revalidate=2592000",
+        "cloudflare-cdn-cache-control": "no-store",
+        "content-encoding": "identity",
+        "content-length": "202864",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"23ax7nqpla4ae2\"",
+        "link": "<http://localhost:8787/en/category/js>; rel=\"alternate\"; hreflang=\"en\", <http://localhost:8787/category/js>; rel=\"alternate\"; hreflang=\"zh\", <http://localhost:8787/category/js>; rel=\"alternate\"; hreflang=\"x-default\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-edge-cache": "bypass",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "HIT",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "trace": [
+        {
+          "event": "stored-wrapper",
+          "now": 1791510453515,
+          "lastModified": 1791510453451,
+          "revalidate": 86400
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/12bf92bbb0f0b82e34d782634de3f1e180f072db49705a9f2f6899f6ab04f106.cache",
+          "found": true
+        },
+        {
+          "event": "tags",
+          "rows": 0
+        },
+        {
+          "event": "next-calculate",
+          "path": "/zh/category/js",
+          "lastModified": 1791510453515,
+          "now": 1791510453516
+        }
+      ]
+    },
+    {
+      "probe": {
+        "path": "/category/js",
+        "tagDelay": 1200
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=2, stale-while-revalidate=2592000",
+        "cloudflare-cdn-cache-control": "no-store",
+        "content-encoding": "identity",
+        "content-length": "202864",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"23ax7nqpla4ae2\"",
+        "link": "<http://localhost:8787/en/category/js>; rel=\"alternate\"; hreflang=\"en\", <http://localhost:8787/category/js>; rel=\"alternate\"; hreflang=\"zh\", <http://localhost:8787/category/js>; rel=\"alternate\"; hreflang=\"x-default\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-edge-cache": "bypass",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "STALE",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "trace": [
+        {
+          "event": "stored-wrapper",
+          "now": 1791510453525,
+          "lastModified": 1791510453451,
+          "revalidate": 86400
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/12bf92bbb0f0b82e34d782634de3f1e180f072db49705a9f2f6899f6ab04f106.cache",
+          "found": true
+        },
+        {
+          "event": "tags",
+          "rows": 0
+        },
+        {
+          "event": "next-calculate",
+          "path": "/zh/category/js",
+          "lastModified": 1791510453525,
+          "now": 1791510454728
+        },
+        {
+          "event": "queue",
+          "msg": {
+            "MessageBody": {
+              "host": "localhost:8787",
+              "url": "/zh/category/js",
+              "eTag": "\"23ax7nqpla4ae2\"",
+              "lastModified": 1791510453525
+            },
+            "MessageDeduplicationId": "72db0f703c7be0c962e140e5f6857ce2",
+            "MessageGroupId": "revalidate-0"
+          }
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/a44055594c5ea6e677cee131bafbdc228b87464b1f866872e28cec5e914aa4a3.fetch",
+          "found": false
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/7ecfa9a32d90c2c3a42a07c3f40425678c9e40ffffc9961bdc04d95327230719.fetch",
+          "found": false
+        },
+        {
+          "event": "external-fetch",
+          "url": "https://offline.invalid/wp-json/wp/v2/categories?slug=js"
+        },
+        {
+          "event": "r2-put",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/7ecfa9a32d90c2c3a42a07c3f40425678c9e40ffffc9961bdc04d95327230719.fetch",
+          "stack": "Error\n    at Object.put (research.js:288139:74)\n    at R2IncrementalCache2.set (research.js:275660:22)\n    at RegionalCache2.set (research.js:275702:74)\n    at Object.set (research.js:7968:44)\n    at Cache.set (research.js:41036:53)\n    at _IncrementalCache.set (research.js:266464:213)\n    at research.js:34144:45"
+        },
+        {
+          "event": "r2-put",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/a44055594c5ea6e677cee131bafbdc228b87464b1f866872e28cec5e914aa4a3.fetch",
+          "stack": "Error\n    at Object.put (research.js:288139:74)\n    at R2IncrementalCache2.set (research.js:275660:22)\n    at RegionalCache2.set (research.js:275702:74)\n    at Object.set (research.js:7968:44)\n    at Cache.set (research.js:41036:53)\n    at _IncrementalCache.set (research.js:266464:213)\n    at k (research.js:69231:20)\n    at research.js:69297:126\n    at async u2 (research.js:74475:20)"
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/79b7739275de2907807e91a997bd986d78507b5a9b61da99b0bd8e3f0f1934ab.fetch",
+          "found": false
+        },
+        {
+          "event": "external-fetch",
+          "url": "https://offline.invalid/wp-json/wp/v2/posts?_embed=true&categories=1&per_page=50"
+        },
+        {
+          "event": "r2-put",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/79b7739275de2907807e91a997bd986d78507b5a9b61da99b0bd8e3f0f1934ab.fetch",
+          "stack": "Error\n    at Object.put (research.js:288139:74)\n    at R2IncrementalCache2.set (research.js:275660:22)\n    at RegionalCache2.set (research.js:275702:74)\n    at Object.set (research.js:7968:44)\n    at Cache.set (research.js:41036:53)\n    at _IncrementalCache.set (research.js:266464:213)\n    at research.js:34144:45"
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/44caffb1475de52cff9de71ff5dd1592a289b6cbbfa12d111ee1d61d37df5162.fetch",
+          "found": false
+        },
+        {
+          "event": "r2-put",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/44caffb1475de52cff9de71ff5dd1592a289b6cbbfa12d111ee1d61d37df5162.fetch",
+          "stack": "Error\n    at Object.put (research.js:288139:74)\n    at R2IncrementalCache2.set (research.js:275660:22)\n    at RegionalCache2.set (research.js:275702:74)\n    at Object.set (research.js:7968:44)\n    at Cache.set (research.js:41036:53)\n    at _IncrementalCache.set (research.js:266464:213)\n    at k (research.js:69231:20)\n    at research.js:69297:126\n    at async u2 (research.js:74475:69)"
+        },
+        {
+          "event": "r2-put",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/12bf92bbb0f0b82e34d782634de3f1e180f072db49705a9f2f6899f6ab04f106.cache",
+          "stack": "Error\n    at Object.put (research.js:288139:74)\n    at R2IncrementalCache2.set (research.js:275660:22)\n    at RegionalCache2.set (research.js:275702:74)\n    at Object.set (research.js:7968:44)\n    at Cache.set (research.js:41032:53)\n    at oy.set (research.js:58823:163)\n    at ny.handleRevalidate (research.js:55827:75)\n    at async research.js:55715:29"
+        }
+      ]
+    },
+    {
+      "probe": {
+        "path": "/zh/category/js",
+        "revalidate": true
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "cloudflare-cdn-cache-control": "no-store",
+        "content-encoding": "identity",
+        "content-length": "44506",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"13lo8pw7y00xk4\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-edge-cache": "bypass",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "REVALIDATED",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "trace": [
+        {
+          "event": "stored-wrapper",
+          "now": 1791510454817,
+          "lastModified": 1791510454811,
+          "revalidate": 86400
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/12bf92bbb0f0b82e34d782634de3f1e180f072db49705a9f2f6899f6ab04f106.cache",
+          "found": true
+        },
+        {
+          "event": "tags",
+          "rows": 0
+        },
+        {
+          "event": "next-calculate",
+          "path": "/zh/category/js",
+          "lastModified": 1791510454817,
+          "now": 1791510454818,
+          "control": {
+            "revalidate": 86400,
+            "expire": 31536000
+          }
+        },
+        {
+          "event": "external-fetch",
+          "url": "https://offline.invalid/wp-json/wp/v2/categories?slug=js"
+        },
+        {
+          "event": "external-fetch",
+          "url": "https://offline.invalid/wp-json/wp/v2/posts?_embed=true&categories=1&per_page=50"
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/a44055594c5ea6e677cee131bafbdc228b87464b1f866872e28cec5e914aa4a3.fetch",
+          "found": true
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/44caffb1475de52cff9de71ff5dd1592a289b6cbbfa12d111ee1d61d37df5162.fetch",
+          "found": true
+        },
+        {
+          "event": "r2-put",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/12bf92bbb0f0b82e34d782634de3f1e180f072db49705a9f2f6899f6ab04f106.cache",
+          "stack": "Error\n    at Object.put (research.js:288139:74)\n    at R2IncrementalCache2.set (research.js:275660:22)\n    at RegionalCache2.set (research.js:275702:74)\n    at Object.set (research.js:7968:44)\n    at Cache.set (research.js:41032:53)\n    at oy.set (research.js:58823:163)\n    at ny.handleRevalidate (research.js:55827:75)\n    at async research.js:55715:29"
+        }
+      ]
+    },
+    {
+      "probe": {
+        "path": "/category/js",
+        "tagDelay": 1200
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "s-maxage=86398, stale-while-revalidate=2592000",
+        "cache-tag": "html",
+        "cloudflare-cdn-cache-control": "max-age=3600, stale-while-revalidate=86400",
+        "content-encoding": "identity",
+        "content-length": "44506",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"13lo8pw7y00xk4\"",
+        "link": "<http://localhost:8787/en/category/js>; rel=\"alternate\"; hreflang=\"en\", <http://localhost:8787/category/js>; rel=\"alternate\"; hreflang=\"zh\", <http://localhost:8787/category/js>; rel=\"alternate\"; hreflang=\"x-default\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, next-action, x-prerender-revalidate",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-edge-cache": "cache",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "HIT",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "trace": [
+        {
+          "event": "stored-wrapper",
+          "now": 1791510454838,
+          "lastModified": 1791510454832,
+          "revalidate": 86400
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/12bf92bbb0f0b82e34d782634de3f1e180f072db49705a9f2f6899f6ab04f106.cache",
+          "found": true
+        },
+        {
+          "event": "tags",
+          "rows": 0
+        },
+        {
+          "event": "next-calculate",
+          "path": "/zh/category/js",
+          "lastModified": 1791510454838,
+          "now": 1791510456040,
+          "control": {
+            "revalidate": 86400,
+            "expire": 31536000
+          }
+        }
+      ]
+    },
+    {
+      "probe": {
+        "path": "/api/research-missing"
+      },
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "cloudflare-cdn-cache-control": "no-store",
+        "content-encoding": "identity",
+        "content-length": "7221",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"9negywhyg15hh\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-edge-cache": "bypass",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "MISS",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "trace": [
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/788bf135b9183609ebaaaee23581117c732cf58ae8996c7a8a18600233a8d6d4.cache",
+          "found": false
+        },
+        {
+          "event": "next-calculate",
+          "path": "/_not-found",
+          "lastModified": 1791510456045,
+          "now": 1791510456045,
+          "control": {
+            "revalidate": false
+          }
+        },
+        {
+          "event": "r2-put",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/788bf135b9183609ebaaaee23581117c732cf58ae8996c7a8a18600233a8d6d4.cache",
+          "stack": "Error\n    at Object.put (research.js:288139:74)\n    at R2IncrementalCache2.set (research.js:275660:22)\n    at RegionalCache2.set (research.js:275702:74)\n    at Object.set (research.js:7968:44)\n    at Cache.set (research.js:41032:53)\n    at oy.set (research.js:58823:163)\n    at ny.handleRevalidate (research.js:55827:75)\n    at async research.js:55715:29"
+        }
+      ]
+    },
+    {
+      "probe": {
+        "path": "/api/research-missing"
+      },
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "cloudflare-cdn-cache-control": "no-store",
+        "content-encoding": "identity",
+        "content-length": "7221",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"9negywhyg15hh\"",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-edge-cache": "bypass",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "HIT",
+        "x-nextjs-prerender": "1",
+        "x-nextjs-stale-time": "300",
+        "x-opennext": "1",
+        "x-powered-by": "Next.js"
+      },
+      "trace": [
+        {
+          "event": "stored-wrapper",
+          "now": 1791510456054,
+          "lastModified": 1791510456050,
+          "revalidate": false
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/788bf135b9183609ebaaaee23581117c732cf58ae8996c7a8a18600233a8d6d4.cache",
+          "found": true
+        },
+        {
+          "event": "tags",
+          "rows": 0
+        },
+        {
+          "event": "next-calculate",
+          "path": "/_not-found",
+          "lastModified": 1791510456050,
+          "now": 1791510456054,
+          "control": {
+            "revalidate": false
+          }
+        }
+      ]
+    },
+    {
+      "probe": {
+        "path": "/api/research-missing?_rsc=test",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1",
+          "next-router-segment-prefetch": "/_tree"
+        }
+      },
+      "status": 404,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "cloudflare-cdn-cache-control": "no-store",
+        "content-encoding": "identity",
+        "content-type": "text/x-component",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "on",
+        "x-edge-cache": "bypass",
+        "x-frame-options": "SAMEORIGIN",
+        "x-nextjs-cache": "HIT",
+        "x-nextjs-postponed": "2",
+        "x-nextjs-prerender": "1",
+        "x-opennext": "1"
+      },
+      "trace": [
+        {
+          "event": "stored-wrapper",
+          "now": 1791510456058,
+          "lastModified": 1791510456050,
+          "revalidate": false
+        },
+        {
+          "event": "r2-get",
+          "key": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/788bf135b9183609ebaaaee23581117c732cf58ae8996c7a8a18600233a8d6d4.cache",
+          "found": true
+        },
+        {
+          "event": "tags",
+          "rows": 0
+        },
+        {
+          "event": "next-calculate",
+          "path": "/_not-found",
+          "lastModified": 1791510456050,
+          "now": 1791510456058,
+          "control": {
+            "revalidate": false
+          }
+        }
+      ]
+    }
+  ]
+}

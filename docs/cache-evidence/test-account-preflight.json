@@ -1,0 +1,10 @@
+{
+  "accountId": "07ee1a1a1cf0da549eaaf6d3c5c80b62",
+  "checkedAt": "2026-10-09",
+  "readOnlyCheck": "wrangler r2 bucket list",
+  "apiCode": 10042,
+  "apiMessage": "Please enable R2 through the Cloudflare Dashboard",
+  "onlineResourcesCreated": false,
+  "userDecision": "先完成本地测试，R2 稍后开通",
+  "automaticUpgradeOrAccountSwitch": false
+}

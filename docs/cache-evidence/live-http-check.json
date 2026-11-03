@@ -1,0 +1,55 @@
+[
+  {
+    "path": "/skills",
+    "status": 200,
+    "headers": {
+      "cf-cache-status": "HIT",
+      "age": "30583",
+      "cache-control": "s-maxage=86400, stale-while-revalidate=31449600",
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+      "x-nextjs-cache": "MISS"
+    }
+  },
+  {
+    "path": "/skills",
+    "status": 200,
+    "headers": {
+      "cf-cache-status": "HIT",
+      "age": "30586",
+      "cache-control": "s-maxage=86400, stale-while-revalidate=31449600",
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+      "x-nextjs-cache": "MISS"
+    }
+  },
+  {
+    "path": "/skills?cache_research_probe=20261009",
+    "status": 200,
+    "headers": {
+      "cf-cache-status": "MISS",
+      "cache-control": "s-maxage=86400, stale-while-revalidate=31449600",
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+      "x-nextjs-cache": "MISS"
+    }
+  },
+  {
+    "path": "/skills?cache_research_probe=20261009",
+    "status": 200,
+    "headers": {
+      "cf-cache-status": "HIT",
+      "age": "1",
+      "cache-control": "s-maxage=86400, stale-while-revalidate=31449600",
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+      "x-nextjs-cache": "MISS"
+    }
+  },
+  {
+    "path": "/api/research-missing-20261009",
+    "status": 404,
+    "headers": {
+      "cf-cache-status": "BYPASS",
+      "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+      "x-nextjs-cache": "MISS"
+    }
+  }
+]

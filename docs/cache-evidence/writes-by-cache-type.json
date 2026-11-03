@@ -1,0 +1,250 @@
+{
+  "data": {
+    "viewer": {
+      "accounts": [
+        {
+          "oct5_cache": [
+            {
+              "dimensions": {
+                "date": "2026-10-07"
+              },
+              "sum": {
+                "requests": 14065
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-05"
+              },
+              "sum": {
+                "requests": 4449
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-08"
+              },
+              "sum": {
+                "requests": 8269
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-06"
+              },
+              "sum": {
+                "requests": 6520
+              }
+            }
+          ],
+          "oct5_composable": [],
+          "oct5_fetch": [
+            {
+              "dimensions": {
+                "date": "2026-10-07"
+              },
+              "sum": {
+                "requests": 7511
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-05"
+              },
+              "sum": {
+                "requests": 6277
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-08"
+              },
+              "sum": {
+                "requests": 3050
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-06"
+              },
+              "sum": {
+                "requests": 6021
+              }
+            }
+          ],
+          "sep27_cache": [
+            {
+              "dimensions": {
+                "date": "2026-09-27"
+              },
+              "sum": {
+                "requests": 38289
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-09-29"
+              },
+              "sum": {
+                "requests": 51734
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-09-28"
+              },
+              "sum": {
+                "requests": 143290
+              }
+            }
+          ],
+          "sep27_composable": [],
+          "sep27_fetch": [
+            {
+              "dimensions": {
+                "date": "2026-09-27"
+              },
+              "sum": {
+                "requests": 43647
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-09-29"
+              },
+              "sum": {
+                "requests": 68929
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-09-28"
+              },
+              "sum": {
+                "requests": 200032
+              }
+            }
+          ],
+          "sep29_cache": [
+            {
+              "dimensions": {
+                "date": "2026-09-29"
+              },
+              "sum": {
+                "requests": 3893
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-02"
+              },
+              "sum": {
+                "requests": 20765
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-04"
+              },
+              "sum": {
+                "requests": 39922
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-09-30"
+              },
+              "sum": {
+                "requests": 8089
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-01"
+              },
+              "sum": {
+                "requests": 13155
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-03"
+              },
+              "sum": {
+                "requests": 37821
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-05"
+              },
+              "sum": {
+                "requests": 4483
+              }
+            }
+          ],
+          "sep29_composable": [],
+          "sep29_fetch": [
+            {
+              "dimensions": {
+                "date": "2026-09-29"
+              },
+              "sum": {
+                "requests": 7176
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-02"
+              },
+              "sum": {
+                "requests": 8019
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-04"
+              },
+              "sum": {
+                "requests": 7778
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-09-30"
+              },
+              "sum": {
+                "requests": 9970
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-01"
+              },
+              "sum": {
+                "requests": 6716
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-03"
+              },
+              "sum": {
+                "requests": 9636
+              }
+            },
+            {
+              "dimensions": {
+                "date": "2026-10-05"
+              },
+              "sum": {
+                "requests": 1106
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}

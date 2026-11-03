@@ -1,0 +1,23 @@
+--- a/dist/api/overrides/incremental-cache/r2-incremental-cache.js
++++ b/dist/api/overrides/incremental-cache/r2-incremental-cache.js
+@@ -38,6 +38,8 @@
+         if (!r2)
+             throw new IgnorableError("No R2 bucket");
+         debugCache("R2IncrementalCache", `set ${key}`);
++        // 404 不进入页面缓存；全局 404 的运行时条目可能没有 status。
++        if (cacheType === "cache" && (key === "/_not-found" || key === "_not-found" || value.meta?.status === 404)) return;
+         try {
+             await r2.put(this.getR2Key(key, cacheType), JSON.stringify(value));
+         }
+--- a/dist/cli/commands/populate-cache.js
++++ b/dist/cli/commands/populate-cache.js
+@@ -112,6 +112,9 @@
+             if (!relativePath.endsWith(".cache") || buildId === undefined || keyParts.length === 0) {
+                 throw new Error(`Invalid path for a Cache Asset file: ${relativePath}`);
+             }
++            // 构建生成的 404 也必须在上传前排除。
++            const entry = JSON.parse(fs.readFileSync(fullPath, "utf8"));
++            if (keyParts.join("/") === "_not-found" || entry.meta?.status === 404) continue;
+             assets.push({
+                 isFetch: false,
+                 fullPath,

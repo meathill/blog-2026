@@ -1,0 +1,836 @@
+{
+  "sourceVersion": "5c49234d-6ae7-4dac-a86a-8930f1ed10b9",
+  "cacheObject": "incremental-cache/IKi4FcCP-pi2RxE66B9bf/788bf135b9183609ebaaaee23581117c732cf58ae8996c7a8a18600233a8d6d4.cache",
+  "cacheSHA256": "f8646e87ac35b207c32b64e1e65e29e291109a4b47adcd59b797352a1ea1705a",
+  "revalidate": false,
+  "probeCount": 70,
+  "globalCacheWrites": 0,
+  "probes": [
+    {
+      "request": {
+        "path": "/api/research-no"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "method": "HEAD"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "method": "POST"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "method": "PUT"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "method": "OPTIONS"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{}"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "a=1"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "method": "POST",
+        "headers": {
+          "next-action": "invalid",
+          "content-type": "text/plain"
+        },
+        "body": "[]"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "headers": {
+          "cache-control": "no-cache"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "headers": {
+          "x-nextjs-data": "1"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1",
+          "next-router-segment-prefetch": "/_tree"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "headers": {
+          "purpose": "prefetch"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/api/research-no",
+        "tagDelay": 1200
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "method": "HEAD"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "method": "POST"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "method": "PUT"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "method": "OPTIONS"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{}"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "a=1"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "method": "POST",
+        "headers": {
+          "next-action": "invalid",
+          "content-type": "text/plain"
+        },
+        "body": "[]"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "headers": {
+          "cache-control": "no-cache"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "headers": {
+          "x-nextjs-data": "1"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1",
+          "next-router-segment-prefetch": "/_tree"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "headers": {
+          "purpose": "prefetch"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/static/no.js",
+        "tagDelay": 1200
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json"
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "method": "HEAD"
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "method": "POST"
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "method": "PUT"
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "method": "OPTIONS"
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{}"
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "a=1"
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "method": "POST",
+        "headers": {
+          "next-action": "invalid",
+          "content-type": "text/plain"
+        },
+        "body": "[]"
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "headers": {
+          "cache-control": "no-cache"
+        }
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "headers": {
+          "x-nextjs-data": "1"
+        }
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1",
+          "next-router-segment-prefetch": "/_tree"
+        }
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1"
+        }
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "headers": {
+          "purpose": "prefetch"
+        }
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/IKi4FcCP-pi2RxE66B9bf/no.json",
+        "tagDelay": 1200
+      },
+      "status": 301,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json"
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "method": "HEAD"
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "method": "POST"
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "method": "PUT"
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "method": "OPTIONS"
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{}"
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "a=1"
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "method": "POST",
+        "headers": {
+          "next-action": "invalid",
+          "content-type": "text/plain"
+        },
+        "body": "[]"
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "headers": {
+          "cache-control": "no-cache"
+        }
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "headers": {
+          "x-nextjs-data": "1"
+        }
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1",
+          "next-router-segment-prefetch": "/_tree"
+        }
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1"
+        }
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "headers": {
+          "purpose": "prefetch"
+        }
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/_next/data/wrong/no.json",
+        "tagDelay": 1200
+      },
+      "status": 404,
+      "nextCache": null,
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "method": "HEAD"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "method": "POST"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "method": "PUT"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "method": "OPTIONS"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{}"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "method": "POST",
+        "headers": {
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "a=1"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "method": "POST",
+        "headers": {
+          "next-action": "invalid",
+          "content-type": "text/plain"
+        },
+        "body": "[]"
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "headers": {
+          "cache-control": "no-cache"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "headers": {
+          "x-nextjs-data": "1"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1",
+          "next-router-segment-prefetch": "/_tree"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "headers": {
+          "rsc": "1",
+          "next-router-prefetch": "1"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "headers": {
+          "purpose": "prefetch"
+        }
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    },
+    {
+      "request": {
+        "path": "/en/api/research-no",
+        "tagDelay": 1200
+      },
+      "status": 404,
+      "nextCache": "HIT",
+      "globalWrites": 0,
+      "adapterErrors": []
+    }
+  ],
+  "conclusion": "真实最新条目在本地请求矩阵中没有重复写入；不能用这些请求形态解释生产 568 次写入，也不能排除历史中间条目或平台读取问题"
+}
