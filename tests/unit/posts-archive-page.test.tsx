@@ -66,14 +66,15 @@ describe('ArchivePageNum', () => {
     expect(wordpress.getCategories).not.toHaveBeenCalled();
   });
 
-  it('should permanently redirect out-of-range en pages to /en/posts when total is unknown', async () => {
+  // Issue #19：/en/posts 已停输出，重定向恒指中文 /posts
+  it('should permanently redirect out-of-range en pages to /posts when total is unknown', async () => {
     (wordpress.getPosts as any).mockResolvedValue({ posts: [], total: 0, totalPages: 0 });
 
     await expect(ArchivePageNum({ params: Promise.resolve({ locale: 'en', num: '7' }) })).rejects.toThrow(
       'NEXT_REDIRECT',
     );
 
-    expect(navigation.permanentRedirect).toHaveBeenCalledWith('/en/posts');
+    expect(navigation.permanentRedirect).toHaveBeenCalledWith('/posts');
   });
 
   it('should permanently redirect page 1 to /posts', async () => {

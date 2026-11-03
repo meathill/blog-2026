@@ -122,9 +122,16 @@ export default async function middleware(req: NextRequest) {
   }
 
   // Issue #13：/posts/page/1 的 canonical 是 /posts，middleware 直接 301（页面组件只能给 308）
+  // Issue #19：/en/posts 已停输出，en 形态直接归一到 /posts，避免 /en/posts 再转一跳
   if (/^\/(?:(zh|en)\/)?posts\/page\/1$/.test(pathname)) {
-    const pageOneLocale = pathname.startsWith('/en/') ? 'en' : routing.defaultLocale;
-    return NextResponse.redirect(buildLegacyRedirectUrl(req, `${getLocalePrefix(pageOneLocale)}/posts`), 301);
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, '/posts'), 301);
+  }
+
+  // Issue #19：站点无英文译文，/en/posts/* 是「声明 en 的中文重复页」，不再输出——
+  // 一律 301 去掉 /en 前缀归一回中文页，把已收录 URL 的信号并回 /posts/*。
+  // 置于 legacy 410/301 之后：/en/posts/img_* 仍直接 410，不产生 301→410 broken 链。
+  if (/^\/en\/posts(?:\/|$)/.test(pathname)) {
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, pathname.replace(/^\/en/, '')), 301);
   }
 
   // Handle legacy AMP and .html paths

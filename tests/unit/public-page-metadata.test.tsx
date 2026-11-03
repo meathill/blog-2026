@@ -62,30 +62,30 @@ function params<T extends Record<string, unknown>>(value: T) {
 }
 
 describe('posts 列表页 metadata', () => {
-  it('en 返回英文文案，canonical 指向 /en/posts', async () => {
+  // Issue #19：无英文译文，/en/posts 已 301 归一，canonical 恒指 /posts，不再声明 en 交替版
+  it('en 也返回中文 canonical /posts（不再自指 /en/posts）', async () => {
     const metadata = await postsMetadata(params({ locale: 'en' }));
     expect(metadata.title).toBe('Tech Insights');
     expect(metadata.description).toMatch(/Cloudflare full-stack/);
-    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/posts`);
-    expect(metadata.openGraph?.url).toBe(`${SITE_URL}/en/posts`);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/posts`);
+    expect(metadata.openGraph?.url).toBe(`${SITE_URL}/posts`);
   });
 
-  it('zh 返回中文文案，canonical 指向 /posts，hreflang 双语齐全', async () => {
+  it('zh 返回中文文案，canonical 指向 /posts，languages 只声明 zh', async () => {
     const metadata = await postsMetadata(params({ locale: 'zh' }));
     expect(metadata.title).toBe('技术洞察');
     expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/posts`);
     expect(metadata.alternates?.languages).toEqual({
       zh: `${SITE_URL}/posts`,
-      en: `${SITE_URL}/en/posts`,
     });
   });
 });
 
 describe('posts 归档分页 metadata', () => {
-  it('en 分页标题为英文并插入页码，canonical 带 /en 前缀', async () => {
+  it('en 分页标题为英文并插入页码，canonical 同样指向 /posts/page/3', async () => {
     const metadata = await postsPageNumMetadata(params({ locale: 'en', num: '3' }));
     expect(metadata.title).toBe('Post Archive - Page 3');
-    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/posts/page/3`);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/posts/page/3`);
     expect(metadata.robots).toEqual({ index: false, follow: true });
   });
 
@@ -169,10 +169,10 @@ describe('tag / author 页 metadata', () => {
     expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/posts/author/meathill`);
   });
 
-  it('en author 页标题为英文，canonical 带 /en', async () => {
+  it('en author 页标题为英文，canonical 同样指向中文归档（issue #19）', async () => {
     const metadata = await authorMetadata(params({ locale: 'en', slug: 'meathill' }));
     expect(metadata.title).toBe('Posts by Meathill');
-    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/posts/author/meathill`);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/posts/author/meathill`);
   });
 });
 

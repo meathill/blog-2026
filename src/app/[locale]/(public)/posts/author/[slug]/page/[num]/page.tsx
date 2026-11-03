@@ -24,8 +24,6 @@ export async function generateMetadata({ params }: AuthorPageNumProps): Promise<
   }
 
   const zhUrl = `${SITE_URL}/posts/author/${slug}/page/${pageNum}`;
-  const enUrl = `${SITE_URL}/en/posts/author/${slug}/page/${pageNum}`;
-  const canonical = locale === 'en' ? enUrl : zhUrl;
   const title = t('author_page_title', { name: author.name, num: pageNum });
   const description = t('author_page_description', { name: author.name, num: pageNum });
 
@@ -34,16 +32,15 @@ export async function generateMetadata({ params }: AuthorPageNumProps): Promise<
     description,
     robots: { index: false, follow: true },
     alternates: {
-      canonical,
+      canonical: zhUrl,
       languages: {
         zh: zhUrl,
-        en: enUrl,
       },
     },
     openGraph: {
       title,
       description,
-      url: canonical,
+      url: zhUrl,
       type: 'website',
       images: [DEFAULT_OG_IMAGE],
     },

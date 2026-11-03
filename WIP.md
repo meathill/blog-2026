@@ -1,3 +1,44 @@
+## Issue #19：/en/posts/* 是中文重复内容，停输出并 301 归一（2026-11-03）
+
+背景：站点无英文译文，`/en/posts/*` 实际渲染中文原文却声明 `lang="en"` + 自指 canonical + hreflang 互指，sitemap 里 802 个 `/en/posts` 条目 0 点击、占一半抓取预算。决策：方案 A，`/en/posts/*` 一律 301 回 `/posts/*`，不再输出英文版文章页；其余 `/en/*`（首页、about、skills、app、tech、category）维持现状。
+
+- [ ] `src/middleware.ts`：新增 `/en/posts(...)` 301 去前缀（置于 legacy 410/301 与 posts/page/1 规则之后，避免破坏 410 语义产生 301→410 链）；`/en/posts/page/1` 目标改 `/posts`
+- [ ] 5 个 posts 页面（详情/列表/分页/作者×2）：去掉 enUrl 与 hreflang en，canonical 固定指中文
+- [ ] `src/app/sitemap.ts`：文章条目与 `/posts` 条目去掉 en alternate（不再被 expandEnEntries 展开）
+- [ ] 测试：middleware 断言更新 + 新增 301 用例；sitemap 数量与 en 断言更新；新增文章页 metadata 单测
+- [ ] format / typecheck / 全量测试 / build
+- [ ] 上线后：清文章页边缘缓存（ISR 86400s，见 #14）、`pnpm indexnow -- --since 3`、GSC/Bing 重提交 sitemap；2–4 周复查 GSC `/en/` 页数量
+- 备注：LanguageSwitcher 在文章页切 en 会被 301 原路弹回（无副作用）；`/en/category/*` 等同类中文重复页不在本 issue 范围，视 GSC 数据后续决定
+
+## Zeabur 安全事件复盘与 HSM 密钥安全博文（2026-10-18，已归档入库，本地已清理）
+
+- [x] 事实核查：梳理 Zeabur 2026 年 8 月与 10 月两次被黑经过、创始人袁霖关停公告、赔偿与 Token 盗刷背景
+- [x] 选题立意：从“明文 API Key 拖垮平台信任链”到现代各类出海全栈模板与 AI SaaS 的明文存储隐患
+- [x] 隐藏具体项目点名，抽象为通用的出海全栈模板与开源 Boilerplate
+- [x] 精简技术篇幅：聚焦零信任（Zero-Trust）哲学与密钥分片（两把钥匙不放同一处），删减冗余密码学实现与多余代码
+- [x] **已写入生产远程与本地 D1 数据库草稿箱**：
+  - Post ID: `b1ca6be8-c9b2-4075-a4f5-350ccb81b47a`
+  - Slug: `zeabur-hacked-plaintext-api-keys-and-zero-trust-hsm`
+  - 后台管理地址：`https://meathill.com/admin/blog/` 或本地 `http://localhost:3000/admin/blog/`
+- [x] 本地草稿与临时插入脚本已清理完成
+
+
+
+- [x] 深度选题与结合点定稿：探讨《From Viral Video to Verified Sale: How Smart Link Routing and AI UGC Ads Double Cross-Border Ecommerce ROAS》
+- [x] 联动自研产品 [DYQR.me](https://dyqr.me) 与个人博客 [meathill.com](https://meathill.com)，打通海外短视频投放“前端 AI UGC 视频 + 后端动态智能分流与免重新送审切链”转化闭环
+- [x] 输出完整投稿英文稿与中英文双语对照版：`docs/from-viral-video-to-verified-sale-oumomo-guest-post.md` 与 `docs/guest-post-for-oumomo-ecommerce-video-edge-conversion.md`
+- [x] 设计并生成 16:9 高清插画封面：短视频流 -> 动态智能路由中枢 -> 多货币高转化成单与 ROAS 增长
+- [x] 已同步完整稿件与封面至用户本地下载目录：`/Users/meathill/Downloads/`
+
+## Cloudflare 真实账单分析与博文草稿（2026-10-17，已同步至线上服务器草稿箱待编辑）
+
+- [x] 使用 `cf` CLI 与 Cloudflare API Token 获取近 3 年全量发票（共 49 笔）
+- [x] 深度账单数据分析：18 个月白嫖期、月结日（17号）走势、域名资产开销与 2026 年尖刺归因
+- [x] 技术架构复盘：Workers Observability 额度击穿、Next.js 16 + OpenNext 边缘缓存治理收益、cf CLI 403 根因剖析
+- [x] 完成博文草稿 Markdown：`docs/blog-draft-cloudflare-billing-analysis.md`
+- [x] **已写入线上服务器生产 D1 数据库草稿箱**：Post ID `eeb736b6-b761-4d3a-a649-8089fda51910`
+- [ ] 用户在线上后台直接编辑和润色完毕后，推进发布流程
+
 ## 文章链接 nofollow / 友链 dofollow 可选支持与 noopener 默认支持（2026-10-14，已完成）
 
 - [x] 方案与核心工具库：创建 `src/lib/blog-links.ts`，提供链接属性解析、dofollow 标记编解码、内链判定与 HTML/Markdown 链接清洗

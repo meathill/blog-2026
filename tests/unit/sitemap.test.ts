@@ -102,6 +102,7 @@ describe('Sitemap Generator', () => {
     );
 
     // Check posts
+    // Issue #19：无英文译文，文章条目不再声明 en alternate（/en/posts/* 已 301 归一）
     expect(result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -109,7 +110,6 @@ describe('Sitemap Generator', () => {
           alternates: {
             languages: {
               zh: `${SITE_URL}/posts/cat-1/post-1`,
-              en: `${SITE_URL}/en/posts/cat-1/post-1`,
             },
           },
         }),
@@ -118,10 +118,14 @@ describe('Sitemap Generator', () => {
       ]),
     );
 
-    // /en 页面可索引，需作为主条目出现（Ahrefs: indexable page not in sitemap）
+    // /en/posts 条目不再输出（issue #19：无译文中文重复页，301 归一）
+    const enPost = result.find((item) => item.url === `${SITE_URL}/en/posts/cat-1/post-1`);
+    expect(enPost).toBeUndefined();
+    const anyEnPosts = result.find((item) => item.url.includes('/en/posts'));
+    expect(anyEnPosts).toBeUndefined();
+    // 其余 /en 页面（首页、category 等）仍作为主条目出现
     expect(result).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ url: `${SITE_URL}/en/posts/cat-1/post-1` }),
         expect.objectContaining({ url: `${SITE_URL}/en/category/cat-1` }),
         expect.objectContaining({ url: `${SITE_URL}/en` }),
       ]),
@@ -131,8 +135,9 @@ describe('Sitemap Generator', () => {
     const post1 = result.find((item) => item.url === `${SITE_URL}/posts/cat-1/post-1`);
     expect(post1?.lastModified).toEqual(new Date('2023-02-01'));
 
-    // Validate count: (static(11, 含 /tech + 4 个 section + /cloudflare-billing-helper) + posts(3) + category(1) + app(1) + skill(1)) × zh/en = 34（标签已移除）
-    expect(result.length).toBe(34);
+    // Validate count: static 11 条中 /posts 不再声明 en（issue #19）→ 10×2 + 1
+    // + posts(3, 无 en) + category(1)×2 + app(1)×2 + skill(1)×2 = 30（标签已移除）
+    expect(result.length).toBe(30);
 
     // /tech 频道页应出现在 sitemap 中，带正确 zh/en alternates
     expect(result).toEqual(
@@ -279,8 +284,9 @@ describe('Sitemap Generator', () => {
 
     const result = await sitemap();
 
-    // Should distinctively return just static pages + mocked skills (which is 1 skill), ×2 (zh + en)
-    expect(result.length).toBe(24); // (11 static pages defined in sitemap.ts, 含 /tech + 4 个 section + /cloudflare-billing-helper + 1 skill page) × zh/en
+    // Should distinctively return just static pages + mocked skills (which is 1 skill)
+    // /posts 不再声明 en（issue #19）→ 10×2 + 1 + 1×2 = 23
+    expect(result.length).toBe(23); // (11 static pages defined in sitemap.ts, 含 /tech + 4 个 section + /cloudflare-billing-helper + 1 skill page)，其中 /posts 无 en
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: SITE_URL })]));
   });
 });

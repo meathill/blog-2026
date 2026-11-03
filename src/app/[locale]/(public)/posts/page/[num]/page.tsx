@@ -17,8 +17,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const t = await getTranslations({ locale, namespace: 'Metadata' });
 
   const zhUrl = `${SITE_URL}/posts/page/${pageNum}`;
-  const enUrl = `${SITE_URL}/en/posts/page/${pageNum}`;
-  const canonical = locale === 'en' ? enUrl : zhUrl;
   const title = t('posts_archive_title', { num: pageNum });
   const description = t('posts_archive_description', { num: pageNum });
 
@@ -27,16 +25,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     robots: { index: false, follow: true },
     alternates: {
-      canonical,
+      canonical: zhUrl,
       languages: {
         zh: zhUrl,
-        en: enUrl,
       },
     },
     openGraph: {
       title,
       description,
-      url: canonical,
+      url: zhUrl,
       type: 'website',
       images: [DEFAULT_OG_IMAGE],
     },
@@ -53,7 +50,7 @@ export default async function ArchivePageNum({ params }: PageProps) {
   const { locale, num } = await params;
   setRequestLocale(locale);
   const currentPage = parseInt(num, 10);
-  const postsPath = locale === 'en' ? '/en/posts' : '/posts';
+  const postsPath = '/posts';
 
   if (isNaN(currentPage) || currentPage < 1) {
     return notFound();

@@ -69,13 +69,14 @@ describe('PostPage Attachment Handling', () => {
     expect(wordpress.getPost).not.toHaveBeenCalled();
   });
 
-  it('en locale 的 attachment 应带 /en 前缀', async () => {
+  // Issue #19：/en/posts 不再输出（middleware 301 归一），attachment 重定向恒指中文路径
+  it('en locale 的 attachment 也 301 到中文路径', async () => {
     const params = Promise.resolve({
       locale: 'en',
       slug: ['tech', 'my-post', 'attachment', 'img_0509'],
     });
 
-    await expect(PostPage({ params })).rejects.toThrow('REDIRECT:/en/posts/tech/my-post');
+    await expect(PostPage({ params })).rejects.toThrow('REDIRECT:/posts/tech/my-post');
   });
 
   it('generateMetadata 对 attachment 使用父文 canonical + noindex', async () => {
@@ -88,6 +89,6 @@ describe('PostPage Attachment Handling', () => {
 
     expect(meta.robots).toEqual({ index: false, follow: true });
     expect(meta.alternates?.canonical).toBe('https://meathill.com/posts/tech/my-post');
-    expect(meta.alternates?.languages?.en).toBe('https://meathill.com/en/posts/tech/my-post');
+    expect(meta.alternates?.languages).toEqual({ zh: 'https://meathill.com/posts/tech/my-post' });
   });
 });

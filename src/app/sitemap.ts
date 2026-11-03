@@ -26,6 +26,7 @@ function safeDate(date: unknown): Date {
 /**
  * 为声明了 en alternate 的条目补一条 /en 主条目。
  * Ahrefs：/en 页面可索引却只作为 alternate 出现，被记为 "not in sitemap" ×877。
+ * Issue #19 起 posts 条目不再声明 en（无译文，/en/posts 301 归一），此函数只服务其余仍可索引的 /en 页面。
  */
 function expandEnEntries(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
   return entries.flatMap((entry) => {
@@ -61,7 +62,6 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: {
         languages: {
           zh: `${SITE_URL}/posts`,
-          en: `${SITE_URL}/en/posts`,
         },
       },
     },
@@ -209,6 +209,7 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
       const url = `${SITE_URL}/posts/${categorySlug}/${post.slug}`;
+      // Issue #19：站点无英文译文，/en/posts/* 已 301 归一，文章条目不再声明 en alternate
       return [
         {
           url,
@@ -218,7 +219,6 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
           alternates: {
             languages: {
               zh: url,
-              en: `${SITE_URL}/en/posts/${categorySlug}/${post.slug}`,
             },
           },
         },

@@ -23,8 +23,6 @@ export async function generateMetadata({ params }: AuthorPageProps): Promise<Met
   }
 
   const zhUrl = `${SITE_URL}/posts/author/${slug}`;
-  const enUrl = `${SITE_URL}/en/posts/author/${slug}`;
-  const canonical = locale === 'en' ? enUrl : zhUrl;
   const title = t('author_title', { name: author.name });
   const description = t('author_description', { name: author.name });
 
@@ -33,16 +31,15 @@ export async function generateMetadata({ params }: AuthorPageProps): Promise<Met
     description,
     robots: { index: false, follow: true },
     alternates: {
-      canonical,
+      canonical: zhUrl,
       languages: {
         zh: zhUrl,
-        en: enUrl,
       },
     },
     openGraph: {
       title,
       description,
-      url: canonical,
+      url: zhUrl,
       type: 'website',
       images: [DEFAULT_OG_IMAGE],
     },

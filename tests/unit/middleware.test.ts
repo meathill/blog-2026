@@ -76,8 +76,46 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 
+  // Issue #19：/en/posts/* 是无译文的中文重复页，一律 301 去掉 /en 前缀归一回 /posts/*
+  it('should 301 /en/posts/* to /posts/* (strip en prefix)', async () => {
+    const cases: Array<[string, string]> = [
+      ['/en/posts', '/posts'],
+      ['/en/posts/', '/posts/'],
+      ['/en/posts/tech/article', '/posts/tech/article'],
+      [
+        '/en/posts/安全和架构/zeabur-hacked-plaintext-api-keys-and-zero-trust-hsm',
+        '/posts/安全和架构/zeabur-hacked-plaintext-api-keys-and-zero-trust-hsm',
+      ],
+      ['/en/posts/page/12', '/posts/page/12'],
+      ['/en/posts/author/meathill', '/posts/author/meathill'],
+    ];
+    for (const [path, target] of cases) {
+      const res = await middleware(new NextRequest(new URL(path, BASE_URL)));
+
+      expect(res?.status).toBe(301);
+      expect(res?.headers.get('Location')).toBe(`${BASE_URL}${encodeURI(target)}`);
+    }
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should drop query params when stripping /en prefix', async () => {
+    const req = new NextRequest(new URL('/en/posts/tech/article?utm_source=x', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
+  });
+
+  it('should NOT strip /en prefix for paths that merely start with /en/posts', async () => {
+    const req = new NextRequest(new URL('/en/postsfoo', BASE_URL));
+    const res = await middleware(req);
+
+    // 顶部 slug 不在 TOP_LEVEL_ROUTES 里，走通用 legacy 逻辑，但绝不能命中 /en/posts 拦截
+    expect(res?.headers.get('Location')).not.toBe(`${BASE_URL}/postsfoo`);
+  });
+
   it('should NOT redirect /posts paths', async () => {
-    const req = new NextRequest(new URL('/en/posts/tech/article', BASE_URL));
+    const req = new NextRequest(new URL('/posts/tech/article', BASE_URL));
     await middleware(req);
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
@@ -324,12 +362,12 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  // Issue #13：/posts/page/1 → 301 /posts
+  // Issue #13：/posts/page/1 → 301 /posts；Issue #19 起 /en/posts/page/1 也直接归一到 /posts
   it('should 301 /posts/page/1 to /posts (with locale prefix)', async () => {
     const cases: Array<[string, string]> = [
       ['/posts/page/1', '/posts'],
       ['/zh/posts/page/1', '/posts'],
-      ['/en/posts/page/1', '/en/posts'],
+      ['/en/posts/page/1', '/posts'],
     ];
     for (const [path, target] of cases) {
       const res = await middleware(new NextRequest(new URL(path, BASE_URL)));
@@ -341,10 +379,10 @@ describe('Middleware', () => {
   });
 
   it('should pass /posts/page/2 and /posts/page/10 through to intl middleware', async () => {
-    for (const path of ['/posts/page/2', '/posts/page/10', '/en/posts/page/12']) {
+    for (const path of ['/posts/page/2', '/posts/page/10']) {
       await middleware(new NextRequest(new URL(path, BASE_URL)));
     }
-    expect(mockIntlMiddleware).toHaveBeenCalledTimes(3);
+    expect(mockIntlMiddleware).toHaveBeenCalledTimes(2);
   });
 
   // --- 新增用例：attachment_id ---

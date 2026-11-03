@@ -10,24 +10,22 @@ const POSTS_PER_PAGE = 20;
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Metadata' });
-  const zhUrl = `${SITE_URL}/posts`;
-  const enUrl = `${SITE_URL}/en/posts`;
-  const canonical = locale === 'en' ? enUrl : zhUrl;
+  // Issue #19：站点无英文译文，/en/posts 已 301 归一，不再声明 en 交替版
+  const postsUrl = `${SITE_URL}/posts`;
 
   return {
     title: t('posts_title'),
     description: t('posts_description'),
     alternates: {
-      canonical,
+      canonical: postsUrl,
       languages: {
-        zh: zhUrl,
-        en: enUrl,
+        zh: postsUrl,
       },
     },
     openGraph: {
       title: t('posts_title'),
       description: t('posts_description'),
-      url: canonical,
+      url: postsUrl,
       type: 'website',
       images: [DEFAULT_OG_IMAGE],
     },

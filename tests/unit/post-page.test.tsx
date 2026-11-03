@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import PostPage, { generateStaticParams } from '../../src/app/[locale]/(public)/posts/[...slug]/page';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import PostPage, { generateMetadata, generateStaticParams } from '../../src/app/[locale]/(public)/posts/[...slug]/page';
 import * as navigation from 'next/navigation';
 import * as wordpress from '../../src/lib/wordpress';
 
@@ -190,6 +190,62 @@ describe('PostPage', () => {
       expect(params).toEqual([]);
       expect(wordpress.getPosts).not.toHaveBeenCalled();
       expect(wordpress.getCategories).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('generateMetadata（issue #19：无译文，不再声明 /en 交替版）', () => {
+    beforeEach(() => {
+      vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://meathill.com');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    function setupPost() {
+      (wordpress.getPost as any).mockResolvedValue({
+        id: 1,
+        slug: 'zeabur-hacked',
+        title: { rendered: '写在 Zeabur 即将关停之际' },
+        categories: [123],
+        date: '2026-10-18',
+        modified: '2026-10-20',
+      });
+      (wordpress.getCategories as any).mockResolvedValue([{ id: 123, slug: '安全', name: '安全' }]);
+    }
+
+    it('zh 文章页 canonical 自指中文 URL，languages 只声明 zh', async () => {
+      setupPost();
+      const metadata = await generateMetadata({
+        params: Promise.resolve({ locale: 'zh', slug: ['安全', 'zeabur-hacked'] }),
+      });
+
+      expect(metadata.alternates?.canonical).toBe('https://meathill.com/posts/安全/zeabur-hacked');
+      expect(metadata.alternates?.languages).toEqual({
+        zh: 'https://meathill.com/posts/安全/zeabur-hacked',
+      });
+    });
+
+    // 回归守卫：即使 locale=en 路径到达页面（middleware 之外的兜底），canonical 也必须指向中文页，
+    // 不得再产出「lang=en + 自指 /en canonical」的中文重复页
+    it('en locale 也不声明 en canonical / en alternate', async () => {
+      setupPost();
+      const metadata = await generateMetadata({
+        params: Promise.resolve({ locale: 'en', slug: ['安全', 'zeabur-hacked'] }),
+      });
+
+      expect(metadata.alternates?.canonical).toBe('https://meathill.com/posts/安全/zeabur-hacked');
+      expect(JSON.stringify(metadata.alternates)).not.toContain('/en/');
+    });
+
+    it('attachment 页 noindex + canonical 指向父文，无 en 声明', async () => {
+      const metadata = await generateMetadata({
+        params: Promise.resolve({ locale: 'zh', slug: ['安全', 'zeabur-hacked', 'attachment', 'img_0224.html'] }),
+      });
+
+      expect(metadata.robots).toEqual({ index: false, follow: true });
+      expect(metadata.alternates?.canonical).toBe('https://meathill.com/posts/安全/zeabur-hacked');
+      expect(JSON.stringify(metadata.alternates)).not.toContain('/en/');
     });
   });
 });

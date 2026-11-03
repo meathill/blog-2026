@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { routing } from '@/i18n/routing';
 import {
   buildPostDescription,
   getCategories,
@@ -50,21 +49,20 @@ async function resolvePrimaryCategorySlug(post: WPPost): Promise<string> {
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
-  const { slug, locale } = await params;
+  const { slug } = await params;
 
   // attachment 页会 301 到父文；metadata 只保留 noindex + 父文 canonical，避免自指
   if (slug.length >= 2 && slug[slug.length - 2] === 'attachment') {
     const parentSegments = cleanParentPathSegments(slug.slice(0, slug.length - 2));
     const parentPath = parentSegments.length > 0 ? `/posts/${parentSegments.join('/')}` : '/posts';
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://meathill.com';
-    const zhUrl = `${siteUrl}${parentPath}`;
-    const enUrl = `${siteUrl}/en${parentPath}`;
+    const parentUrl = `${siteUrl}${parentPath}`;
     return {
       title: '附件已迁移',
       robots: { index: false, follow: true },
       alternates: {
-        canonical: locale === routing.defaultLocale ? zhUrl : enUrl,
-        languages: { zh: zhUrl, en: enUrl },
+        canonical: parentUrl,
+        languages: { zh: parentUrl },
       },
     };
   }
@@ -94,9 +92,8 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   const primaryCategorySlug = await resolvePrimaryCategorySlug(post);
 
   const basePath = `/posts/${primaryCategorySlug}/${cleanSlug}`;
-  const zhUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${basePath}`;
-  const enUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/en${basePath}`;
-  const canonicalUrl = locale === routing.defaultLocale ? zhUrl : enUrl;
+  // Issue #19：站点无英文译文，不再声明 /en/posts 交替版（/en/posts/* 由 middleware 301 归一）
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${basePath}`;
 
   return {
     title,
@@ -104,8 +101,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        zh: zhUrl,
-        en: enUrl,
+        zh: canonicalUrl,
       },
     },
     openGraph: {
@@ -130,13 +126,12 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 export default async function PostPage({ params }: PostPageProps) {
   const { slug, locale } = await params;
   setRequestLocale(locale);
-  const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
 
   // 低价值 attachment URL → 301 到父文（issue #4：避免 self-canonical 继续喂给索引）
   if (slug.length >= 2 && slug[slug.length - 2] === 'attachment') {
     const parentSegments = cleanParentPathSegments(slug.slice(0, slug.length - 2));
     if (parentSegments.length === 0) {
-      permanentRedirect(`${prefix}/posts`);
+      permanentRedirect('/posts');
     }
 
     // 仅 post slug 时尝试解析主分类，跳到规范路径
@@ -144,11 +139,11 @@ export default async function PostPage({ params }: PostPageProps) {
       const parentPost = await getPost(parentSegments[0]);
       if (parentPost) {
         const primaryCategorySlug = await resolvePrimaryCategorySlug(parentPost);
-        permanentRedirect(`${prefix}/posts/${primaryCategorySlug}/${parentPost.slug}`);
+        permanentRedirect(`/posts/${primaryCategorySlug}/${parentPost.slug}`);
       }
     }
 
-    permanentRedirect(`${prefix}/posts/${parentSegments.join('/')}`);
+    permanentRedirect(`/posts/${parentSegments.join('/')}`);
   }
 
   const lastSegment = slug[slug.length - 1];
@@ -162,14 +157,14 @@ export default async function PostPage({ params }: PostPageProps) {
     if (slug.length === 1) {
       const category = await getCategoryBySlug(cleanSlug);
       if (category) {
-        permanentRedirect(`${prefix}/category/${decodeURIComponent(category.slug)}`);
+        permanentRedirect(`/category/${decodeURIComponent(category.slug)}`);
       }
       const media = await getMediaBySlug(cleanSlug);
       if (media?.post) {
         const parentPost = await getPostById(media.post);
         if (parentPost) {
           const primaryCategorySlug = await resolvePrimaryCategorySlug(parentPost);
-          permanentRedirect(`${prefix}/posts/${primaryCategorySlug}/${parentPost.slug}`);
+          permanentRedirect(`/posts/${primaryCategorySlug}/${parentPost.slug}`);
         }
       }
     }
@@ -181,7 +176,7 @@ export default async function PostPage({ params }: PostPageProps) {
   const expectedPath = `${primaryCategorySlug}/${cleanSlug}`;
   const currentPath = slug.join('/');
   if (currentPath !== expectedPath && decodeURIComponent(currentPath) !== decodeURIComponent(expectedPath)) {
-    permanentRedirect(`${prefix}/posts/${expectedPath}`);
+    permanentRedirect(`/posts/${expectedPath}`);
   }
 
   return <PostView post={post} locale={locale} />;
