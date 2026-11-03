@@ -19,6 +19,7 @@
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:migrate:prod": "wrangler d1 migrations apply DB --remote",
     "sync:apps": "npx tsx scripts/sync-apps.ts",
+    "sync:app-translations": "npx tsx scripts/sync-app-translations.ts",
     "seed:products": "node scripts/seed-products.ts"
   },
   "dependencies": {

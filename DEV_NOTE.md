@@ -385,6 +385,15 @@ return new Response(transformed.image(), {
 - **hreflang/sitemap 收口**：5 个 posts 页面（详情/列表/分页/作者×2）canonical 恒指中文、`languages` 只声明 zh 自指；sitemap 文章与 `/posts` 条目去 en alternate（`expandEnEntries` 不再展开它们）。其余 `/en/*`（首页、about、skills、app、tech、category）维持现状——同类「en 壳中文内容」问题视 GSC 数据后续决定。
 - **LanguageSwitcher 副作用**：文章页切到 en 会被 301 弹回原页（URL 不变），无死链无报错；如需更优体验可在文章页隐藏切换器。
 
+### 博客内容 en 版整体停输出 + 信息页双语化（2026-11-04）
+
+- **多语言边界定案**：博客内容（posts/category/tag/search）无英文版，`/en` 形态在 middleware 一律 301 归一（正则 `/^\/en\/(?:posts|category|tag|search)(?:\/|$)/`）；信息页（首页/about/app/skills/tech/solutions/billing-helper/friend）保留 en 并做好双语。sitemap 中 `/en/posts`、`/en/category` 条目不再输出；category/tag/search 页面 canonical 恒指中文。
+- **双语模式沿用两条既有路径**：纯 UI 文案进 `messages/zh.json` + `en.json`（新增 About/PostCard/NotFound/AwesomeComment ns）；策展数据用 `Localized {zh, en}` 字段（tech/solutions/skills/tools/billing-helper，全齐）。apps 正文走 D1 `app_translations`（en 行由 `scripts/sync-app-translations.ts` upsert，数据在 `scripts/app-translations-en.ts`，AI 起草、用户审校后可重跑覆盖——幂等，基于 UNIQUE(app_id, locale)）。
+- **client 组件的 next-intl 坑**：`[locale]/layout.tsx` 的 `NextIntlClientProvider` 只下发 `CLIENT_NAMESPACES` 白名单 ns——新增 client 侧 `useTranslations` 的组件（NotFound、AwesomeComment）必须同步加进白名单，否则 hydration 时 MISSING_MESSAGE。根级 `app/not-found.tsx`（非法 locale 的 404，自带 `<html>`、在 provider 之外）需自备最小 messages（`zhMessages.NotFound`）。
+- **vitest 与 next-intl**：测试直接 import 带 `useTranslations`/本地 `Link` 的组件会因 next-intl ESM 解析失败挂掉，统一 `vi.mock('next-intl')` + `vi.mock('next-intl/navigation')`；async server component 在测试里直接 `render(await Component(props))`。
+- **守卫测试**：`tests/lib/messages-i18n.test.ts` 锁 zh/en key 集合一致且非空，防止一侧页面 MISSING_MESSAGE 或空文案。
+- **WP 分类/标签名维持中文**（博客内容），TagCloud、面包屑等处不翻译；后续若 GSC 显示 en 信息页有效，可再评估分类名 slug→en 映射。
+
 ### Issue #10 增补（SEO 词矩阵、Ahrefs 抓取放行与 SSG 性能优化，2026-08-21）
 
 - **Ahrefs 抓取拦截修复**：`src/app/robots.ts` 中同时声明 `AhrefsSiteAudit` 和 `AhrefsBot` 允许抓取主站（`allow: '/'`），同时继续禁爬 `/tag/` 与 `/en/tag/` 避免 3000+ noindex 页消耗每月 1 万次免费 crawl credits。

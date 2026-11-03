@@ -1,26 +1,32 @@
-## 博客内容取消 en 输出 + 其余页面双语化（2026-11-04）
+## 博客内容取消 en 输出 + 其余页面双语化（2026-11-04，已完成）
 
 承接 #19：博客相关内容（posts/category/tag/search）整体取消 en 版（301 归一）；其余页面确保双语，AI 起草英文、用户审校。category/tag/search 列表页、WP 分类名维持中文。
 
-### ① 博客内容 en 取消输出
-- [ ] middleware：`/en/posts` 拦截扩展为 `/en/(posts|category|tag|search)` 301 去前缀
-- [ ] sitemap：category 条目去 en alternate（/en/category 不再展开）
-- [ ] category/tag/tag 分页/search 四页 metadata：canonical 恒指中文、languages 只 zh
-- [ ] middleware/sitemap/metadata 测试更新
+### ① 博客内容 en 取消输出（commit 9236632）
+- [x] middleware：`/en/posts` 拦截扩展为 `/en/(posts|category|tag|search)` 301 去前缀
+- [x] sitemap：category 条目去 en alternate（/en/category 不再展开）
+- [x] category/tag/tag 分页/search 四页 metadata：canonical 恒指中文、languages 只 zh
+- [x] middleware/sitemap/metadata 测试更新
 
-### ② 信息页与组件双语化
-- [ ] messages 新增 About（~35 key，AI 起草 en）/PostCard/NotFound ns；Home.hot_tags、Contact mailto subject
-- [ ] about/page.tsx 全部硬编码中文 → t()，skills/timeline 改引 key，hreflang 补 x-default
-- [ ] PostCard（推荐/分钟/阅读全文）、TagCloud（热门标签）、ContactCTA（mailto subject）、NotFoundContent（404 全页）、AwesomeComment（报错 toast）→ messages
-- [ ] LanguageSwitcher 切换保留 query；app 两页 hreflang 补 x-default；删死代码 home/PostCard.tsx
+### ② 信息页与组件双语化（commit 5651b68）
+- [x] messages 新增 About（~35 key，en AI 起草待审校）/PostCard/NotFound/AwesomeComment ns；Home.hot_tags、Contact.mail_subject
+- [x] about/page.tsx 全部硬编码中文 → t()，skills/timeline 改引 key，hreflang 补 x-default
+- [x] PostCard/TagCloud/ContactCTA/NotFoundContent（+本地 Link）/AwesomeComment → messages；layout 客户端 ns 白名单扩充；根级 not-found.tsx 自备最小 messages
+- [x] LanguageSwitcher 切换保留 query；app 两页 hreflang 补 x-default；删死代码 home/PostCard.tsx
 
-### ③ apps en 译文数据
-- [ ] 起草 10 个 published app 的 en name/description/content（awesome-comment 已英文、muiad archived 跳过）
-- [ ] scripts/sync-app-translations.ts（照 sync-apps.ts 模式，local+remote upsert app_translations）+ package.json script，由用户运行
+### ③ apps en 译文数据（已导入线上）
+- [x] 起草 11 个 published app 的 en name/description/content（`scripts/app-translations-en.ts`，awesome-comment 已英文、muiad archived 跳过）
+- [x] `scripts/sync-app-translations.ts` + `pnpm sync:app-translations`（upsert，幂等可重跑覆盖）
+- [x] **已写入本地 + 远程 D1（线上 `/en/app/muicv` 等已验证英文）**；用户审校后改数据重跑即可
+- [ ] 用户审校 11 篇英文译文（尤其 baifo/mui-memo 的品牌英文名 Baifo/MuiMemo）
 
 ### ④ 测试与收尾
-- [ ] 新增：messages key 双语一致性、PostCard 双语渲染、脚本数据完整性、LanguageSwitcher 带 query
-- [ ] format / typecheck / 全量测试 / build；DEV_NOTE 增补；小步提交 ×4
+- [x] 新增：messages key 双语一致性、PostCard 双语渲染、脚本数据完整性、LanguageSwitcher 带 query
+- [x] format / typecheck / 全量测试（702 全绿）/ build
+- [x] DEV_NOTE「博客内容 en 版整体停输出 + 信息页双语化」增补
+- [ ] 部署后：`pnpm indexnow -- --since 3`；GSC/Bing 重提交 sitemap（/en/category 条目已移除）；2–4 周复查 GSC
+
+## Issue #19：/en/posts/* 是中文重复内容，停输出并 301 归一（2026-11-03，已完成待部署）
 
 ## Issue #19：/en/posts/* 是中文重复内容，停输出并 301 归一（2026-11-03，已完成待部署）
 
