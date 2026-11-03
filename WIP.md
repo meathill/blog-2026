@@ -1,12 +1,12 @@
-## Issue #19：/en/posts/* 是中文重复内容，停输出并 301 归一（2026-11-03）
+## Issue #19：/en/posts/* 是中文重复内容，停输出并 301 归一（2026-11-03，已完成待部署）
 
-背景：站点无英文译文，`/en/posts/*` 实际渲染中文原文却声明 `lang="en"` + 自指 canonical + hreflang 互指，sitemap 里 802 个 `/en/posts` 条目 0 点击、占一半抓取预算。决策：方案 A，`/en/posts/*` 一律 301 回 `/posts/*`，不再输出英文版文章页；其余 `/en/*`（首页、about、skills、app、tech、category）维持现状。
+背景：站点无英文译文，`/en/posts/*` 实际渲染中文原文却声明 `lang="en"` + 自指 canonical + hreflang 互指，sitemap 里 802 个 `/en/posts` 条目 0 点击、占一半抓取预算。决策：方案 A，`/en/posts/*` 一律 301 回 `/posts/*`，不再输出英文版文章页；其余 `/en/*`（首页、about、skills、app、tech、category）维持现状。commit `5c8c1e6`，[issue 评论](https://github.com/meathill/blog-2026/issues/19#issuecomment-6592522845)。
 
-- [ ] `src/middleware.ts`：新增 `/en/posts(...)` 301 去前缀（置于 legacy 410/301 与 posts/page/1 规则之后，避免破坏 410 语义产生 301→410 链）；`/en/posts/page/1` 目标改 `/posts`
-- [ ] 5 个 posts 页面（详情/列表/分页/作者×2）：去掉 enUrl 与 hreflang en，canonical 固定指中文
-- [ ] `src/app/sitemap.ts`：文章条目与 `/posts` 条目去掉 en alternate（不再被 expandEnEntries 展开）
-- [ ] 测试：middleware 断言更新 + 新增 301 用例；sitemap 数量与 en 断言更新；新增文章页 metadata 单测
-- [ ] format / typecheck / 全量测试 / build
+- [x] `src/middleware.ts`：新增 `/en/posts(...)` 301 去前缀（置于 legacy 410/301 与 posts/page/1 规则之后，避免破坏 410 语义产生 301→410 链）；`/en/posts/page/1` 直接归一到 `/posts`
+- [x] 5 个 posts 页面（详情/列表/分页/作者×2）：去掉 enUrl 与 hreflang en，canonical 固定指中文
+- [x] `src/app/sitemap.ts`：文章条目与 `/posts` 条目去掉 en alternate（不再被 expandEnEntries 展开，/en/posts 条目降为 0）
+- [x] 测试：middleware/sitemap/metadata 断言更新 + 新增 301 与 metadata 回归用例（664 全绿 / format / typecheck / build）
+- [x] DEV_NOTE「SEO 约定」增补 Issue #19 决策记录
 - [ ] 上线后：清文章页边缘缓存（ISR 86400s，见 #14）、`pnpm indexnow -- --since 3`、GSC/Bing 重提交 sitemap；2–4 周复查 GSC `/en/` 页数量
 - 备注：LanguageSwitcher 在文章页切 en 会被 301 原路弹回（无副作用）；`/en/category/*` 等同类中文重复页不在本 issue 范围，视 GSC 数据后续决定
 
