@@ -127,10 +127,10 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(buildLegacyRedirectUrl(req, '/posts'), 301);
   }
 
-  // Issue #19：站点无英文译文，/en/posts/* 是「声明 en 的中文重复页」，不再输出——
-  // 一律 301 去掉 /en 前缀归一回中文页，把已收录 URL 的信号并回 /posts/*。
+  // Issue #19 + 后续决策：博客内容（文章/分类/标签/搜索）无英文版，/en 形态一律 301
+  // 去掉前缀归一回中文页，把已收录 URL 的信号并回。信息页（首页/about/app/skills/tech/…）保留 en。
   // 置于 legacy 410/301 之后：/en/posts/img_* 仍直接 410，不产生 301→410 broken 链。
-  if (/^\/en\/posts(?:\/|$)/.test(pathname)) {
+  if (/^\/en\/(?:posts|category|tag|search)(?:\/|$)/.test(pathname)) {
     return NextResponse.redirect(buildLegacyRedirectUrl(req, pathname.replace(/^\/en/, '')), 301);
   }
 

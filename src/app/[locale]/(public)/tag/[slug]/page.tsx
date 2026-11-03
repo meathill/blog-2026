@@ -25,9 +25,8 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     };
   }
 
-  const zhUrl = `${SITE_URL}/tag/${slug}`;
-  const enUrl = `${SITE_URL}/en/tag/${slug}`;
-  const canonical = locale === 'en' ? enUrl : zhUrl;
+  // 博客内容无 en 版（/en/tag/* 已 301 归一），canonical 恒指中文
+  const canonical = `${SITE_URL}/tag/${slug}`;
   const title = t('tag_title', { name: tag.name });
   const description = t('tag_description', { name: tag.name });
 
@@ -38,8 +37,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     alternates: {
       canonical,
       languages: {
-        zh: zhUrl,
-        en: enUrl,
+        zh: canonical,
       },
     },
     openGraph: {

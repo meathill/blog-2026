@@ -82,8 +82,8 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).toHaveBeenCalledWith(req);
   });
 
-  // Issue #19：/en/posts/* 是无译文的中文重复页，一律 301 去掉 /en 前缀归一回 /posts/*
-  it('should 301 /en/posts/* to /posts/* (strip en prefix)', async () => {
+  // 博客内容（posts/category/tag/search）无英文版，/en 形态一律 301 去掉前缀归一回中文页
+  it('should 301 /en blog-content paths to zh paths (strip en prefix)', async () => {
     const cases: Array<[string, string]> = [
       ['/en/posts', '/posts'],
       ['/en/posts/', '/posts/'],
@@ -94,6 +94,11 @@ describe('Middleware', () => {
       ],
       ['/en/posts/page/12', '/posts/page/12'],
       ['/en/posts/author/meathill', '/posts/author/meathill'],
+      ['/en/category/cloudflare', '/category/cloudflare'],
+      ['/en/category/cloudflare/page/2', '/category/cloudflare/page/2'],
+      ['/en/tag/memory', '/tag/memory'],
+      ['/en/tag/memory/page/3', '/tag/memory/page/3'],
+      ['/en/search', '/search'],
     ];
     for (const [path, target] of cases) {
       const res = await middleware(new NextRequest(new URL(path, BASE_URL)));
@@ -112,11 +117,11 @@ describe('Middleware', () => {
     expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
   });
 
-  it('should NOT strip /en prefix for paths that merely start with /en/posts', async () => {
+  it('should NOT strip /en prefix for paths that merely start with blog prefixes', async () => {
     const req = new NextRequest(new URL('/en/postsfoo', BASE_URL));
     const res = await middleware(req);
 
-    // 顶部 slug 不在 TOP_LEVEL_ROUTES 里，走通用 legacy 逻辑，但绝不能命中 /en/posts 拦截
+    // 顶部 slug 不在 TOP_LEVEL_ROUTES 里，走通用 legacy 逻辑，但绝不能命中博客内容拦截
     expect(res?.headers.get('Location')).not.toBe(`${BASE_URL}/postsfoo`);
   });
 

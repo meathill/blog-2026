@@ -1,3 +1,27 @@
+## 博客内容取消 en 输出 + 其余页面双语化（2026-11-04）
+
+承接 #19：博客相关内容（posts/category/tag/search）整体取消 en 版（301 归一）；其余页面确保双语，AI 起草英文、用户审校。category/tag/search 列表页、WP 分类名维持中文。
+
+### ① 博客内容 en 取消输出
+- [ ] middleware：`/en/posts` 拦截扩展为 `/en/(posts|category|tag|search)` 301 去前缀
+- [ ] sitemap：category 条目去 en alternate（/en/category 不再展开）
+- [ ] category/tag/tag 分页/search 四页 metadata：canonical 恒指中文、languages 只 zh
+- [ ] middleware/sitemap/metadata 测试更新
+
+### ② 信息页与组件双语化
+- [ ] messages 新增 About（~35 key，AI 起草 en）/PostCard/NotFound ns；Home.hot_tags、Contact mailto subject
+- [ ] about/page.tsx 全部硬编码中文 → t()，skills/timeline 改引 key，hreflang 补 x-default
+- [ ] PostCard（推荐/分钟/阅读全文）、TagCloud（热门标签）、ContactCTA（mailto subject）、NotFoundContent（404 全页）、AwesomeComment（报错 toast）→ messages
+- [ ] LanguageSwitcher 切换保留 query；app 两页 hreflang 补 x-default；删死代码 home/PostCard.tsx
+
+### ③ apps en 译文数据
+- [ ] 起草 10 个 published app 的 en name/description/content（awesome-comment 已英文、muiad archived 跳过）
+- [ ] scripts/sync-app-translations.ts（照 sync-apps.ts 模式，local+remote upsert app_translations）+ package.json script，由用户运行
+
+### ④ 测试与收尾
+- [ ] 新增：messages key 双语一致性、PostCard 双语渲染、脚本数据完整性、LanguageSwitcher 带 query
+- [ ] format / typecheck / 全量测试 / build；DEV_NOTE 增补；小步提交 ×4
+
 ## Issue #19：/en/posts/* 是中文重复内容，停输出并 301 归一（2026-11-03，已完成待部署）
 
 背景：站点无英文译文，`/en/posts/*` 实际渲染中文原文却声明 `lang="en"` + 自指 canonical + hreflang 互指，sitemap 里 802 个 `/en/posts` 条目 0 点击、占一半抓取预算。决策：方案 A，`/en/posts/*` 一律 301 回 `/posts/*`，不再输出英文版文章页；其余 `/en/*`（首页、about、skills、app、tech、category）维持现状。commit `5c8c1e6`，[issue 评论](https://github.com/meathill/blog-2026/issues/19#issuecomment-6592522845)。

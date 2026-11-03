@@ -118,15 +118,16 @@ describe('Sitemap Generator', () => {
       ]),
     );
 
-    // /en/posts 条目不再输出（issue #19：无译文中文重复页，301 归一）
+    // 博客内容（/en/posts、/en/category）条目不再输出（无 en 版，301 归一）
     const enPost = result.find((item) => item.url === `${SITE_URL}/en/posts/cat-1/post-1`);
     expect(enPost).toBeUndefined();
-    const anyEnPosts = result.find((item) => item.url.includes('/en/posts'));
-    expect(anyEnPosts).toBeUndefined();
-    // 其余 /en 页面（首页、category 等）仍作为主条目出现
+    const anyBlogEn = result.find(
+      (item) => item.url.includes('/en/posts') || item.url.includes('/en/category'),
+    );
+    expect(anyBlogEn).toBeUndefined();
+    // 其余 /en 页面（首页、friend 等）仍作为主条目出现
     expect(result).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ url: `${SITE_URL}/en/category/cat-1` }),
         expect.objectContaining({ url: `${SITE_URL}/en` }),
       ]),
     );
@@ -135,8 +136,8 @@ describe('Sitemap Generator', () => {
     const post1 = result.find((item) => item.url === `${SITE_URL}/posts/cat-1/post-1`);
     expect(post1?.lastModified).toEqual(new Date('2023-02-01'));
 
-    // 静态 12 条中 /posts 无 en：11×2 + 1；文章 3 + 分类/应用/skill 各 2 = 32
-    expect(result.length).toBe(32);
+    // 静态 12 条中 /posts 无 en：11×2 + 1；文章 3 + 分类/应用/skill 各 2，其中分类无 en（博客内容）= 31
+    expect(result.length).toBe(31);
     for (const path of ['/friend', '/en/friend']) {
       expect(result).toEqual(
         expect.arrayContaining([
@@ -187,7 +188,7 @@ describe('Sitemap Generator', () => {
     // /en/tech 应由 expandEnEntries 自动补出主条目
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/en/tech` })]));
 
-    // Check categories
+    // Check categories（无 en 版，languages 只声明 zh）
     expect(result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -195,7 +196,6 @@ describe('Sitemap Generator', () => {
           alternates: {
             languages: {
               zh: `${SITE_URL}/category/cat-1`,
-              en: `${SITE_URL}/en/category/cat-1`,
             },
           },
         }),

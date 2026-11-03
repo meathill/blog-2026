@@ -33,9 +33,8 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
   const basePath = `/category/${categoryPath.join('/')}`;
   const pagePath = pageNum > 1 ? `${basePath}/page/${pageNum}` : basePath;
-  const zhUrl = `${SITE_URL}${pagePath}`;
-  const enUrl = `${SITE_URL}/en${pagePath}`;
-  const canonical = locale === 'en' ? enUrl : zhUrl;
+  // 博客内容无 en 版（/en/category/* 已 301 归一），canonical 恒指中文
+  const canonical = `${SITE_URL}${pagePath}`;
 
   const title =
     pageNum > 1
@@ -51,8 +50,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     alternates: {
       canonical,
       languages: {
-        zh: zhUrl,
-        en: enUrl,
+        zh: canonical,
       },
     },
     openGraph: {

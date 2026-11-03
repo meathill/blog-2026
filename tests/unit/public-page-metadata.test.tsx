@@ -97,22 +97,23 @@ describe('posts 归档分页 metadata', () => {
 });
 
 describe('search 页 metadata', () => {
-  it('en 无关键词返回英文标题，canonical 带 /en', async () => {
+  // 博客内容无 en 版（/en/search 已 301 归一），canonical 恒指中文
+  it('en 无关键词也返回中文 canonical /search', async () => {
     const metadata = await searchMetadata({
       ...params({ locale: 'en' }),
       searchParams: Promise.resolve({}),
     });
     expect(metadata.title).toBe('Search Posts');
-    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/search`);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/search`);
   });
 
-  it('en 带关键词时标题为英文并插入关键词', async () => {
+  it('en 带关键词时标题为英文，canonical 同样指向中文 /search', async () => {
     const metadata = await searchMetadata({
       ...params({ locale: 'en' }),
       searchParams: Promise.resolve({ q: 'cloudflare' }),
     });
     expect(metadata.title).toBe('Search: cloudflare');
-    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/search?q=cloudflare`);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/search?q=cloudflare`);
   });
 
   it('zh 带关键词时标题为中文', async () => {
@@ -141,11 +142,12 @@ describe('about 页 metadata', () => {
 });
 
 describe('category 页 metadata', () => {
-  it('en 标题为英文并插入分类名，canonical 带 /en', async () => {
+  // 博客内容无 en 版（/en/category/* 已 301 归一），canonical 恒指中文
+  it('en 标题为英文，canonical 同样指向中文 /category/cloudflare', async () => {
     const metadata = await categoryMetadata(params({ locale: 'en', slug: ['cloudflare'] }));
     expect(metadata.title).toBe('Cloudflare - Category');
     expect(metadata.description).toBe('Browse all posts in the Cloudflare category');
-    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/category/cloudflare`);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/category/cloudflare`);
   });
 
   it('zh 分页标题为中文并插入页码，分页 noindex', async () => {
@@ -157,10 +159,10 @@ describe('category 页 metadata', () => {
 });
 
 describe('tag / author 页 metadata', () => {
-  it('en tag 页标题为英文并插入标签名', async () => {
+  it('en tag 页标题为英文，canonical 同样指向中文 /tag/workers', async () => {
     const metadata = await tagMetadata(params({ locale: 'en', slug: 'workers' }));
     expect(metadata.title).toBe('Workers - Tag');
-    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/en/tag/workers`);
+    expect(metadata.alternates?.canonical).toBe(`${SITE_URL}/tag/workers`);
   });
 
   it('zh author 页标题为中文并插入作者名', async () => {

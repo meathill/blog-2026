@@ -15,9 +15,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const t = await getTranslations({ locale, namespace: 'Metadata' });
 
   if (q) {
-    const zhUrl = `${SITE_URL}/search?q=${encodeURIComponent(q)}`;
-    const enUrl = `${SITE_URL}/en/search?q=${encodeURIComponent(q)}`;
-    const canonical = locale === 'en' ? enUrl : zhUrl;
+    // 博客内容无 en 版（/en/search 已 301 归一），canonical 恒指中文
+    const canonical = `${SITE_URL}/search?q=${encodeURIComponent(q)}`;
     const title = t('search_query_title', { query: q });
     const description = t('search_query_description', { query: q });
     return {
@@ -27,8 +26,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       alternates: {
         canonical,
         languages: {
-          zh: zhUrl,
-          en: enUrl,
+          zh: canonical,
         },
       },
       openGraph: {
@@ -41,9 +39,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     };
   }
 
-  const zhUrl = `${SITE_URL}/search`;
-  const enUrl = `${SITE_URL}/en/search`;
-  const canonical = locale === 'en' ? enUrl : zhUrl;
+  const canonical = `${SITE_URL}/search`;
   return {
     title: t('search_title'),
     description: t('search_description'),
@@ -51,8 +47,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     alternates: {
       canonical,
       languages: {
-        zh: zhUrl,
-        en: enUrl,
+        zh: canonical,
       },
     },
     openGraph: {

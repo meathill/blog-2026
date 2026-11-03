@@ -171,8 +171,8 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
         alternates: {
           languages: {
+            // 博客内容无 en 版（/en/category/* 已 301 归一），只声明 zh 自指
             zh: `${SITE_URL}/category/${cat.slug}`,
-            en: `${SITE_URL}/en/category/${cat.slug}`,
           },
         },
       }));
