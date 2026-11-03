@@ -1,9 +1,12 @@
 'use client';
 
 import { ArrowLeftIcon, HomeIcon, SearchIcon } from 'lucide-react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 
 export default function NotFoundContent() {
+  const t = useTranslations('NotFound');
+
   return (
     <div data-blog-not-found="true" className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-md">
@@ -16,11 +19,11 @@ export default function NotFoundContent() {
         </div>
 
         {/* Message */}
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-4">页面走丢了</h1>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-4">{t('title')}</h1>
         <p className="text-[var(--text-secondary)] mb-8">
-          抱歉，你访问的页面不存在或已被移动。
+          {t('description_1')}
           <br />
-          可能是链接过期了，或者输入的地址有误。
+          {t('description_2')}
         </p>
 
         {/* Actions */}
@@ -31,7 +34,7 @@ export default function NotFoundContent() {
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
           >
             <HomeIcon size={18} />
-            返回首页
+            {t('back_home')}
           </Link>
           <Link
             prefetch={false}
@@ -39,7 +42,7 @@ export default function NotFoundContent() {
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass text-[var(--text-primary)] font-semibold hover:bg-[var(--surface-hover)] transition-all"
           >
             <SearchIcon size={18} />
-            浏览文章
+            {t('browse_posts')}
           </Link>
         </div>
 
@@ -49,7 +52,7 @@ export default function NotFoundContent() {
           className="mt-8 inline-flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
         >
           <ArrowLeftIcon size={14} />
-          返回上一页
+          {t('go_back')}
         </button>
       </div>
     </div>

@@ -53,6 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       languages: {
         zh: zhUrl,
         en: enUrl,
+        'x-default': zhUrl,
       },
     },
     openGraph: {

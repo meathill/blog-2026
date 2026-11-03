@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       languages: {
         zh: `${SITE_URL}/about`,
         en: `${SITE_URL}/en/about`,
+        'x-default': `${SITE_URL}/about`,
       },
     },
     openGraph: {
@@ -52,21 +53,22 @@ const socialLinks = [
   { href: 'mailto:meathill@gmail.com', label: 'Email', icon: MailIcon, username: 'meathill@gmail.com' },
 ];
 
+// 技能条目与职业旅程文案按 locale 取自 messages/About；items 是技术名词，不翻译
 const skills = [
-  { category: '前端', items: ['Vue.js', 'React', 'Next.js', 'TypeScript', 'Tailwind CSS'] },
-  { category: '后端 & 数据', items: ['Node.js', 'Python', 'PHP', 'MySQL', 'D1 / TiDB'] },
-  { category: '云 & 基建', items: ['Cloudflare Workers', 'R2', 'Hyperdrive', 'Docker'] },
-  { category: 'AI & 计费', items: ['OpenAI', 'Claude', 'Stripe', 'Supabase'] },
-  { category: '移动端', items: ['React Native', 'Expo'] },
+  { categoryKey: 'skill_frontend', items: ['Vue.js', 'React', 'Next.js', 'TypeScript', 'Tailwind CSS'] },
+  { categoryKey: 'skill_backend', items: ['Node.js', 'Python', 'PHP', 'MySQL', 'D1 / TiDB'] },
+  { categoryKey: 'skill_cloud', items: ['Cloudflare Workers', 'R2', 'Hyperdrive', 'Docker'] },
+  { categoryKey: 'skill_ai', items: ['OpenAI', 'Claude', 'Stripe', 'Supabase'] },
+  { categoryKey: 'skill_mobile', items: ['React Native', 'Expo'] },
 ];
 
 const timeline = [
-  { year: '2006', event: '开始 Web 开发之旅' },
-  { year: '2012', event: '转型全栈开发' },
-  { year: '2015', event: '开始技术自媒体' },
-  { year: '2017', event: '专注远程工作' },
-  { year: '2023', event: '成立 Meathill LLC，转向独立产品与咨询' },
-  { year: '2025', event: '陆续上线 dyqr、Mui Router、Mui CV 等产品' },
+  { year: '2006', eventKey: 'timeline_2006' },
+  { year: '2012', eventKey: 'timeline_2012' },
+  { year: '2015', eventKey: 'timeline_2015' },
+  { year: '2017', eventKey: 'timeline_2017' },
+  { year: '2023', eventKey: 'timeline_2023' },
+  { year: '2025', eventKey: 'timeline_2025' },
 ];
 
 // ISR：构建期不预渲染任何路径，首个请求渲染后写入增量缓存（R2），按 revalidate 过期后台重建。
@@ -78,6 +80,7 @@ export async function generateStaticParams() {
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'About' });
   const aboutContent = await getAboutContent(locale);
 
   return (
@@ -98,27 +101,24 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           </h1>
 
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--surface-border)] bg-[var(--surface)] px-4 py-1.5 text-sm text-[var(--text-secondary)]">
-            Meathill LLC · 一人公司 · 远程交付
+            {t('badge')}
           </div>
 
-          <p className="text-xl text-[var(--text-secondary)] mb-6 max-w-2xl mx-auto">
-            Meathill LLC 创始人，20+ 年全栈开发经验。专注 Cloudflare 全栈架构、AI
-            应用与计费、跨端开发，独立交付完整产品。
-          </p>
+          <p className="text-xl text-[var(--text-secondary)] mb-6 max-w-2xl mx-auto">{t('hero_intro')}</p>
 
           {/* Quick Info */}
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-[var(--text-muted)]">
             <span className="inline-flex items-center gap-1">
               <MapPinIcon size={14} />
-              重庆, 中国
+              {t('location')}
             </span>
             <span className="inline-flex items-center gap-1">
               <CalendarIcon size={14} />
-              2006 年入行
+              {t('since')}
             </span>
             <span className="inline-flex items-center gap-1">
               <CodeIcon size={14} />
-              全栈开发
+              {t('role')}
             </span>
           </div>
 
@@ -141,13 +141,13 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 
         {/* About Section */}
         <section className="mb-16">
-          <h2 className="text-xl font-bold text-gradient mb-6">关于我</h2>
+          <h2 className="text-xl font-bold text-gradient mb-6">{t('about_title')}</h2>
           <div
             className="prose prose-invert max-w-none text-[var(--text-secondary)]"
             dangerouslySetInnerHTML={{
               __html: aboutContent?.content
                 ? withImageAltFallback(demoteBodyH1(String(marked(aboutContent.content))), 'Meathill')
-                : `<p>大家好，我是肉山（Meathill），Meathill LLC 创始人，拥有 20+ 年全栈开发经验。我以一人公司的方式远程交付项目，专注 Cloudflare 全栈架构、AI 应用与计费系统、以及 React Native 跨端开发——从沟通到上线，对你的产品全程负责。</p>`,
+                : `<p>${t('fallback_intro')}</p>`,
             }}
           />
         </section>
@@ -167,14 +167,14 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 
         {/* Skills Section */}
         <section className="mb-16">
-          <h2 className="text-xl font-bold text-gradient mb-6">技术栈</h2>
+          <h2 className="text-xl font-bold text-gradient mb-6">{t('tech_stack_title')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {skills.map((skill) => (
               <div
-                key={skill.category}
+                key={skill.categoryKey}
                 className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)]"
               >
-                <h3 className="text-sm font-semibold text-[var(--accent)] mb-3">{skill.category}</h3>
+                <h3 className="text-sm font-semibold text-[var(--accent)] mb-3">{t(skill.categoryKey)}</h3>
                 <ul className="space-y-1">
                   {skill.items.map((item) => (
                     <li key={item} className="text-sm text-[var(--text-secondary)]">
@@ -189,53 +189,51 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 
         {/* Hobbies Section */}
         <section className="mb-16">
-          <h2 className="text-xl font-bold text-gradient mb-6">兴趣爱好</h2>
+          <h2 className="text-xl font-bold text-gradient mb-6">{t('hobbies_title')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-6 rounded-xl glass glow">
               <div className="flex items-center gap-3 mb-4">
                 <DumbbellIcon size={24} className="text-[var(--accent)]" />
-                <h3 className="text-lg font-semibold">力量举</h3>
+                <h3 className="text-lg font-semibold">{t('powerlifting')}</h3>
               </div>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-gradient">190kg</div>
-                  <div className="text-xs text-[var(--text-muted)]">深蹲</div>
+                  <div className="text-xs text-[var(--text-muted)]">{t('squat')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gradient">130kg</div>
-                  <div className="text-xs text-[var(--text-muted)]">卧推</div>
+                  <div className="text-xs text-[var(--text-muted)]">{t('bench')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gradient">220kg</div>
-                  <div className="text-xs text-[var(--text-muted)]">硬拉</div>
+                  <div className="text-xs text-[var(--text-muted)]">{t('deadlift')}</div>
                 </div>
               </div>
             </div>
             <div className="p-6 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)]">
               <div className="flex items-center gap-3 mb-4">
                 <PlaneIcon size={24} className="text-[var(--accent)]" />
-                <h3 className="text-lg font-semibold">旅行</h3>
+                <h3 className="text-lg font-semibold">{t('travel')}</h3>
               </div>
-              <p className="text-[var(--text-secondary)] text-sm">
-                喜欢和家人一起探索世界。已去过日本、泰国、美国等地。
-              </p>
+              <p className="text-[var(--text-secondary)] text-sm">{t('travel_desc')}</p>
             </div>
           </div>
         </section>
 
         {/* Timeline Section */}
         <section className="mb-16">
-          <h2 className="text-xl font-bold text-gradient mb-6">职业旅程</h2>
+          <h2 className="text-xl font-bold text-gradient mb-6">{t('career_title')}</h2>
           <div className="relative">
             <div className="absolute left-4 top-0 bottom-0 w-px bg-[var(--surface-border)]" />
             <ul className="space-y-6">
-              {timeline.map((item, index) => (
+              {timeline.map((item) => (
                 <li key={item.year} className="relative pl-12">
                   <div className="absolute left-0 w-8 h-8 rounded-full bg-[var(--surface)] border-2 border-[var(--accent)] flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                   </div>
                   <div className="text-sm text-[var(--accent)] font-medium">{item.year}</div>
-                  <div className="text-[var(--text-secondary)]">{item.event}</div>
+                  <div className="text-[var(--text-secondary)]">{t(item.eventKey)}</div>
                 </li>
               ))}
             </ul>
@@ -244,30 +242,28 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 
         {/* Contact Section */}
         <section className="text-center">
-          <h2 className="text-xl font-bold text-gradient mb-6">联系我</h2>
-          <p className="text-[var(--text-secondary)] mb-6">
-            如果你有任何问题、合作意向或只是想打个招呼，欢迎通过以下方式联系我。
-          </p>
+          <h2 className="text-xl font-bold text-gradient mb-6">{t('contact_title')}</h2>
+          <p className="text-[var(--text-secondary)] mb-6">{t('contact_desc')}</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <a
-              href="mailto:meathill@gmail.com?subject=%5BMeathill%20LLC%5D%20%E5%90%88%E4%BD%9C%E5%92%A8%E8%AF%A2"
+              href={`mailto:meathill@gmail.com?subject=${encodeURIComponent(`[Meathill LLC] ${t('mail_subject')}`)}`}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold hover:opacity-90 transition-opacity"
             >
-              ✉️ 聊聊合作
+              ✉️ {t('cta_contact')}
             </a>
             <Link
               prefetch={false}
               href="/solutions"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all"
             >
-              🧩 查看方案
+              🧩 {t('cta_solutions')}
             </Link>
             <Link
               prefetch={false}
               href="/app"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all"
             >
-              🚀 我的产品
+              🚀 {t('cta_products')}
             </Link>
           </div>
         </section>

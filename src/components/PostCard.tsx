@@ -1,5 +1,6 @@
 import { ArrowRightIcon, CalendarIcon, ClockIcon } from 'lucide-react';
 import Image from 'next/image';
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { getPostPath } from '@/lib/post-utils';
 import { termPublicPath } from '@/lib/public-slug';
@@ -12,7 +13,8 @@ interface PostCardProps {
   featured?: boolean;
 }
 
-export default function PostCard({ post, featured = false }: PostCardProps) {
+export default async function PostCard({ post, featured = false }: PostCardProps) {
+  const t = await getTranslations('PostCard');
   const title = stripHtml(post.title.rendered);
   const excerpt = stripHtml(post.excerpt.rendered).slice(0, 100);
   const date = formatDate(post.date);
@@ -40,7 +42,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
       {featured && (
         <div className="absolute top-4 right-4 z-10">
           <span className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-amber-600 to-orange-600 text-white">
-            推荐
+            {t('featured')}
           </span>
         </div>
       )}
@@ -102,7 +104,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
         </span>
         <span className="inline-flex items-center gap-1">
           <ClockIcon size={12} />
-          {readingTime} 分钟
+          {t('reading_time', { minutes: readingTime })}
         </span>
       </div>
 
@@ -114,7 +116,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
             href={href}
             className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:gap-2 transition-all"
           >
-            阅读全文
+            {t('read_more')}
             <ArrowRightIcon size={14} />
           </Link>
         </div>

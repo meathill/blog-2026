@@ -11,7 +11,9 @@ export default function LanguageSwitcher() {
 
   function onSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
     const nextLocale = event.target.value;
-    router.replace(pathname, { locale: nextLocale });
+    // 保留 query string（如 /search?q=...、/app?tag=...），否则切语言后参数丢失
+    const query = typeof window !== 'undefined' ? window.location.search : '';
+    router.replace(query ? `${pathname}${query}` : pathname, { locale: nextLocale });
   }
 
   return (

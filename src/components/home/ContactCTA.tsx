@@ -21,7 +21,7 @@ export default async function ContactCTA() {
             <p className="mx-auto mb-8 max-w-2xl text-white/90 leading-relaxed">{t('desc')}</p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
-                href="mailto:meathill@gmail.com?subject=%5BMeathill%20LLC%5D%20%E5%90%88%E4%BD%9C%E5%92%A8%E8%AF%A2"
+                href={`mailto:meathill@gmail.com?subject=${encodeURIComponent(`[Meathill LLC] ${t('mail_subject')}`)}`}
                 className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-amber-700 shadow-lg transition-all hover:-translate-y-0.5"
               >
                 <MailIcon size={18} /> {t('email_button')}

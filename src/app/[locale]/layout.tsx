@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'para
 }
 
 // 客户端只需要这些 namespace，其余仅服务端使用
-const CLIENT_NAMESPACES = ['LocaleSwitcher'] as const;
+const CLIENT_NAMESPACES = ['LocaleSwitcher', 'NotFound', 'AwesomeComment'] as const;
 
 const inter = Inter({
   subsets: ['latin'],

@@ -10,6 +10,15 @@ import {
 } from '@/lib/blog-incremental-cache';
 import { runWithCacheWritePolicy } from '@/lib/cache-write-policy';
 
+// NotFoundContent 依赖 next-intl（useTranslations + 本地 Link），vitest 下 ESM 解析失败，mock 掉
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}));
+vi.mock('next-intl/navigation', () => ({
+  // Link 用字符串 'a'（intrinsic element），保证 renderToStaticMarkup 可渲染
+  createNavigation: () => ({ Link: 'a' }),
+}));
+
 vi.mock('@opennextjs/cloudflare/overrides/incremental-cache/regional-cache', () => ({
   withRegionalCache: vi.fn((store: IncrementalCache) => store),
 }));

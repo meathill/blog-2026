@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { termPublicPath } from '@/lib/public-slug';
 import { getTags } from '@/lib/wordpress';
@@ -10,13 +11,14 @@ function getTagSize(count: number): string {
 }
 
 export default async function TagCloud() {
+  const t = await getTranslations('Home');
   const tags = await getTags({ perPage: 20 });
 
   return (
     <section className="py-16 border-t border-[var(--surface-border)]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <h2 className="text-responsive-title mb-8 text-center">
-          <span className="text-gradient">热门标签</span>
+          <span className="text-gradient">{t('hot_tags')}</span>
         </h2>
 
         <div className="flex flex-wrap justify-center items-center gap-3">

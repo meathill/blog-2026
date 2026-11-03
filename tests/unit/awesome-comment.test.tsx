@@ -2,6 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import AwesomeComment from '@/components/AwesomeComment';
 
+// 组件的报错 toast 文案经 useTranslations('AwesomeComment') 获取，mock 返回 key
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 describe('AwesomeComment', () => {
   beforeEach(() => {
     vi.resetAllMocks();

@@ -22,7 +22,8 @@
     "value_pricing_desc": "按项目范围估算，清晰透明，不绑长约。",
     "posts_title": "技术洞察",
     "posts_subtitle": "踩坑、架构与实践笔记。",
-    "posts_view_all": "全部文章"
+    "posts_view_all": "全部文章",
+    "hot_tags": "热门标签"
   },
   "Apps": {
     "title": "产品与作品",
@@ -70,7 +71,60 @@
     "title": "聊聊你的项目",
     "desc": "从产品开发到美国公司注册与出海收款，聊聊你的需求，我会给出清晰的方案和报价。",
     "email_button": "发邮件聊聊",
-    "github_button": "查看 GitHub"
+    "github_button": "查看 GitHub",
+    "mail_subject": "合作咨询"
+  },
+  "PostCard": {
+    "featured": "推荐",
+    "reading_time": "{minutes} 分钟",
+    "read_more": "阅读全文"
+  },
+  "NotFound": {
+    "title": "页面走丢了",
+    "description_1": "抱歉，你访问的页面不存在或已被移动。",
+    "description_2": "可能是链接过期了，或者输入的地址有误。",
+    "back_home": "返回首页",
+    "browse_posts": "浏览文章",
+    "go_back": "返回上一页"
+  },
+  "AwesomeComment": {
+    "load_failed_title": "评论组件加载失败",
+    "load_failed_desc": "请刷新页面重试"
+  },
+  "About": {
+    "badge": "Meathill LLC · 一人公司 · 远程交付",
+    "hero_intro": "Meathill LLC 创始人，20+ 年全栈开发经验。专注 Cloudflare 全栈架构、AI 应用与计费、跨端开发，独立交付完整产品。",
+    "location": "重庆, 中国",
+    "since": "2006 年入行",
+    "role": "全栈开发",
+    "about_title": "关于我",
+    "fallback_intro": "大家好，我是肉山（Meathill），Meathill LLC 创始人，拥有 20+ 年全栈开发经验。我以一人公司的方式远程交付项目，专注 Cloudflare 全栈架构、AI 应用与计费系统、以及 React Native 跨端开发——从沟通到上线，对你的产品全程负责。",
+    "tech_stack_title": "技术栈",
+    "skill_frontend": "前端",
+    "skill_backend": "后端 & 数据",
+    "skill_cloud": "云 & 基建",
+    "skill_ai": "AI & 计费",
+    "skill_mobile": "移动端",
+    "hobbies_title": "兴趣爱好",
+    "powerlifting": "力量举",
+    "squat": "深蹲",
+    "bench": "卧推",
+    "deadlift": "硬拉",
+    "travel": "旅行",
+    "travel_desc": "喜欢和家人一起探索世界。已去过日本、泰国、美国等地。",
+    "career_title": "职业旅程",
+    "timeline_2006": "开始 Web 开发之旅",
+    "timeline_2012": "转型全栈开发",
+    "timeline_2015": "开始技术自媒体",
+    "timeline_2017": "专注远程工作",
+    "timeline_2023": "成立 Meathill LLC，转向独立产品与咨询",
+    "timeline_2025": "陆续上线 dyqr、Mui Router、Mui CV 等产品",
+    "contact_title": "联系我",
+    "contact_desc": "如果你有任何问题、合作意向或只是想打个招呼，欢迎通过以下方式联系我。",
+    "cta_contact": "聊聊合作",
+    "cta_solutions": "查看方案",
+    "cta_products": "我的产品",
+    "mail_subject": "合作咨询"
   },
   "Header": {
     "about": "关于我",

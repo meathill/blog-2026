@@ -10,6 +10,12 @@ vi.mock('@/i18n/routing', () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
 }));
 
+// PostCard 是 async server component，经 getTranslations 取 PostCard ns 文案
+vi.mock('next-intl/server', () => ({
+  getTranslations: async () => (key: string, values?: Record<string, unknown>) =>
+    values?.minutes !== undefined ? `${values.minutes} 分钟` : key,
+}));
+
 describe('空 slug 不渲染链接', () => {
   it('文章头、尾和面包屑把空分类/标签显示成文字', () => {
     const categories = [{ id: 1, name: '前端', slug: null as unknown as string, count: 1 }];
@@ -29,7 +35,7 @@ describe('空 slug 不渲染链接', () => {
     expect(document.querySelector('a[href="/tag/null"]')).toBeNull();
   });
 
-  it('文章卡片在 slug 为空时不链到 /posts/.../null 或 /tag/null', () => {
+  it('文章卡片在 slug 为空时不链到 /posts/.../null 或 /tag/null', async () => {
     const post = {
       id: 1,
       date: '2026-01-01',
@@ -46,7 +52,7 @@ describe('空 slug 不渲染链接', () => {
       },
     } as unknown as WPPost;
 
-    render(<PostCard post={post} />);
+    render(await PostCard({ post }));
 
     expect(screen.getByRole('heading', { name: '无 slug' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '无 slug' })).not.toBeInTheDocument();

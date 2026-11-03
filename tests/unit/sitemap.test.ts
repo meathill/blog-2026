@@ -121,16 +121,10 @@ describe('Sitemap Generator', () => {
     // 博客内容（/en/posts、/en/category）条目不再输出（无 en 版，301 归一）
     const enPost = result.find((item) => item.url === `${SITE_URL}/en/posts/cat-1/post-1`);
     expect(enPost).toBeUndefined();
-    const anyBlogEn = result.find(
-      (item) => item.url.includes('/en/posts') || item.url.includes('/en/category'),
-    );
+    const anyBlogEn = result.find((item) => item.url.includes('/en/posts') || item.url.includes('/en/category'));
     expect(anyBlogEn).toBeUndefined();
     // 其余 /en 页面（首页、friend 等）仍作为主条目出现
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ url: `${SITE_URL}/en` }),
-      ]),
-    );
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ url: `${SITE_URL}/en` })]));
 
     // post lastModified 使用 post.modified（新鲜度信号）
     const post1 = result.find((item) => item.url === `${SITE_URL}/posts/cat-1/post-1`);

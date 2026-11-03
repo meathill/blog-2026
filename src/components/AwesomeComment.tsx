@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { toastManager } from '@/components/ui/toast';
 
 const SITE_ID = '8a576462-a61c-492a-ad36-33fc48e281b3';
@@ -10,6 +11,7 @@ const GOOGLE_CLIENT_ID = '553490336811-e0lmqt2vkb0nqfc4fbm83lc6mjo4ahbf.apps.goo
 export default function AwesomeComment() {
   const containerRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
+  const t = useTranslations('AwesomeComment');
 
   async function loadAndInit() {
     // 动态加载 CSS
@@ -45,8 +47,8 @@ export default function AwesomeComment() {
       console.error('Failed to load Awesome Comment:', error);
       toastManager.add({
         type: 'error',
-        title: '评论组件加载失败',
-        description: error instanceof Error ? error.message : '请刷新页面重试',
+        title: t('load_failed_title'),
+        description: error instanceof Error ? error.message : t('load_failed_desc'),
       });
     }
   }

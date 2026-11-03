@@ -22,7 +22,8 @@
     "value_pricing_desc": "Estimated by project scope — clear, transparent, no long lock-in.",
     "posts_title": "Insights",
     "posts_subtitle": "Notes on architecture, pitfalls, and practice.",
-    "posts_view_all": "All posts"
+    "posts_view_all": "All posts",
+    "hot_tags": "Popular Tags"
   },
   "Apps": {
     "title": "Products & Work",
@@ -70,7 +71,60 @@
     "title": "Let's talk about your project",
     "desc": "From product development to US company formation and global payments, tell me what you need and I'll come back with a clear plan and quote.",
     "email_button": "Email me",
-    "github_button": "View GitHub"
+    "github_button": "View GitHub",
+    "mail_subject": "Inquiry"
+  },
+  "PostCard": {
+    "featured": "Featured",
+    "reading_time": "{minutes} min read",
+    "read_more": "Read more"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description_1": "Sorry, the page you're looking for doesn't exist or has been moved.",
+    "description_2": "The link may be outdated, or the address may be mistyped.",
+    "back_home": "Back to Home",
+    "browse_posts": "Browse Posts",
+    "go_back": "Go Back"
+  },
+  "AwesomeComment": {
+    "load_failed_title": "Failed to load comments",
+    "load_failed_desc": "Please refresh and try again"
+  },
+  "About": {
+    "badge": "Meathill LLC · One-person studio · Remote delivery",
+    "hero_intro": "Founder of Meathill LLC with 20+ years of full-stack experience. Specialized in Cloudflare full-stack architecture, AI apps & billing, and cross-platform development — delivering complete products independently.",
+    "location": "Chongqing, China",
+    "since": "In the industry since 2006",
+    "role": "Full-stack Developer",
+    "about_title": "About Me",
+    "fallback_intro": "Hi, I'm Meathill, founder of Meathill LLC with 20+ years of full-stack experience. I deliver projects remotely as a one-person studio, focusing on Cloudflare full-stack architecture, AI apps & billing systems, and React Native cross-platform development — owning your product from kickoff to launch.",
+    "tech_stack_title": "Tech Stack",
+    "skill_frontend": "Frontend",
+    "skill_backend": "Backend & Data",
+    "skill_cloud": "Cloud & Infra",
+    "skill_ai": "AI & Billing",
+    "skill_mobile": "Mobile",
+    "hobbies_title": "Beyond the Code",
+    "powerlifting": "Powerlifting",
+    "squat": "Squat",
+    "bench": "Bench",
+    "deadlift": "Deadlift",
+    "travel": "Travel",
+    "travel_desc": "Exploring the world with my family — Japan, Thailand, the US, and counting.",
+    "career_title": "Career Journey",
+    "timeline_2006": "Started my web development journey",
+    "timeline_2012": "Went full-stack",
+    "timeline_2015": "Started creating technical content",
+    "timeline_2017": "Went fully remote",
+    "timeline_2023": "Founded Meathill LLC — indie products & consulting",
+    "timeline_2025": "Shipped DYQR, MuiRouter, MuiCV and more",
+    "contact_title": "Get in Touch",
+    "contact_desc": "Whether you have a question, a project in mind, or just want to say hi — feel free to reach out.",
+    "cta_contact": "Work with Me",
+    "cta_solutions": "View Solutions",
+    "cta_products": "My Products",
+    "mail_subject": "Inquiry"
   },
   "Header": {
     "about": "About",
