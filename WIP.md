@@ -1,3 +1,17 @@
+## 生产 500 事故与 i18n 部署修复（2026-11-04/05，已完成）
+
+**事故**：11-04 15:32 UTC 部署版本 f6e1e47c（i18n 双语化代码）后，所有 ● ISR 路由请求时重渲染全抛 DYNAMIC_SERVER_USAGE → OpenNext 500；ƒ 动态路由与 sitemap 正常。与同窗口的 VPS 升级无关（已逐一排除）。
+
+**根因**：根级 app/not-found.tsx 引入 NextIntlClientProvider + messages JSON 导入，毒化全部 ISR 路由的产物骨架（详见 DEV_NOTE「根级 not-found 禁止 next-intl」）。
+
+**已完成**
+- [x] `wrangler rollback 511ee502` 止血 → 恢复 200
+- [x] instrumentation onRequestError 拿到 digest → dev --remote 复现 → 4 轮单变量二分锁定根级 not-found.tsx
+- [x] 修复：根级 not-found 静态化 + 守卫测试 tests/unit/root-not-found-guard.test.ts；705 测试/typecheck/format 全绿
+- [x] 重新部署（版本 9adc6812）+ 生产全路由验证通过
+- [ ] 待办：`pnpm indexnow -- --since 3`；GSC/Bing 重提交 sitemap（延续双语化任务的原有收尾）
+- [ ] 部署流程改进：deploy 后必须冒烟（curl 首页断言 200 再收工）——本次教训
+
 ## 博客内容取消 en 输出 + 其余页面双语化（2026-11-04，已完成）
 
 承接 #19：博客相关内容（posts/category/tag/search）整体取消 en 版（301 归一）；其余页面确保双语，AI 起草英文、用户审校。category/tag/search 列表页、WP 分类名维持中文。

@@ -709,3 +709,24 @@ Worker errors=0，Workers Cache 命中率约 44.7%；跨机房边缘 MISS / ISR 
 10/22 按用户确认删除 r2-isr 观察任务，不再等待原定 24 小时窗口。最新稳定统计截至北京时间
 10/22 16:20，实际约 22 小时 44 分：首页累计成功 Put 1 / Get 395，skills 成功 Put 1，
 全局 404 无 Put，Worker errors=0。以上是阶段观察结果，不宣称已完成完整 24 小时验收。
+
+## 根级 not-found 禁止 next-intl：ISR 重渲染 DYNAMIC_SERVER_USAGE（2026-11-04 全站 500 事故）
+
+事故：15:32 UTC 部署 i18n 双语化版本后，所有 ● ISR 路由（/、/en、/posts、author 分页、about、文章页）
+请求时重渲染全部抛 DYNAMIC_SERVER_USAGE，OpenNext 未接住该降级信号直接 500；ƒ 动态路由与 sitemap 正常。
+根因：commit 1531fd9 为修 /_not-found 预渲染失败，在根级 app/not-found.tsx 引入 NextIntlClientProvider
+并直接 import messages/zh.json。根级 not-found 会被预渲染进全部 ISR 路由的产物骨架，其中的 next-intl
+运行时在 ISR 重渲染上下文读 locale 触发动态 API 用法。构建期预渲染（Node 环境）不触发、仅 Workers
+运行时重渲染触发——705 项测试与构建全绿仍全线崩溃，只有生产运行时能暴露。
+
+定位过程：wrangler tail 只有被 scrub 的错误 → 加 instrumentation.ts onRequestError 拿到 digest
+DYNAMIC_SERVER_USAGE → wrangler dev --remote（真实绑定、不影响生产流量）复现 → 对 6 文件嫌疑簇做
+4 轮单变量二分，锁定根级 not-found.tsx（其余 5 文件均无罪）。
+
+修复：根级 not-found 完全静态化（硬编码 zh、零 next-intl、零客户端组件、零 messages 导入）；
+[locale] 内 404 由 [locale]/not-found.tsx + layout 的 Provider 正常双语，不受影响。
+守卫测试 tests/unit/root-not-found-guard.test.ts 锁定结构约束；instrumentation.ts 保留为常驻排障钩子。
+修复版本 9adc6812，生产全路由验证通过（含此前崩溃的全部 ISR 冷渲染路径与 404）。
+
+规则：**根级 not-found.tsx 必须保持零依赖静态渲染，任何请求时上下文（next-intl、客户端组件、
+动态 API）都不得进入**；需要国际化的 404 只能放 [locale] 段内。
