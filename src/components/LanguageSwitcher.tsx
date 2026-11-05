@@ -9,6 +9,11 @@ export default function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Issue #19：纯中文文章页（/posts 开头）无英文版，避免展示切换器诱导用户/爬虫切换后被 301 原路弹回
+  if (/^\/posts(?:\/|$)/.test(pathname)) {
+    return null;
+  }
+
   function onSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
     const nextLocale = event.target.value;
     // 保留 query string（如 /search?q=...、/app?tag=...），否则切语言后参数丢失

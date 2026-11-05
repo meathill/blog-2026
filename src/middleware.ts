@@ -57,10 +57,6 @@ function resolveDeletedLegacy(contentSegments: string[]): 'gone' | string | null
   return null;
 }
 
-function getLocalePrefix(locale: string) {
-  return locale === routing.defaultLocale ? '' : `/${locale}`;
-}
-
 function buildLegacyRedirectUrl(req: NextRequest, pathname: string) {
   const url = req.nextUrl.clone();
   url.pathname = pathname;
@@ -71,15 +67,16 @@ function buildLegacyRedirectUrl(req: NextRequest, pathname: string) {
 // 分页形态（/js/page/2）仍视作分类归档；其余（含单段旧 slug，如 /img_0224）
 // 一律交给 /posts/[...slug] 解析——未命中文章时该页会回退到分类/附件（见对应 page.tsx），
 // 避免把附件 slug 误跳到不存在的 /category/{slug}
-function redirectLegacyContentPath(req: NextRequest, prefix: string, contentSegments: string[]) {
+// Issue #19：博客内容（文章/分类）无英文版，一律直达中文 canonical，消除 /en 两跳 301
+function redirectLegacyContentPath(req: NextRequest, contentSegments: string[]) {
   const { pageNum } = parseCategorySlug(contentSegments);
   const pathContent = contentSegments.join('/');
   const url = buildLegacyRedirectUrl(req, req.nextUrl.pathname);
 
   if (pageNum > 1) {
-    url.pathname = `${prefix}/category/${pathContent}`;
+    url.pathname = `/category/${pathContent}`;
   } else {
-    url.pathname = `${prefix}/posts/${pathContent}`;
+    url.pathname = `/posts/${pathContent}`;
   }
   return NextResponse.redirect(url, 301);
 }
@@ -111,14 +108,16 @@ export default async function middleware(req: NextRequest) {
   // Issue #11 已删除旧内容：先于 .html/legacy 通用分支拦截，
   // 否则会 301 到 /posts/... 再 404，形成 broken redirect。
   {
-    const { locale: legacyLocale, content: legacyContent } = getLocaleAndContent(pathname);
+    const { content: legacyContent } = getLocaleAndContent(pathname);
     const legacySegments = legacyContent.split('/').filter(Boolean);
     const resolved = resolveDeletedLegacy(legacySegments);
     if (resolved === 'gone') {
       return new NextResponse('Gone', { status: 410 });
     }
     if (resolved) {
-      return NextResponse.redirect(buildLegacyRedirectUrl(req, `${getLocalePrefix(legacyLocale)}/${resolved}`), 301);
+      // Issue #19：旧文章继任映射目标均属博客文章，无英文版，
+      // 无论请求来源是否带 /en 前缀，一律直达中文 canonical，消除 301 重定向链
+      return NextResponse.redirect(buildLegacyRedirectUrl(req, `/${resolved}`), 301);
     }
   }
 
@@ -139,14 +138,14 @@ export default async function middleware(req: NextRequest) {
   const isAmp = pathname.endsWith('/amp') || pathname.endsWith('/amp/');
   const isHtml = pathname.endsWith('.html') || pathname.includes('.html/');
   if (isAmp || isHtml) {
-    const { locale, content } = getLocaleAndContent(pathname);
+    const { content } = getLocaleAndContent(pathname);
     const cleanPath = content.replace(/\/amp\/?$/, '').replace('.html', '');
     const finalPath =
       cleanPath.startsWith('posts/') || cleanPath.startsWith('category/') || cleanPath.startsWith('tag/')
         ? cleanPath
         : `posts/${cleanPath}`;
-    const prefix = getLocalePrefix(locale);
-    return NextResponse.redirect(buildLegacyRedirectUrl(req, `${prefix}/${finalPath}`), 301);
+    // Issue #19：博客文章/分类/标签无英文版，一步直达中文 canonical，消除 301 重定向链
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `/${finalPath}`), 301);
   }
 
   // Rewrite [...something]/feed -> /feed/[...something]
@@ -168,8 +167,6 @@ export default async function middleware(req: NextRequest) {
   const isLocale = routing.locales.includes(segments[0] as any);
   const contentSegments = isLocale ? segments.slice(1) : segments;
   const rootSegment = contentSegments[0];
-  const locale = isLocale ? (segments[0] as (typeof routing.locales)[number]) : routing.defaultLocale;
-  const prefix = getLocalePrefix(locale);
 
   if (rootSegment === 'sponsors' && contentSegments.length === 1) {
     return NextResponse.redirect('https://github.com/sponsors/meathill', 301);
@@ -177,7 +174,7 @@ export default async function middleware(req: NextRequest) {
 
   if (rootSegment === 'author' && contentSegments.length === 4 && contentSegments[2] === 'page') {
     return NextResponse.redirect(
-      buildLegacyRedirectUrl(req, `${prefix}/posts/author/${contentSegments[1]}/page/${contentSegments[3]}`),
+      buildLegacyRedirectUrl(req, `/posts/author/${contentSegments[1]}/page/${contentSegments[3]}`),
       301,
     );
   }
@@ -185,13 +182,13 @@ export default async function middleware(req: NextRequest) {
   // Redirect /tags/xxx -> /tag/xxx
   if (rootSegment === 'tags' && contentSegments.length >= 2) {
     const pathContent = contentSegments.slice(1).join('/');
-    return NextResponse.redirect(buildLegacyRedirectUrl(req, `/${locale}/tag/${pathContent}`), 301);
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `/tag/${pathContent}`), 301);
   }
 
   // Redirect /page/xxx -> /posts/page/xxx
   if (rootSegment === 'page' && contentSegments.length >= 2) {
     const pathContent = contentSegments.join('/');
-    return NextResponse.redirect(buildLegacyRedirectUrl(req, `${prefix}/posts/${pathContent}`), 301);
+    return NextResponse.redirect(buildLegacyRedirectUrl(req, `/posts/${pathContent}`), 301);
   }
 
   // `tech` 既是产品栏目根路径（/tech、/tech/{compare|platforms|stacks|guides}），
@@ -201,13 +198,13 @@ export default async function middleware(req: NextRequest) {
     const isTechRoot = contentSegments.length === 1;
     const isTechSection = contentSegments.length === 2 && isTechSectionSlug(contentSegments[1]);
     if (!isTechRoot && !isTechSection) {
-      return redirectLegacyContentPath(req, prefix, contentSegments);
+      return redirectLegacyContentPath(req, contentSegments);
     }
   }
 
   // Handle non-top-level routes (e.g. legacy WP paths)
   if (rootSegment && !TOP_LEVEL_ROUTES.includes(rootSegment)) {
-    return redirectLegacyContentPath(req, prefix, contentSegments);
+    return redirectLegacyContentPath(req, contentSegments);
   }
 
   // Issue #18：Markdown 内容协商（Content Negotiation）

@@ -378,12 +378,13 @@ return new Response(transformed.image(), {
 - **`meathill.com/wp-content` 的 WAF 403 是 by design**：修引用不断链——`processContent` 把主站/相对路径的 uploads **href** 改指边缘放行的 blog 源（img src 早已走 Image Resizing 管线；blog 子域 href 仍解链）。
 - 详见 `docs/seo-ahrefs-2026-09.md`（分组表、转交 evertools 事项、重跑验收清单）。
 
-### Issue #19 增补（/en/posts 停输出并 301 归一，2026-11-03）
+### Issue #19 增补（/en/posts 停输出并 301 归一，2026-11-03 实施，2026-11-05 验收闭环）
 
 - **决策**：站点文章全部中文、WordPress 无英文译文，`/en/posts/*` 是「`lang=en` + 自指 canonical + hreflang en」的中文重复页（802 条 sitemap 条目，GSC 28 天 0 点击）。选定 301 方案（而非 noindex）：`middleware.ts` 对 `/^\/en\/posts(?:\/|$)/` 一律去 `/en` 前缀 301，把已收录 URL 的信号并回 `/posts/*`，也不产生 404。
 - **拦截位置在 legacy 410/301 之后**：`/en/posts/img_*` 仍直接 410、honey 等旧文先走继任映射，避免 301→410 broken 链；`/en/posts/page/1` 在 page/1 规则里直接归一到 `/posts`，不再转 `/en/posts` 一跳。
+- **301 重定向链压平（2026-11-05 闭环）**：所有博客遗留路径重定向（`.html`、legacy slug 继任表、`/tags/`、`/page/`、`/author/.../page/`）不论来源是否带 `/en`，目标均直达中文 canonical URL，彻底消除此前 `/en/xxx.html` → `/en/posts/xxx` → `/posts/xxx` 的双跳 301 链。
 - **hreflang/sitemap 收口**：5 个 posts 页面（详情/列表/分页/作者×2）canonical 恒指中文、`languages` 只声明 zh 自指；sitemap 文章与 `/posts` 条目去 en alternate（`expandEnEntries` 不再展开它们）。其余 `/en/*`（首页、about、skills、app、tech、category）维持现状——同类「en 壳中文内容」问题视 GSC 数据后续决定。
-- **LanguageSwitcher 副作用**：文章页切到 en 会被 301 弹回原页（URL 不变），无死链无报错；如需更优体验可在文章页隐藏切换器。
+- **LanguageSwitcher 隐藏**：文章页（`/posts` 开头）为纯中文内容，在 `LanguageSwitcher` 客户端组件中平滑隐藏，避免诱导用户/爬虫点击英文后被 301 弹回原页。
 
 ### 博客内容 en 版整体停输出 + 信息页双语化（2026-11-04）
 

@@ -34,7 +34,8 @@ describe('Middleware', () => {
 
     expect(res).toBeInstanceOf(NextResponse);
     expect(res?.status).toBe(301);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/posts/tech/article`);
+    // Issue #19：博客内容无 en 版，一步直达中文 canonical，消除 301 重定向链
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
@@ -59,7 +60,8 @@ describe('Middleware', () => {
     const res = await middleware(req);
 
     expect(res?.status).toBe(301);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/posts/tech/article`);
+    // Issue #19：博客内容无 en 版，一步直达中文 canonical，消除 301 重定向链
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/tech/article`);
   });
 
   it('should redirect legacy paths without locale to /posts/', async () => {
@@ -145,21 +147,21 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).toHaveBeenCalled();
   });
 
-  it('should redirect /tags/xxx to /tag/xxx', async () => {
+  it('should redirect /tags/xxx to /tag/xxx directly without locale prefix', async () => {
     const req = new NextRequest(new URL('/tags/memory', BASE_URL));
     const res = await middleware(req);
 
     expect(res?.status).toBe(301);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/zh/tag/memory`);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/tag/memory`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
-  it('should redirect /en/tags/xxx to /en/tag/xxx', async () => {
+  it('should redirect /en/tags/xxx to /tag/xxx directly (flatten 301 chain)', async () => {
     const req = new NextRequest(new URL('/en/tags/memory', BASE_URL));
     const res = await middleware(req);
 
     expect(res?.status).toBe(301);
-    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/en/tag/memory`);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/tag/memory`);
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
@@ -178,6 +180,15 @@ describe('Middleware', () => {
     expect(mockIntlMiddleware).not.toHaveBeenCalled();
   });
 
+  it('should redirect /en/page/3 to /posts/page/3 directly (flatten 301 chain)', async () => {
+    const req = new NextRequest(new URL('/en/page/3', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/page/3`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
   it('should redirect /sponsors to GitHub Sponsors', async () => {
     const req = new NextRequest(new URL('/sponsors', BASE_URL));
     const res = await middleware(req);
@@ -189,6 +200,15 @@ describe('Middleware', () => {
 
   it('should redirect author archive paths to /posts/author/:slug/page/:num', async () => {
     const req = new NextRequest(new URL('/author/meathill/page/24', BASE_URL));
+    const res = await middleware(req);
+
+    expect(res?.status).toBe(301);
+    expect(res?.headers.get('Location')).toBe(`${BASE_URL}/posts/author/meathill/page/24`);
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('should redirect /en/author archive paths directly to /posts/author/:slug/page/:num', async () => {
+    const req = new NextRequest(new URL('/en/author/meathill/page/24', BASE_URL));
     const res = await middleware(req);
 
     expect(res?.status).toBe(301);
@@ -302,12 +322,13 @@ describe('Middleware', () => {
   });
 
   // Issue #11：已删除的 honey 旧文（拼写错误的重复文）→ 301 到同主题存活文
+  // Issue #19：博客内容无 en 版，带 /en 请求一步直达中文 canonical，消除 301 重定向链
   it('should 301 deleted honey legacy URLs to the surviving phu-quoc article', async () => {
     const cases: Array<[string, string]> = [
       ['/honey-moon-in-phu-guoc-vietenam', '/posts/travel/second-time-to-phu-quoc-island'],
-      ['/en/honey-moon-in-phu-guoc-vietenam', '/en/posts/travel/second-time-to-phu-quoc-island'],
+      ['/en/honey-moon-in-phu-guoc-vietenam', '/posts/travel/second-time-to-phu-quoc-island'],
       ['/posts/honey-moon-in-phu-guoc-vietenam', '/posts/travel/second-time-to-phu-quoc-island'],
-      ['/en/posts/honey-moon-in-phu-guoc-vietenam', '/en/posts/travel/second-time-to-phu-quoc-island'],
+      ['/en/posts/honey-moon-in-phu-guoc-vietenam', '/posts/travel/second-time-to-phu-quoc-island'],
     ];
     for (const [path, target] of cases) {
       const req = new NextRequest(new URL(path, BASE_URL));
@@ -320,12 +341,13 @@ describe('Middleware', () => {
   });
 
   // Issue #11：已删除的 wordpressmysql8 旧文（.html / 多段 legacy / posts 内形态）→ 301 到 lnmp 存活文
+  // Issue #19：博客内容无 en 版，带 /en 请求一步直达中文 canonical
   it('should 301 deleted wordpressmysql8 legacy URLs to the surviving lnmp article', async () => {
     const cases: Array<[string, string]> = [
       ['/internet/wp/wordpressmysql8.html', '/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
       ['/internet/wp/wordpressmysql8', '/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
       ['/posts/internet/wp/wordpressmysql8', '/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
-      ['/en/internet/wp/wordpressmysql8.html', '/en/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
+      ['/en/internet/wp/wordpressmysql8.html', '/posts/serverside/setting-lnmp-on-ubuntu-16-04'],
     ];
     for (const [path, target] of cases) {
       const req = new NextRequest(new URL(path, BASE_URL));
@@ -354,14 +376,15 @@ describe('Middleware', () => {
   });
 
   // Issue #13：两条 GSC 旧文死链 → 301 到现存文章
+  // Issue #19：博客无 en 版，带 /en 请求一步直达中文 canonical
   it('should 301 issue #13 legacy article URLs to their live successors', async () => {
     const rn = '/posts/app/2024-how-to-setup-react-native-develop-environment-in-china-mainland';
     const sso = '/posts/chrome/chrome-extension-sso-fix-err_blocked_by_client';
     const cases: Array<[string, string]> = [
       ['/posts/2024-how-to-setup-react-native-development-environment-in-china-mainland', rn],
       ['/2024-how-to-setup-react-native-development-environment-in-china-mainland', rn],
-      ['/en/posts/2024-how-to-setup-react-native-development-environment-in-china-mainland', `/en${rn}`],
-      ['/en/posts/chrome/chrome-extension-sso-fix-error_blocked_by_client', `/en${sso}`],
+      ['/en/posts/2024-how-to-setup-react-native-development-environment-in-china-mainland', rn],
+      ['/en/posts/chrome/chrome-extension-sso-fix-error_blocked_by_client', sso],
       ['/posts/chrome/chrome-extension-sso-fix-error_blocked_by_client', sso],
     ];
     for (const [path, target] of cases) {

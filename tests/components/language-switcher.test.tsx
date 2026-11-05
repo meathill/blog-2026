@@ -37,4 +37,11 @@ describe('LanguageSwitcher 保留 query string', () => {
 
     expect(replaceMock).toHaveBeenCalledWith('/about', { locale: 'en' });
   });
+
+  it('在文章页（/posts 开头）隐藏切换器，避免切 en 后被 301 弹回', () => {
+    window.history.replaceState(null, '', '/posts/tech/demo-article');
+
+    const { container } = render(<LanguageSwitcher />);
+    expect(container).toBeEmptyDOMElement();
+  });
 });
