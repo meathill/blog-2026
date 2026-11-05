@@ -38,6 +38,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: {
       canonical,
       languages: { zh: zhUrl, en: enUrl, 'x-default': zhUrl },
+      types: {
+        'text/markdown': canonical,
+      },
     },
     openGraph: {
       title,

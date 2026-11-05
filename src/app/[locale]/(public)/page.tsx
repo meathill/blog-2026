@@ -28,6 +28,9 @@ export async function generateMetadata({ params }: HomeProps): Promise<Metadata>
         en: `${SITE_URL}/en`,
         'x-default': SITE_URL,
       },
+      types: {
+        'text/markdown': canonical,
+      },
     },
   };
 }

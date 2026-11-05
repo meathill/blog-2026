@@ -103,6 +103,9 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       languages: {
         zh: canonicalUrl,
       },
+      types: {
+        'text/markdown': canonicalUrl,
+      },
     },
     openGraph: {
       title,

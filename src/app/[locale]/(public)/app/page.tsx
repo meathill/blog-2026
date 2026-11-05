@@ -3,6 +3,7 @@ import { apps, appTranslations } from '@/db/schema';
 import { eq, desc, asc, and } from 'drizzle-orm';
 import AppCard from '@/components/AppCard';
 import ProductCard from '@/components/ProductCard';
+import BillingHelperEntry from '@/components/billing-helper-entry';
 import { getAppCoverMap, getPublicAppTagsMap, type PublicAppCardData, type PublicAppTag } from '@/lib/public-apps';
 import { Link } from '@/i18n/routing';
 import { getTranslations } from 'next-intl/server';
@@ -90,6 +91,10 @@ export default async function AppListPage({ params, searchParams }: AppListPageP
           {t('title')}
         </h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400">{t('subtitle_page')}</p>
+      </div>
+
+      <div className="mx-auto max-w-6xl">
+        <BillingHelperEntry locale={locale} />
       </div>
 
       {featuredApps.length > 0 && (

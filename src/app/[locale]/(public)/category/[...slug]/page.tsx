@@ -3,12 +3,14 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import JsonLd from '@/components/JsonLd';
 import { Pagination } from '@/components/Pagination';
 import { PostListItem } from '@/components/posts/post-list-item';
 import { parseCategorySlug } from '@/lib/category-slug';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { getPostPath } from '@/lib/post-utils';
 import { rememberCategorySlug } from '@/lib/public-slug';
+import { buildBreadcrumbJsonLd, buildItemListJsonLd } from '@/lib/seo/jsonld';
 import { calculateReadingTime, formatDate, getCategoryBySlug, getPostsByCategory, stripHtml } from '@/lib/wordpress';
 
 interface CategoryPageProps {
@@ -98,8 +100,28 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   const baseUrl = `/category/${categoryPath.join('/')}`;
 
+  const categorySlugById = new Map<number, string>();
+  rememberCategorySlug(categorySlugById, category.id, category.slug);
+
+  const itemListJsonLd = buildItemListJsonLd({
+    name: category.name,
+    description: `分类 ${category.name} 下的文章归档`,
+    items: posts.map((post) => ({
+      name: stripHtml(post.title.rendered),
+      url: `${SITE_URL}${getPostPath(post, categorySlugById)}`,
+    })),
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: '首页', url: SITE_URL },
+    { name: '文章', url: `${SITE_URL}/posts` },
+    { name: category.name, url: `${SITE_URL}${baseUrl}` },
+  ]);
+
   return (
     <div className="min-h-screen pt-24 pb-16">
+      <JsonLd data={itemListJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Back Link */}
         <Link

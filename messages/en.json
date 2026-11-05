@@ -137,6 +137,7 @@
     "toggle_menu": "Toggle menu"
   },
   "Footer": {
+    "billing_helper": "Cloudflare Billing Helper",
     "friends": "Friends",
     "brand_desc": "Meathill LLC — a one-person studio with 20+ years of full-stack experience, delivering Cloudflare, AI, and cross-platform projects remotely.",
     "quick_links": "Quick Links",

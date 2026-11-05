@@ -1,191 +1,22 @@
-## 生产 500 事故与 i18n 部署修复（2026-11-04/05，已完成）
+# WIP (Work In Progress)
 
-**事故**：11-04 15:32 UTC 部署版本 f6e1e47c（i18n 双语化代码）后，所有 ● ISR 路由请求时重渲染全抛 DYNAMIC_SERVER_USAGE → OpenNext 500；ƒ 动态路由与 sitemap 正常。与同窗口的 VPS 升级无关（已逐一排除）。
+## 中短期跟踪与待办
 
-**根因**：根级 app/not-found.tsx 引入 NextIntlClientProvider + messages JSON 导入，毒化全部 ISR 路由的产物骨架（详见 DEV_NOTE「根级 not-found 禁止 next-intl」）。
+### 1. Issue #18 机器可读性与 SEO 效果复查
+- [ ] **Ahrefs 重新跑 Site Audit**（建议 2026-11-15 之后）：
+  - 观察 Machine readability 分数是否提升
+  - 观察 Changed pages 积压指标（原 1,914 篇未提交 IndexNow）是否随 1,755 条全量提交逐步消解
+  - 检查 410 / 301 状态码与 Google / Bing 抓取频次
 
-**已完成**
-- [x] `wrangler rollback 511ee502` 止血 → 恢复 200
-- [x] instrumentation onRequestError 拿到 digest → dev --remote 复现 → 4 轮单变量二分锁定根级 not-found.tsx
-- [x] 修复：根级 not-found 静态化 + 守卫测试 tests/unit/root-not-found-guard.test.ts；705 测试/typecheck/format 全绿
-- [x] 重新部署（版本 9adc6812）+ 生产全路由验证通过
-- [ ] 待办：`pnpm indexnow -- --since 3`；GSC/Bing 重提交 sitemap（延续双语化任务的原有收尾）
-- [ ] 部署流程改进：deploy 后必须冒烟（curl 首页断言 200 再收工）——本次教训
+### 2. 博客草稿发布推进
+- [ ] **Cloudflare 真实账单分析博文**：
+  - 线上 D1 草稿箱待编辑（Post ID: `eeb736b6-b761-4d3a-a649-8089fda51910`）
+  - 本地快照：`docs/blog-draft-cloudflare-billing-analysis.md`
+  - 润色排版后推进线上发布流程
+- [ ] **Zeabur 安全事件复盘与零信任 HSM 密钥安全博文**：
+  - 线上 D1 草稿箱待编辑（Post ID: `b1ca6be8-c9b2-4075-a4f5-350ccb81b47a`）
+  - 聚焦零信任哲学与出海全栈模板防泄露实践
 
-## 博客内容取消 en 输出 + 其余页面双语化（2026-11-04，已完成）
-
-承接 #19：博客相关内容（posts/category/tag/search）整体取消 en 版（301 归一）；其余页面确保双语，AI 起草英文、用户审校。category/tag/search 列表页、WP 分类名维持中文。
-
-### ① 博客内容 en 取消输出（commit 9236632）
-- [x] middleware：`/en/posts` 拦截扩展为 `/en/(posts|category|tag|search)` 301 去前缀
-- [x] sitemap：category 条目去 en alternate（/en/category 不再展开）
-- [x] category/tag/tag 分页/search 四页 metadata：canonical 恒指中文、languages 只 zh
-- [x] middleware/sitemap/metadata 测试更新
-
-### ② 信息页与组件双语化（commit 5651b68）
-- [x] messages 新增 About（~35 key，en AI 起草待审校）/PostCard/NotFound/AwesomeComment ns；Home.hot_tags、Contact.mail_subject
-- [x] about/page.tsx 全部硬编码中文 → t()，skills/timeline 改引 key，hreflang 补 x-default
-- [x] PostCard/TagCloud/ContactCTA/NotFoundContent（+本地 Link）/AwesomeComment → messages；layout 客户端 ns 白名单扩充；根级 not-found.tsx 自备最小 messages
-- [x] LanguageSwitcher 切换保留 query；app 两页 hreflang 补 x-default；删死代码 home/PostCard.tsx
-
-### ③ apps en 译文数据（已导入线上）
-- [x] 起草 11 个 published app 的 en name/description/content（`scripts/app-translations-en.ts`，awesome-comment 已英文、muiad archived 跳过）
-- [x] `scripts/sync-app-translations.ts` + `pnpm sync:app-translations`（upsert，幂等可重跑覆盖）
-- [x] **已写入本地 + 远程 D1（线上 `/en/app/muicv` 等已验证英文）**；用户审校后改数据重跑即可
-- [ ] 用户审校 11 篇英文译文（尤其 baifo/mui-memo 的品牌英文名 Baifo/MuiMemo）
-
-### ④ 测试与收尾
-- [x] 新增：messages key 双语一致性、PostCard 双语渲染、脚本数据完整性、LanguageSwitcher 带 query
-- [x] format / typecheck / 全量测试（702 全绿）/ build
-- [x] DEV_NOTE「博客内容 en 版整体停输出 + 信息页双语化」增补
-- [ ] 部署后：`pnpm indexnow -- --since 3`；GSC/Bing 重提交 sitemap（/en/category 条目已移除）；2–4 周复查 GSC
-
-## Issue #19：/en/posts/* 是中文重复内容，停输出并 301 归一（2026-11-03，已完成待部署）
-
-## Issue #19：/en/posts/* 是中文重复内容，停输出并 301 归一（2026-11-03，已完成待部署）
-
-背景：站点无英文译文，`/en/posts/*` 实际渲染中文原文却声明 `lang="en"` + 自指 canonical + hreflang 互指，sitemap 里 802 个 `/en/posts` 条目 0 点击、占一半抓取预算。决策：方案 A，`/en/posts/*` 一律 301 回 `/posts/*`，不再输出英文版文章页；其余 `/en/*`（首页、about、skills、app、tech、category）维持现状。commit `5c8c1e6`，[issue 评论](https://github.com/meathill/blog-2026/issues/19#issuecomment-6592522845)。
-
-- [x] `src/middleware.ts`：新增 `/en/posts(...)` 301 去前缀（置于 legacy 410/301 与 posts/page/1 规则之后，避免破坏 410 语义产生 301→410 链）；`/en/posts/page/1` 直接归一到 `/posts`
-- [x] 5 个 posts 页面（详情/列表/分页/作者×2）：去掉 enUrl 与 hreflang en，canonical 固定指中文
-- [x] `src/app/sitemap.ts`：文章条目与 `/posts` 条目去掉 en alternate（不再被 expandEnEntries 展开，/en/posts 条目降为 0）
-- [x] 测试：middleware/sitemap/metadata 断言更新 + 新增 301 与 metadata 回归用例（664 全绿 / format / typecheck / build）
-- [x] DEV_NOTE「SEO 约定」增补 Issue #19 决策记录
-- [ ] 上线后：清文章页边缘缓存（ISR 86400s，见 #14）、`pnpm indexnow -- --since 3`、GSC/Bing 重提交 sitemap；2–4 周复查 GSC `/en/` 页数量
-- 备注：LanguageSwitcher 在文章页切 en 会被 301 原路弹回（无副作用）；`/en/category/*` 等同类中文重复页不在本 issue 范围，视 GSC 数据后续决定
-
-## Zeabur 安全事件复盘与 HSM 密钥安全博文（2026-10-18，已归档入库，本地已清理）
-
-- [x] 事实核查：梳理 Zeabur 2026 年 8 月与 10 月两次被黑经过、创始人袁霖关停公告、赔偿与 Token 盗刷背景
-- [x] 选题立意：从“明文 API Key 拖垮平台信任链”到现代各类出海全栈模板与 AI SaaS 的明文存储隐患
-- [x] 隐藏具体项目点名，抽象为通用的出海全栈模板与开源 Boilerplate
-- [x] 精简技术篇幅：聚焦零信任（Zero-Trust）哲学与密钥分片（两把钥匙不放同一处），删减冗余密码学实现与多余代码
-- [x] **已写入生产远程与本地 D1 数据库草稿箱**：
-  - Post ID: `b1ca6be8-c9b2-4075-a4f5-350ccb81b47a`
-  - Slug: `zeabur-hacked-plaintext-api-keys-and-zero-trust-hsm`
-  - 后台管理地址：`https://meathill.com/admin/blog/` 或本地 `http://localhost:3000/admin/blog/`
-- [x] 本地草稿与临时插入脚本已清理完成
-
-
-
-- [x] 深度选题与结合点定稿：探讨《From Viral Video to Verified Sale: How Smart Link Routing and AI UGC Ads Double Cross-Border Ecommerce ROAS》
-- [x] 联动自研产品 [DYQR.me](https://dyqr.me) 与个人博客 [meathill.com](https://meathill.com)，打通海外短视频投放“前端 AI UGC 视频 + 后端动态智能分流与免重新送审切链”转化闭环
-- [x] 输出完整投稿英文稿与中英文双语对照版：`docs/from-viral-video-to-verified-sale-oumomo-guest-post.md` 与 `docs/guest-post-for-oumomo-ecommerce-video-edge-conversion.md`
-- [x] 设计并生成 16:9 高清插画封面：短视频流 -> 动态智能路由中枢 -> 多货币高转化成单与 ROAS 增长
-- [x] 已同步完整稿件与封面至用户本地下载目录：`/Users/meathill/Downloads/`
-
-## Cloudflare 真实账单分析与博文草稿（2026-10-17，已同步至线上服务器草稿箱待编辑）
-
-- [x] 使用 `cf` CLI 与 Cloudflare API Token 获取近 3 年全量发票（共 49 笔）
-- [x] 深度账单数据分析：18 个月白嫖期、月结日（17号）走势、域名资产开销与 2026 年尖刺归因
-- [x] 技术架构复盘：Workers Observability 额度击穿、Next.js 16 + OpenNext 边缘缓存治理收益、cf CLI 403 根因剖析
-- [x] 完成博文草稿 Markdown：`docs/blog-draft-cloudflare-billing-analysis.md`
-- [x] **已写入线上服务器生产 D1 数据库草稿箱**：Post ID `eeb736b6-b761-4d3a-a649-8089fda51910`
-- [ ] 用户在线上后台直接编辑和润色完毕后，推进发布流程
-
-## 文章链接 nofollow / 友链 dofollow 可选支持与 noopener 默认支持（2026-10-14，已完成）
-
-- [x] 方案与核心工具库：创建 `src/lib/blog-links.ts`，提供链接属性解析、dofollow 标记编解码、内链判定与 HTML/Markdown 链接清洗
-- [x] 单元测试先行：编写 `tests/lib/blog-links.test.ts` 覆盖内链、默认外链 (nofollow+noopener)、交换链接 (dofollow+noopener)、特殊 URL 兼容（16 项测试通过）
-- [x] 前台内容流集成：在 `src/lib/wordpress/content.ts` 的 `processContent` 中接入链接处理，确保所有输出 HTML 链接规范统一
-- [x] 后台编辑器交互：开发 `BlogLinkToolbar` 自定义组件，并在 `BlogBlockEditor.tsx` 中集成，支持浮层一键切换/编辑 nofollow 状态（5 项组件测试通过）
-- [x] 导出与序列化清洗：在 `BlogBlockEditor.tsx` 与 `src/lib/blog-content.ts` 中将 HTML 与 Markdown 输出经由 `processBlogHtmlLinks` 和 `stripDofollowMarkers` 清洗
-- [x] 全量验证：跑通全部 606 项单测、Biome 格式化、TypeScript 类型检查与 Next.js 构建验证通过
-
-## 编辑器链接体验修复：鼠标掠过误切第二行链接 & 暗黑模式链接颜色优化（2026-10-14，已完成）
-
-- [x] 链接浮层触发机制重构：开发 `BlogLinkToolbarController`，彻底移除 BlockNote 默认在 mouseover 上的激进劫持，仅在光标选中/点击链接时激活并锁定当前链接，避免鼠标移动时浮层跳窜（3 项组件测试通过）
-- [x] 编辑器链接与暗色模式样式：在 `BlogBlockEditor.module.css` 中补齐 `.bn-editor a` 样式，适配 dark mode 高对比度琥珀主色，移除原生深蓝与浏览器默认 `:active` / `:visited` 变色
-- [x] 单元测试与验证：更新/新增控制器测试，运行全量测试套件（609 项全绿通过）、格式化与构建验证
-
-
-## 博客编辑器代码块与排版改进（2026-10-13，已完成）
-
-- [x] 装依赖：shiki / @shikijs/langs / @shikijs/themes / prosemirror-highlight（13 项高亮单测）
-- [x] fork `blog-code-block.ts`：select 包一层 `.bn-code-block-language`、词表外语言补选项、挂 `code-block-highlighter`
-- [x] `BlogBlockEditor.module.css`：代码块纵向布局、#282c34 底色、行内代码、段落间距
-- [x] 无头 Chrome 截图验收（临时预览页，已删除）：工具条回到代码上方、shiki 高亮生效（82 个装饰）、
-      语言下拉可见可点、行内代码有底色边框、段落间距变松；564 测试 / typecheck / next build 通过
-- [x] `DEV_NOTE.md` 记录选型与两条 BlockNote CSS 坑
-- [ ] 待用户确认观感（间距数值、深色工具栏是否合意，都在 CSS 里，随时可调）
-
-根因：BlockNote 自带 `.bn-block-content{display:flex}`（行方向）让 toolbar 与 `<pre>` 并排；
-`.bn-block-content[data-content-type=codeBlock]>div>select`（绝对定位 + opacity:0）命中 fork 的 select，
-把它变成左上角隐形浮层，我们自己的下拉样式被更高特异性盖掉。
-
-顺带发现（非本次引入，改动前后对照一致）：mermaid 预览只在编辑后才显示，详见 DEV_NOTE。
-
-
-
-# WIP: 处理 issue #6 / #7 / #8
-
-## WP 源站抖动导致文章页 500（2026-10-05，已完成待部署）
-
-线上 blog.meathill.com 源站间歇性挂起（>100s，Cloudflare 回 524），冷渲染文章页 `wpFetch` 抛未捕获异常 → 裸 500。定性为瞬时抖动（当日已自愈），只做代码韧性：
-
-- [x] 测试先行：`tests/unit/wordpress-client.test.ts`（5xx 重试 / 网络错误重试 / 耗尽抛错 / 4xx 不重试 / 非 GET 不重试 / 超时 signal）
-- [x] `wpFetch`：30s 超时 + GET 重试 1 次 + 结构化错误日志（`src/lib/wordpress/client.ts`）
-- [x] 友好错误页：`src/app/[locale]/error.tsx`（500 语义 + 重试/回首页）+ `tests/unit/locale-error.test.tsx`
-- [x] 回归：test 615 通过 / format / typecheck / build
-- [ ] 部署后线上验证文章页与 feed 路由
-- 决策记录见 DEV_NOTE「WP 源站访问韧性」；不做：feed 路由改造、observability 重开、源站排查
-
-完整计划见 `~/.claude/plans/https-github-com-meathill-blog-2026-iss-linear-tide.md`。执行模式:主管 + Sonnet subagents 分包,逐项督查验收。
-
-## 任务分解 (TODO)
-
-### Part 0 基线
-- [x] chore(deps): next 升级到 16.3,全量验证(test/typecheck/build);顺带修复 cf-typegen strict-vars 既有类型错误,新增 typecheck script
-
-### Part 1 — #8 区域缓存
-- [x] perf(cloudflare): open-next.config.ts 用 withRegionalCache 包装 R2(long-lived + lazy update),不配 cachePurge(free plan 无 tag purge)
-
-### Part 2 — #6 /tech 内容中心
-- [x] feat(middleware): 放行 /tech 与 4 个 section,保留其余 /tech/* legacy 301
-- [x] feat(seo): 抽取 buildItemListJsonLd,重构 solutions/skills 列表页
-- [x] feat(wordpress): getPosts 支持 slug 数组批量查询
-- [x] feat(tech): 策展数据层 tech.ts / tech-posts.ts + messages + 测试
-- [x] feat(tech): /tech hub 页 + [section] 分类页 + TechSectionCard
-- [x] feat(seo): sitemap 收录 /tech 5 个页面
-- [x] feat(nav): 主导航接入 /tech(注意 D1 navigation_configs 覆盖,部署后需 admin 同步)
-- [x] docs: docs/tech-content-plan.md 全量首批选题大纲(12 篇,query-to-page 映射)
-
-### Part 3 — #7 sitemap 清理
-- [x] 盘点:GSC 8 条 / Bing 9 条 sitemap 实测,产出 docs/seo-sitemap-cleanup-2026-08.md,修 DEV_NOTE 悬空引用
-- [x] 源站:确认 Cloudflare 边缘 301 在 Caddy 之前,410 方案不可达,维持 301 归一(不改源站);seo/shop DNS 已消亡
-- [x] Bing:实操核实 Discovered 条目无删除入口,靠淡出;GSC 无删除入口,记录策略
-- [x] 删除 scripts/seo/server 未应用的 nginx/htaccess/noindex 片段
-- [x] 附带修复:非法 locale 段软 404(任意 .xml 路径曾以 200 渲染首页)
-
-### 遗留
-- [x] 生产导航同步:已用 SQL 直接更新 D1 navigation_configs(zh/en,保留自定义项),线上已验证
-- [ ] 按 docs/tech-content-plan.md 逐篇写作(建议先写 Hyperdrive 详解、Claude Code Skills 实战、Skills 对比)
-
-
-## Issue #11：Ahrefs crawl 32 broken + 88 过长 meta（2026-09-04）
-
-- [x] 分组：本仓 5 条 meta + broken 链路；tools 站 83 条转交 evertools；2017 大图 0 引用不动；23.5K blocked 保持禁止
-- [x] Meta：`root-metadata.ts` en、`messages/en.json` about、`skills.ts` 3 条 en 改短（≤155）+ `seo-meta-length.test.ts` 守卫
-- [x] Middleware：honey/mysql8 301 到存活文，gitbook/`img_*` 直接 410（覆盖 /en、/posts/、.html 形态）
-- [x] `processContent`：wp-content href 改指 blog 源（修 3 个 403）
-- [x] 全量校验：format / typecheck / 469 测试 / build 通过
-- [ ] 待部署 24h 后手动 Ahrefs Re-crawl，按 `docs/seo-ahrefs-2026-09.md` 验收关单
-
-## Issue #10: 日语 PDF 编辑词曝光、图片格式转换词矩阵与 Ahrefs 抓取拦截修复 (2026-08-21)
-
-- [x] Part 1: 多语言工具元数据扩展 (`src/lib/tools.ts` 支持 ja/es 多语言回退，补齐 PDF 编辑词与图片转换格式矩阵)
-- [x] Part 2: Ahrefs 抓取拦截修复 (`src/app/robots.ts` 同时支持 AhrefsBot 与 AhrefsSiteAudit)
-- [x] Part 3: 文章页前端排版与比较表格优化 (`src/app/post-content.css` 支持 table 横向自适应滚动与深色模式样式)
-- [x] Part 4: CWV 性能与 TTFB 优化 (`src/app/[locale]/(public)/posts/[...slug]/page.tsx` 添加 `generateStaticParams` 实现 SSG 静态预渲染)
-- [x] Part 5: 编写/更新单元测试，确保全部测试通过
-- [x] Part 6: 代码格式化、类型检查与全量构建验证
-- [x] Part 7: 更新开发笔记 `DEV_NOTE.md`
-
-## Issue #12：Next/OpenNext prefetch 加固 + observability 关闭 (2026-09-05)
-
-- [x] 版本：`next@16.3.4` / `@next/third-parties@16.3.4` / `@opennextjs/cloudflare@1.20.4` 已对齐
-- [x] `open-next.config.ts`：`enableCacheInterception: true` → `false`（upstream opennextjs-cloudflare#1348 / opennextjs-aws#1212）
-- [x] `wrangler.jsonc`：`observability.enabled` → `false`（本月额度用完，先关省请求数；排障时手动开）
-- [x] 次要 `<Link>` 全部 `prefetch={false}`（35 个文件，卡片/列表/分页/面包屑/搜索/关于/admin/404 等）；主导航 `HeaderNavLink` 与品牌 `/` 保留预取；`/search` 关预取；`home/PostCard` 的动态 `LinkComponent` 用 `prefetch: false` 的 `linkProps`
-- [x] 全量校验：format / typecheck / 469 测试 / build 通过
-- [ ] 待部署后验证：生产 `_rsc` 不再跑飞 + Worker 请求量回落，再关 issue
+### 3. 多语言与内容审校
+- [ ] **应用英文译文审校**：用户审校 11 篇已导入线上 D1 的 published app 英文翻译（重点关注 Baifo / MuiMemo 品牌英文名）
+- [ ] **搜索引擎 Sitemap 状态**：在 Google Search Console 与 Bing Webmaster 重新提交 `https://meathill.com/sitemap.xml`，观察收录健康度

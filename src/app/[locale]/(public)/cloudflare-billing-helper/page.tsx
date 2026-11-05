@@ -5,6 +5,8 @@ import {
   ArrowRightIcon,
   BoxesIcon,
   CheckIcon,
+  CoffeeIcon,
+  DownloadIcon,
   GaugeIcon,
   GithubIcon,
   LayersIcon,
@@ -20,6 +22,15 @@ import JsonLd from '@/components/JsonLd';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
 import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo/jsonld';
 import { GITHUB_URL, getBillingHelperContent } from '@/lib/billing-helper';
+import {
+  BMC_URL,
+  EXTENSION_CHECKSUM_URL,
+  EXTENSION_DOWNLOAD_URL,
+  MACOS_CHECKSUM_URL,
+  MACOS_DOWNLOAD_URL,
+  MACOS_VERSION,
+  getBillingHelperReleaseContent,
+} from '@/lib/billing-helper-release';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -45,6 +56,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: {
       canonical,
       languages: { zh: zhUrl, en: enUrl, 'x-default': zhUrl },
+      types: {
+        'text/markdown': canonical,
+      },
     },
     openGraph: {
       title,
@@ -65,6 +79,7 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
   const t = await getTranslations({ locale, namespace: 'SolutionDetail' });
   const content = getBillingHelperContent(locale);
   const baseUrl = locale === 'en' ? `${SITE_URL}/en` : SITE_URL;
+  const release = getBillingHelperReleaseContent(locale);
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: t('home'), url: baseUrl },
@@ -115,12 +130,10 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={MACOS_DOWNLOAD_URL}
             className="inline-flex items-center gap-2 rounded-xl bg-amber-700 px-6 py-3 font-semibold text-amber-50 transition-colors hover:bg-amber-800"
           >
-            <GithubIcon size={18} aria-hidden="true" />
+            <DownloadIcon size={18} aria-hidden="true" />
             {content.ctaPrimary}
           </a>
           <a
@@ -132,6 +145,28 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
           </a>
         </div>
       </header>
+
+      <section
+        id="macos"
+        className="mx-auto mt-14 max-w-3xl scroll-mt-24 rounded-xl border border-border bg-card p-6 md:p-8"
+      >
+        <h2 className="mb-3 text-2xl font-bold">{release.macTitle}</h2>
+        <p className="text-[var(--text-secondary)]">{release.macDescription}</p>
+        <p className="mt-3 text-sm font-medium text-muted-foreground">
+          {release.requirements} · v{MACOS_VERSION}
+        </p>
+        <p className="mt-4 text-sm leading-relaxed text-[var(--text-secondary)]">{release.macInstall}</p>
+        <a
+          href={MACOS_DOWNLOAD_URL}
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-amber-700 px-5 py-3 font-semibold text-amber-50 transition-colors hover:bg-amber-800"
+        >
+          <DownloadIcon size={18} aria-hidden="true" />
+          {content.ctaPrimary}
+        </a>
+        <a href={MACOS_CHECKSUM_URL} className="ml-4 inline-flex text-sm text-amber-700 underline dark:text-amber-300">
+          SHA-256
+        </a>
+      </section>
 
       {/* 截图 */}
       <figure className="mx-auto mt-14 max-w-5xl">
@@ -220,9 +255,19 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
             </li>
           ))}
         </ol>
-        <pre className="mt-6 overflow-x-auto rounded-xl border border-border bg-zinc-950 p-5 text-sm text-zinc-100">
-          <code>{content.installCode}</code>
-        </pre>
+        <a
+          href={EXTENSION_DOWNLOAD_URL}
+          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-700 px-5 py-3 font-semibold text-amber-50 transition-colors hover:bg-amber-800"
+        >
+          <DownloadIcon size={18} aria-hidden="true" />
+          {release.extensionDownload}
+        </a>
+        <a
+          href={EXTENSION_CHECKSUM_URL}
+          className="ml-4 inline-flex text-sm text-amber-700 underline dark:text-amber-300"
+        >
+          SHA-256
+        </a>
       </section>
 
       {/* 隐私 */}
@@ -235,6 +280,7 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
           {content.privacyTitle}
         </h2>
         <p className="leading-relaxed text-[var(--text-secondary)]">{content.privacyDesc}</p>
+        <p className="mt-3 leading-relaxed text-[var(--text-secondary)]">{release.privacy}</p>
         <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--text-secondary)]">
           {content.privacyBullets.map((bullet) => (
             <li key={bullet} className="flex items-center gap-2">
@@ -256,6 +302,19 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
             </div>
           ))}
         </dl>
+      </section>
+
+      <section className="mx-auto mt-16 max-w-3xl text-center">
+        <a
+          href={BMC_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 font-semibold transition-colors hover:bg-muted"
+        >
+          <CoffeeIcon size={18} aria-hidden="true" />
+          {release.support}
+        </a>
+        <p className="mt-3 text-sm text-muted-foreground">{release.supportDescription}</p>
       </section>
 
       {/* 底部 CTA */}

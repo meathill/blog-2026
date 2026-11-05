@@ -728,5 +728,48 @@ DYNAMIC_SERVER_USAGE → wrangler dev --remote（真实绑定、不影响生产�
 守卫测试 tests/unit/root-not-found-guard.test.ts 锁定结构约束；instrumentation.ts 保留为常驻排障钩子。
 修复版本 9adc6812，生产全路由验证通过（含此前崩溃的全部 ISR 冷渲染路径与 404）。
 
+## AI 可读性与 GEO 优化治理（Issue #18，2026-11-05）
+
+来源：Ahrefs AI Discoverability 与 isitagentready.com 扫描诊断。
+
+### 1. robots.txt 与 Content-Signal
+- **背景**：Next.js `MetadataRoute.Robots` 不支持社区标准与 AI 抓取协议声明 `Content-Signal`。
+- **方案**：移除 `src/app/robots.ts`，改为 `src/app/robots.txt/route.ts` 原生文本路由处理器（`dynamic = 'force-static'`，构建期预渲染为静态文本）。
+- **规则**：在 `User-Agent: *` 组补充 `Content-Signal: ai-train=no, search=yes, ai-input=yes`；保留针对 `AhrefsSiteAudit` 和 `AhrefsBot` 的配额保护规则（禁爬 `/tag/` 与 `/en/tag/`）与 `Sitemap` 链接。
+
+### 2. IndexNow 全量分批提交与发布流程自动化
+- **背景**：发文后未自动提交导致 1,914 页积压；旧 `/en/posts/*` 301 归一后需通知搜索引擎更新。
+- **方案**：
+  - 核心逻辑抽象为 `src/lib/seo/indexnow.ts`，按 IndexNow 协议上限（单次最多 10,000 条）自动切片分批，成功返回 200/202。
+  - 脚本 `scripts/indexnow-submit.ts` 增加 `--all` 选项，从 `/sitemap.xml` 提取全部 URL，并自动为 `/posts/*` 衍生对应的 `/en/posts/*` 提交，使 Bing 快速感知 301 变更。
+  - 后台发文（`src/actions/blog.ts`）在 WordPress 同步和 revalidate 成功后，通过 `ctx.waitUntil` 异步触发 `submitPostToIndexNow`，失败不阻断发布流程。
+
+### 3. 应用层 Markdown 内容协商（无需 Cloudflare Pro）
+- **背景**：Cloudflare 的「Markdown for Agents」需 Pro 计划，应用层 SSR / ISR 完全可在中间件与 Route Handler 搞定。
+- **方案**：
+  - 中间件 `src/middleware.ts` 拦截 `Accept` 包含 `text/markdown` 且命中单篇内容路径（文章页 `/posts/*`、工具说明 `/cloudflare-billing-helper`、解决方案与技能）的请求，内部 rewrite 到 `/api/markdown-negotiation?path=...`，对外保持原生 URL 不变。
+  - Route Handler 复用轻量 `htmlToMarkdown` 将正文转换为纯 Markdown，头部拼接标题与元数据，返回 `Content-Type: text/markdown; charset=utf-8`、`Vary: Accept` 与 CDN 缓存头。
+  - 所有可协商内容页在常规浏览器访问（HTML 响应）时，由中间件确保带上 `Vary: Accept`，防止边缘缓存将 HTML 与 Markdown 混淆；同时在页面 `alternates.types['text/markdown']` 中注入 `<link rel="alternate" type="text/markdown" href="<当前 URL>">`。
+
+### 4. 结构化数据 Schema 审计结论
+- **分类归档页**：`src/app/[locale]/(public)/category/[...slug]/page.tsx` 注入 `buildItemListJsonLd` 与 `buildBreadcrumbJsonLd`，消除 2/2 ItemList 缺失。
+- **关于页**：`src/app/[locale]/(public)/about/page.tsx` 注入 `buildOrganizationJsonLd`，消除 2/3 Organization 缺失。
+- **11 个产品页**：`/app/[slug]` 系作品展示与导流，并无实际购买价格或交易闭环。Schema.org 强制要求 Product 具备 offers/price，若伪造 0 元或假标价反遭 Google 质量警示，结论为**不硬加 Product schema**。
+- **14 篇缺 Article 文章**：全站 1,001 篇中 98.6% 均有完备的 `BlogPosting`，被误判的 14 篇为历史 WP 遗留的 attachment 附件页或空草稿，保持现状即可。
+
+### 5. 验收结果
+- **isitagentready.com**：由 Level 1 跃升至 **Level 3 (Agent-Readable)**；robotsTxt、sitemap、linkHeaders、robotsTxtAiRules、contentSignals、markdownNegotiation 全线 PASS。
+- **IndexNow**：完成全量 1,755 个 URL 提交（HTTP 200），覆盖 `/posts/*` 与 `/en/posts/*` 衍生 URL。
+
+
+
 规则：**根级 not-found.tsx 必须保持零依赖静态渲染，任何请求时上下文（next-intl、客户端组件、
 动态 API）都不得进入**；需要国际化的 404 只能放 [locale] 段内。
+
+## 账单助手的官网发行入口（2026-11-05）
+
+- 下载版本和 R2 地址统一维护在 `src/lib/billing-helper-release.ts`，发布前先确认文件可访问且回读 SHA-256 一致，再更新官网链接。
+- 安装包使用 R2 `blog` 的 `downloads/cloudflare-billing-helper/` 版本化路径，经 `i.meathill.com` 提供；保留旧文件，使用不可变缓存，并提供同路径 `.sha256`。
+- 首页推荐区、应用列表和页脚均保留产品入口，不依赖后台 featured 数量或自定义导航配置。不要只在 sitemap 中收录、却不提供可见入口。
+- 官网 Mac 包使用 BMC；App Store 包保持 StoreKit，两个渠道通过编译条件隔离。应用仓库内的 `docs/macos/build.md` 记录签名、公证和打包流程。
+- 浏览器扩展提供 ZIP 直装与 Chrome / Edge 开发者模式说明，不再要求普通用户先安装 Node.js 和 pnpm。

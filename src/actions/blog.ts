@@ -23,6 +23,7 @@ import { syncBlogPostToWordPress } from '@/lib/blog-sync';
 import { WP_CACHE_TAG } from '@/lib/cache-config';
 import { purgeCloudflareCache } from '@/lib/cloudflare-purge';
 import { regeneratePostOg } from '@/lib/og/post-image';
+import { submitPostToIndexNow } from '@/lib/seo/indexnow';
 
 export async function listBlogPosts(options?: { page?: number; pageSize?: number; search?: string }) {
   await checkAuth();
@@ -142,6 +143,13 @@ export async function publishBlogPost(formData: FormData): Promise<BlogEditorMut
   ctx.waitUntil(
     regeneratePostOg(slug).catch((error: unknown) => {
       console.error('[publish] OG 图预热失败:', error);
+    }),
+  );
+
+  // Issue #18：发文/更新同步成功后向 IndexNow 提交 URL，失败不阻断发布
+  ctx.waitUntil(
+    submitPostToIndexNow(post.slug, post.categories).catch((error: unknown) => {
+      console.warn('[publish] IndexNow 提交异常:', error);
     }),
   );
 

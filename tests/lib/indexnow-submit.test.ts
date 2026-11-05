@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseSitemapUrls, toAbsoluteUrl } from '../../scripts/indexnow-submit';
+import { chunkArray, deriveEnPostsUrls, parseSitemapUrls, toAbsoluteUrl } from '../../scripts/indexnow-submit';
 
 const SITEMAP_FIXTURE = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
@@ -37,8 +37,26 @@ describe('indexnow-submit', () => {
       expect(urls).toContain('https://meathill.com/search?q=a&b=c');
     });
 
-    it('cutoff 极早时返回全部带 lastmod 的 URL', () => {
-      expect(parseSitemapUrls(SITEMAP_FIXTURE, 0)).toHaveLength(3);
+    it('cutoff 为 0 时返回全量 URL（包含无 lastmod 的条目）', () => {
+      expect(parseSitemapUrls(SITEMAP_FIXTURE, 0)).toHaveLength(4);
+    });
+  });
+
+  describe('deriveEnPostsUrls', () => {
+    it('为包含 /posts/ 的 URL 衍生出 /en/posts/ 对应条目', () => {
+      const input = ['https://meathill.com/posts/tech/foo', 'https://meathill.com/about'];
+      const output = deriveEnPostsUrls(input);
+      expect(output).toContain('https://meathill.com/posts/tech/foo');
+      expect(output).toContain('https://meathill.com/en/posts/tech/foo');
+      expect(output).toContain('https://meathill.com/about');
+      expect(output).toHaveLength(3);
+    });
+  });
+
+  describe('chunkArray', () => {
+    it('按给定批次大小切片', () => {
+      const list = [1, 2, 3, 4, 5];
+      expect(chunkArray(list, 2)).toEqual([[1, 2], [3, 4], [5]]);
     });
   });
 

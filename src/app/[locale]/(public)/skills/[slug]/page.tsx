@@ -41,6 +41,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         en: enUrl,
         'x-default': zhUrl,
       },
+      types: {
+        'text/markdown': canonical,
+      },
     },
     openGraph: {
       title: skill.name,

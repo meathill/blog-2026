@@ -5,6 +5,7 @@ import { TOP_LEVEL_ROUTES, getLocaleAndContent } from '@/lib/middleware-helpers'
 import { parseCategorySlug } from '@/lib/category-slug';
 import { getWordPressAccessHeaders, getWordPressApiUrl } from '@/lib/wordpress/access';
 import { isTechSectionSlug } from '@/lib/tech-sections';
+import { isMarkdownAccepted, isNegotiableContentPath } from '@/lib/seo/markdown-negotiation';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -209,7 +210,27 @@ export default async function middleware(req: NextRequest) {
     return redirectLegacyContentPath(req, prefix, contentSegments);
   }
 
-  return intlMiddleware(req);
+  // Issue #18：Markdown 内容协商（Content Negotiation）
+  const acceptHeader = req.headers.get('accept');
+  if (isMarkdownAccepted(acceptHeader) && isNegotiableContentPath(pathname)) {
+    const rewriteUrl = req.nextUrl.clone();
+    rewriteUrl.pathname = '/api/markdown-negotiation';
+    rewriteUrl.searchParams.set('path', pathname);
+    const rewriteRes = NextResponse.rewrite(rewriteUrl);
+    rewriteRes.headers.set('Vary', 'Accept');
+    return rewriteRes;
+  }
+
+  const res = intlMiddleware(req);
+  if (res && isNegotiableContentPath(pathname)) {
+    const currentVary = res.headers.get('Vary');
+    if (!currentVary) {
+      res.headers.set('Vary', 'Accept');
+    } else if (!currentVary.toLowerCase().includes('accept')) {
+      res.headers.set('Vary', `${currentVary}, Accept`);
+    }
+  }
+  return res;
 }
 
 export const config = {

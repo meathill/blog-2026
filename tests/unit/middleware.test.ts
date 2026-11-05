@@ -447,4 +447,44 @@ describe('Middleware', () => {
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
+
+  // --- Issue #18: Markdown Content Negotiation ---
+
+  it('当请求内容页且带 Accept: text/markdown 时 rewrite 到 /api/markdown-negotiation 并带 Vary: Accept', async () => {
+    const req = new NextRequest(new URL('/posts/tech/my-post', BASE_URL), {
+      headers: { Accept: 'text/markdown, text/html;q=0.9' },
+    });
+    const res = await middleware(req);
+
+    expect(res).toBeInstanceOf(NextResponse);
+    expect(res?.headers.get('Vary')).toContain('Accept');
+    expect(res?.headers.get('x-middleware-rewrite')).toContain(
+      '/api/markdown-negotiation?path=%2Fposts%2Ftech%2Fmy-post',
+    );
+    expect(mockIntlMiddleware).not.toHaveBeenCalled();
+  });
+
+  it('当普通浏览器请求内容页时返回页面并补充 Vary: Accept 响应头', async () => {
+    mockIntlMiddleware.mockReturnValueOnce(new NextResponse('ok', { status: 200 }));
+
+    const req = new NextRequest(new URL('/posts/tech/my-post', BASE_URL), {
+      headers: { Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9' },
+    });
+    const res = await middleware(req);
+
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+    expect(res?.headers.get('Vary')).toContain('Accept');
+  });
+
+  it('非协商路径（如关于页）不强制添加 Vary: Accept', async () => {
+    mockIntlMiddleware.mockReturnValueOnce(new NextResponse('ok', { status: 200 }));
+
+    const req = new NextRequest(new URL('/about', BASE_URL), {
+      headers: { Accept: 'text/html' },
+    });
+    const res = await middleware(req);
+
+    expect(mockIntlMiddleware).toHaveBeenCalled();
+    expect(res?.headers.get('Vary')).toBeNull();
+  });
 });

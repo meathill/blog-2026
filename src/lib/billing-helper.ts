@@ -25,7 +25,6 @@ export interface BillingHelperContent {
   breakdownItems: string[];
   installTitle: string;
   installSteps: { title: string; desc: string }[];
-  installCode: string;
   privacyTitle: string;
   privacyDesc: string;
   privacyBullets: string[];
@@ -38,13 +37,13 @@ export interface BillingHelperContent {
 
 const zh: BillingHelperContent = {
   home: '首页',
-  badge: 'Chrome 扩展 · 本地运行 · 无需 API Token',
+  badge: 'Mac 应用 + Chrome / Edge 扩展',
   title: 'Cloudflare',
   titleHighlight: '账单用量助手',
   subtitle:
-    '在「可计费使用量」页面直接看到：每个产品的免费额度余量、预计耗尽日期、本周期预估费用，以及钱到底花在哪个 Worker / namespace 上。',
-  ctaPrimary: '查看源码并安装',
-  ctaSecondary: '安装步骤',
+    '用 Mac 菜单栏应用查看账户账单、费用趋势与预算提醒；用浏览器扩展在「可计费使用量」页面查看免费额度、耗尽预测与按应用拆分。',
+  ctaPrimary: '下载 Mac 版',
+  ctaSecondary: '安装浏览器扩展',
   screenshotAlt: 'Cloudflare Billing Helper 面板截图',
   screenshotCaption: '面板自动插入在「支出摘要」下方，随页面账期切换自动刷新。',
   problemTitle: '官方账单页不回答的三个问题',
@@ -62,7 +61,7 @@ const zh: BillingHelperContent = {
       desc: 'KV 用了 1.74 GB-months，却不知道是哪个 namespace 在消耗，只能一个一个点开排查。',
     },
   ],
-  featuresTitle: '装上就有的六个能力',
+  featuresTitle: '浏览器扩展的六个能力',
   featuresSubtitle: '全部在浏览器本地计算，不给账单页引入任何第三方请求。',
   features: [
     {
@@ -102,20 +101,18 @@ const zh: BillingHelperContent = {
   installTitle: '安装（Chrome / Edge）',
   installSteps: [
     {
-      title: '构建扩展',
-      desc: '克隆仓库并执行构建，产物位于 .output/chrome-mv3（需要 Node.js 与 pnpm）。',
+      title: '下载并解压扩展',
+      desc: '下载下方 ZIP 安装包并解压，保留这个目录，后续浏览器会从这里加载扩展，无需 Node.js 或 pnpm。',
     },
     {
       title: '加载已解压的扩展',
-      desc: '打开 chrome://extensions，开启「开发者模式」，选择「加载已解压的扩展程序」并指向构建产物目录。',
+      desc: '打开 chrome://extensions（Edge 使用 edge://extensions），开启「开发者模式」，选择「加载已解压的扩展程序」，选中包含 manifest.json 的解压目录。',
     },
     {
       title: '打开账单页',
       desc: '进入 Dashboard → 账单 → 可计费使用量（/{accountId}/billing/billable-usage），面板会出现在「支出摘要」下方。',
     },
   ],
-  installCode:
-    'git clone https://github.com/meathill/cloudflare-billing-helper.git\ncd cloudflare-billing-helper\npnpm install\npnpm build',
   privacyTitle: '隐私与数据',
   privacyDesc:
     '扩展不发送任何遥测，不加载第三方脚本，不请求除 dash.cloudflare.com 之外的任何服务。账单数据只用于本地计算，缓存与每日快照保存在 chrome.storage 中，最多保留 3 个账期。',
@@ -123,7 +120,7 @@ const zh: BillingHelperContent = {
   faqTitle: '常见问题',
   faqs: [
     {
-      question: '需要创建 API Token 吗？',
+      question: '浏览器扩展需要创建 API Token 吗？',
       answer: '不需要。扩展复用你当前的浏览器登录态，同源调用 Dashboard 内部接口读取账单与用量数据，安装即用。',
     },
     {
@@ -147,13 +144,13 @@ const zh: BillingHelperContent = {
 
 const en: BillingHelperContent = {
   home: 'Home',
-  badge: 'Chrome extension · Runs locally · No API token',
+  badge: 'Mac app + Chrome / Edge extension',
   title: 'Cloudflare',
   titleHighlight: 'Billing Usage Helper',
   subtitle:
-    'See free-tier headroom, projected exhaustion dates, per-product cost forecasts, and which Worker or namespace is actually driving your bill — right on the Billable Usage page.',
-  ctaPrimary: 'View source & install',
-  ctaSecondary: 'Install steps',
+    'Track account costs, trends and budget alerts from your Mac menu bar. Add the browser extension for free-tier headroom, exhaustion forecasts and per-app usage on the Billable Usage page.',
+  ctaPrimary: 'Download for Mac',
+  ctaSecondary: 'Install browser extension',
   screenshotAlt: 'Cloudflare Billing Helper panel screenshot',
   screenshotCaption: 'The panel is inserted below the spend summary and follows the billing-period switcher.',
   problemTitle: 'Three questions the official billing page does not answer',
@@ -171,7 +168,7 @@ const en: BillingHelperContent = {
       desc: 'KV shows 1.74 GB-months, but which namespace is consuming it? You end up clicking through every one.',
     },
   ],
-  featuresTitle: 'Six things you get out of the box',
+  featuresTitle: 'Six browser extension features',
   featuresSubtitle:
     'Everything is computed locally in your browser — no third-party requests are added to the billing page.',
   features: [
@@ -213,20 +210,18 @@ const en: BillingHelperContent = {
   installTitle: 'Install (Chrome / Edge)',
   installSteps: [
     {
-      title: 'Build the extension',
-      desc: 'Clone the repo and build; the output lands in .output/chrome-mv3 (Node.js and pnpm required).',
+      title: 'Download and extract',
+      desc: 'Download the ZIP below and extract it. Keep the folder in place: the browser will load the extension from there. No Node.js or pnpm required.',
     },
     {
       title: 'Load unpacked',
-      desc: 'Open chrome://extensions, enable Developer mode, click "Load unpacked" and select the build folder.',
+      desc: 'Open chrome://extensions (edge://extensions in Edge), enable Developer mode, choose "Load unpacked" and select the extracted folder containing manifest.json.',
     },
     {
       title: 'Open the billing page',
       desc: 'Go to Dashboard → Billing → Billable Usage (/{accountId}/billing/billable-usage). The panel appears below the spend summary.',
     },
   ],
-  installCode:
-    'git clone https://github.com/meathill/cloudflare-billing-helper.git\ncd cloudflare-billing-helper\npnpm install\npnpm build',
   privacyTitle: 'Privacy',
   privacyDesc:
     'No telemetry, no third-party scripts, no requests beyond dash.cloudflare.com. Billing data is computed locally; caches and daily snapshots live in chrome.storage and keep at most three billing periods.',
@@ -238,7 +233,7 @@ const en: BillingHelperContent = {
   faqTitle: 'FAQ',
   faqs: [
     {
-      question: 'Do I need an API token?',
+      question: 'Does the browser extension need an API token?',
       answer: 'No. The extension reuses your browser session and calls the dashboard’s own endpoints same-origin.',
     },
     {

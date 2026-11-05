@@ -42,6 +42,9 @@ export default async function Footer({ navItems }: FooterProps) {
         <Link href="/friend" className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)]">
           {t('friends')}
         </Link>
+        <Link href="/cloudflare-billing-helper" className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)]">
+          {t('billing_helper')}
+        </Link>
       </div>
       <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
         <LanguageSwitcher />

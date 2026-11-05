@@ -3,13 +3,12 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { getCachedFeaturedApps } from '@/lib/public-apps';
 import ProductCard from '@/components/ProductCard';
+import BillingHelperEntry from '@/components/billing-helper-entry';
 
 export default async function Products() {
   const locale = await getLocale();
   const t = await getTranslations('Apps');
   const featured = await getCachedFeaturedApps(locale);
-
-  if (featured.length === 0) return null;
 
   return (
     <section className="py-16 md:py-24">
@@ -30,6 +29,8 @@ export default async function Products() {
             {t('view_all')} <ArrowRightIcon size={16} />
           </Link>
         </div>
+
+        <BillingHelperEntry locale={locale} />
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map(({ app, tags }) => (

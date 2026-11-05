@@ -137,6 +137,7 @@
     "toggle_menu": "菜单"
   },
   "Footer": {
+    "billing_helper": "Cloudflare 账单助手",
     "friends": "友链",
     "brand_desc": "Meathill LLC —— 20+ 年全栈开发经验的一人公司，远程交付 Cloudflare 全栈、AI 应用与跨端项目。",
     "quick_links": "快速链接",

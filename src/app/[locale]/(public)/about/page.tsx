@@ -14,8 +14,10 @@ import {
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import AwesomeComment from '@/components/AwesomeComment';
+import JsonLd from '@/components/JsonLd';
 import { getAboutContent } from '@/actions/about';
 import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
+import { buildBreadcrumbJsonLd, buildOrganizationJsonLd } from '@/lib/seo/jsonld';
 import { marked } from 'marked';
 import { demoteBodyH1, withImageAltFallback } from '@/lib/wordpress/content';
 
@@ -83,8 +85,16 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const t = await getTranslations({ locale, namespace: 'About' });
   const aboutContent = await getAboutContent(locale);
 
+  const organizationJsonLd = buildOrganizationJsonLd();
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: '首页', url: SITE_URL },
+    { name: '关于', url: `${SITE_URL}${locale === 'en' ? '/en' : ''}/about` },
+  ]);
+
   return (
     <div className="min-h-screen pt-24 pb-16">
+      <JsonLd data={organizationJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Hero Section */}
         <section className="text-center mb-16">
