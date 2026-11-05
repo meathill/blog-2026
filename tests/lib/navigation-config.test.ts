@@ -94,4 +94,32 @@ describe('navigation-config', () => {
     expect(config.header).toEqual([{ href: '/about', label: 'About' }]);
     expect(config.footer).toEqual([{ href: '/posts', label: 'Archives' }]);
   });
+
+  it('默认作品导航应包含 DYQR 等独立产品，且不含 battleship、aigazou、minesweeper', () => {
+    const zhItems = getDefaultNavigationItems('zh', 'header');
+    const worksItem = zhItems.find((item) => item.href === '/works');
+    expect(worksItem).toBeDefined();
+    expect(worksItem?.children).toBeDefined();
+
+    const urls = worksItem?.children?.map((c) => c.href) ?? [];
+    const labels = worksItem?.children?.map((c) => c.label) ?? [];
+
+    // 包含新独立产品
+    expect(urls).toContain('https://dyqr.me');
+    expect(urls).toContain('https://muirouter.com');
+    expect(urls).toContain('https://muicv.com');
+    expect(urls).toContain('https://freeaiapi.org');
+    expect(urls).toContain('https://my-playlist.app');
+
+    expect(labels).toContain('DYQR');
+    expect(labels).toContain('Mui Router');
+    expect(labels).toContain('Mui CV');
+    expect(labels).toContain('Free AI API');
+    expect(labels).toContain('My Playlist');
+
+    // 移除旧产品与扫雷
+    expect(urls).not.toContain('https://battleship-game.com');
+    expect(urls).not.toContain('https://aigazou.net');
+    expect(urls).not.toContain('https://minesweeper.meathill.com');
+  });
 });

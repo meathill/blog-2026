@@ -74,7 +74,7 @@ function createItems(): NavItem[] {
       label: '作品',
       children: [
         { href: '/apps/github', label: 'GitHub' },
-        { href: '/apps/aigazou', label: 'AIGAZOU' },
+        { href: 'https://dyqr.me', label: 'DYQR' },
       ],
     },
     {
