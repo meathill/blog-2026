@@ -24,6 +24,7 @@ export interface BillingHelperContent {
   breakdownDesc: string;
   breakdownItems: string[];
   installTitle: string;
+  installLead: string;
   installSteps: { title: string; desc: string }[];
   privacyTitle: string;
   privacyDesc: string;
@@ -43,7 +44,7 @@ const zh: BillingHelperContent = {
   subtitle:
     '用 Mac 菜单栏应用查看账户账单、费用趋势与预算提醒；用浏览器扩展在「可计费使用量」页面查看免费额度、耗尽预测与按应用拆分。',
   ctaPrimary: '下载 Mac 版',
-  ctaSecondary: '安装浏览器扩展',
+  ctaSecondary: '从 Chrome 网上应用店安装',
   screenshotAlt: 'Cloudflare Billing Helper 面板截图',
   screenshotCaption: '面板自动插入在「支出摘要」下方，随页面账期切换自动刷新。',
   problemTitle: '官方账单页不回答的三个问题',
@@ -99,18 +100,19 @@ const zh: BillingHelperContent = {
     'Durable Objects：请求量与存储占用',
   ],
   installTitle: '安装（Chrome / Edge）',
+  installLead: '从 Chrome 网上应用店安装即可使用。想自己构建，可以到 GitHub 按仓库说明打包。',
   installSteps: [
     {
-      title: '下载并解压扩展',
-      desc: '下载下方 ZIP 安装包并解压，保留这个目录，后续浏览器会从这里加载扩展，无需 Node.js 或 pnpm。',
-    },
-    {
-      title: '加载已解压的扩展',
-      desc: '打开 chrome://extensions（Edge 使用 edge://extensions），开启「开发者模式」，选择「加载已解压的扩展程序」，选中包含 manifest.json 的解压目录。',
+      title: '从 Chrome 网上应用店安装',
+      desc: '打开商店页面，点击「添加至 Chrome」。装好后即可使用，不需要开启开发者模式。',
     },
     {
       title: '打开账单页',
       desc: '进入 Dashboard → 账单 → 可计费使用量（/{accountId}/billing/billable-usage），面板会出现在「支出摘要」下方。',
+    },
+    {
+      title: '或从 GitHub 自行构建',
+      desc: '克隆仓库后按 README 构建。打开 chrome://extensions（Edge 使用 edge://extensions），开启「开发者模式」，选择「加载已解压的扩展程序」。',
     },
   ],
   privacyTitle: '隐私与数据',
@@ -150,7 +152,7 @@ const en: BillingHelperContent = {
   subtitle:
     'Track account costs, trends and budget alerts from your Mac menu bar. Add the browser extension for free-tier headroom, exhaustion forecasts and per-app usage on the Billable Usage page.',
   ctaPrimary: 'Download for Mac',
-  ctaSecondary: 'Install browser extension',
+  ctaSecondary: 'Add from Chrome Web Store',
   screenshotAlt: 'Cloudflare Billing Helper panel screenshot',
   screenshotCaption: 'The panel is inserted below the spend summary and follows the billing-period switcher.',
   problemTitle: 'Three questions the official billing page does not answer',
@@ -208,18 +210,19 @@ const en: BillingHelperContent = {
     'Durable Objects: requests and storage per object',
   ],
   installTitle: 'Install (Chrome / Edge)',
+  installLead: 'Install it from the Chrome Web Store. To build it yourself, follow the instructions on GitHub.',
   installSteps: [
     {
-      title: 'Download and extract',
-      desc: 'Download the ZIP below and extract it. Keep the folder in place: the browser will load the extension from there. No Node.js or pnpm required.',
-    },
-    {
-      title: 'Load unpacked',
-      desc: 'Open chrome://extensions (edge://extensions in Edge), enable Developer mode, choose "Load unpacked" and select the extracted folder containing manifest.json.',
+      title: 'Install from the Chrome Web Store',
+      desc: 'Open the listing and choose Add to Chrome. Developer mode is not required.',
     },
     {
       title: 'Open the billing page',
       desc: 'Go to Dashboard → Billing → Billable Usage (/{accountId}/billing/billable-usage). The panel appears below the spend summary.',
+    },
+    {
+      title: 'Or build it from GitHub',
+      desc: 'Clone the repository and follow the README. Then open chrome://extensions (edge://extensions in Edge), enable Developer mode, and choose "Load unpacked".',
     },
   ],
   privacyTitle: 'Privacy',

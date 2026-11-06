@@ -1,8 +1,5 @@
-import type { Metadata } from 'next';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
 import {
   AlarmClockIcon,
-  ArrowRightIcon,
   BoxesIcon,
   CheckIcon,
   CoffeeIcon,
@@ -17,20 +14,21 @@ import {
   TrendingUpIcon,
   WalletIcon,
 } from 'lucide-react';
-import { Link } from '@/i18n/routing';
+import type { Metadata } from 'next';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import JsonLd from '@/components/JsonLd';
-import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
-import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo/jsonld';
+import { Link } from '@/i18n/routing';
 import { GITHUB_URL, getBillingHelperContent } from '@/lib/billing-helper';
 import {
   BMC_URL,
-  EXTENSION_CHECKSUM_URL,
-  EXTENSION_DOWNLOAD_URL,
+  CHROME_WEB_STORE_URL,
+  getBillingHelperReleaseContent,
   MACOS_CHECKSUM_URL,
   MACOS_DOWNLOAD_URL,
   MACOS_VERSION,
-  getBillingHelperReleaseContent,
 } from '@/lib/billing-helper-release';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/constants';
+import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo/jsonld';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -128,20 +126,22 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
         <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">
           {content.subtitle}
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
           <a
             href={MACOS_DOWNLOAD_URL}
-            className="inline-flex items-center gap-2 rounded-xl bg-amber-700 px-6 py-3 font-semibold text-amber-50 transition-colors hover:bg-amber-800"
+            className="inline-flex max-w-full items-center justify-center gap-2 rounded-xl bg-amber-700 px-6 py-3 font-semibold text-amber-50 transition-colors hover:bg-amber-800"
           >
             <DownloadIcon size={18} aria-hidden="true" />
             {content.ctaPrimary}
           </a>
           <a
-            href="#install"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 font-semibold transition-colors hover:bg-muted"
+            href={CHROME_WEB_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex max-w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-center font-semibold transition-colors hover:bg-muted"
           >
+            <PuzzleIcon size={18} aria-hidden="true" />
             {content.ctaSecondary}
-            <ArrowRightIcon size={18} aria-hidden="true" />
           </a>
         </div>
       </header>
@@ -241,7 +241,28 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
 
       {/* 安装 */}
       <section id="install" className="mx-auto mt-20 max-w-3xl scroll-mt-24">
-        <h2 className="mb-8 text-center text-2xl font-bold md:text-3xl">{content.installTitle}</h2>
+        <h2 className="mb-3 text-center text-2xl font-bold md:text-3xl">{content.installTitle}</h2>
+        <p className="mb-6 text-center text-[var(--text-secondary)]">{content.installLead}</p>
+        <div className="mb-8 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center">
+          <a
+            href={CHROME_WEB_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex max-w-full items-center justify-center gap-2 rounded-xl bg-amber-700 px-5 py-3 text-center font-semibold text-amber-50 transition-colors hover:bg-amber-800"
+          >
+            <PuzzleIcon size={18} aria-hidden="true" />
+            {release.extensionStore}
+          </a>
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex max-w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-3 font-semibold transition-colors hover:bg-muted"
+          >
+            <GithubIcon size={18} aria-hidden="true" />
+            {release.extensionGithub}
+          </a>
+        </div>
         <ol className="space-y-4">
           {content.installSteps.map((step, index) => (
             <li key={step.title} className="flex gap-4 rounded-xl border border-border bg-card p-5">
@@ -255,19 +276,6 @@ export default async function BillingHelperLandingPage({ params }: PageProps) {
             </li>
           ))}
         </ol>
-        <a
-          href={EXTENSION_DOWNLOAD_URL}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-700 px-5 py-3 font-semibold text-amber-50 transition-colors hover:bg-amber-800"
-        >
-          <DownloadIcon size={18} aria-hidden="true" />
-          {release.extensionDownload}
-        </a>
-        <a
-          href={EXTENSION_CHECKSUM_URL}
-          className="ml-4 inline-flex text-sm text-amber-700 underline dark:text-amber-300"
-        >
-          SHA-256
-        </a>
       </section>
 
       {/* 隐私 */}

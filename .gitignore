@@ -45,4 +45,6 @@ next-env.d.ts
 .idea
 scripts/cloudflare/snapshots/
 .claude
+.zcode
+.zcodeignore
 env.d.ts

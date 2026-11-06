@@ -88,6 +88,11 @@ describe('seo/markdown-negotiation', () => {
       expect(markdown).toContain('# Cloudflare 账单');
       expect(markdown).toContain('核心能力');
       expect(markdown).toContain('常见问题');
+      expect(markdown).toContain(
+        'https://chromewebstore.google.com/detail/cloudflare-billing-helper/lhaplnigoplpfnlbpiohjofgmieihdgd',
+      );
+      expect(markdown).toContain('https://github.com/meathill/cloudflare-billing-helper');
+      expect(markdown).not.toContain('cloudflare-billing-helper-0.2.0-chrome.zip');
     });
   });
 });

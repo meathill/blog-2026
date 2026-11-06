@@ -769,8 +769,8 @@ DYNAMIC_SERVER_USAGE → wrangler dev --remote（真实绑定、不影响生产�
 
 ## 账单助手的官网发行入口（2026-11-05）
 
-- 下载版本和 R2 地址统一维护在 `src/lib/billing-helper-release.ts`，发布前先确认文件可访问且回读 SHA-256 一致，再更新官网链接。
-- 安装包使用 R2 `blog` 的 `downloads/cloudflare-billing-helper/` 版本化路径，经 `i.meathill.com` 提供；保留旧文件，使用不可变缓存，并提供同路径 `.sha256`。
+- Mac 安装包的版本和 R2 地址统一维护在 `src/lib/billing-helper-release.ts`。发布前先确认文件可访问且回读 SHA-256 一致，再更新官网链接。
+- Mac 安装包使用 R2 `blog` 的 `downloads/cloudflare-billing-helper/macos/` 版本化路径，经 `i.meathill.com` 提供；保留旧文件，使用不可变缓存，并提供同路径 `.sha256`。
 - 首页推荐区、应用列表和页脚均保留产品入口，不依赖后台 featured 数量或自定义导航配置。不要只在 sitemap 中收录、却不提供可见入口。
 - 官网 Mac 包使用 BMC；App Store 包保持 StoreKit，两个渠道通过编译条件隔离。应用仓库内的 `docs/macos/build.md` 记录签名、公证和打包流程。
-- 浏览器扩展提供 ZIP 直装与 Chrome / Edge 开发者模式说明，不再要求普通用户先安装 Node.js 和 pnpm。
+- 浏览器扩展只从 Chrome Web Store 安装，官网不再提供 ZIP。需要自行构建的用户走 GitHub 仓库，按 README 打包。

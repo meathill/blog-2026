@@ -1,4 +1,5 @@
-import { getBillingHelperContent } from '@/lib/billing-helper';
+import { GITHUB_URL, getBillingHelperContent } from '@/lib/billing-helper';
+import { CHROME_WEB_STORE_URL } from '@/lib/billing-helper-release';
 import { htmlToMarkdown } from '@/lib/blog-html-to-markdown';
 import { SITE_URL } from '@/lib/constants';
 import { getLocalizedDescription, getSkillBySlug, getSkillSourceUrl } from '@/lib/skills';
@@ -135,6 +136,11 @@ export async function resolvePathMarkdown(pathname: string): Promise<string | nu
       '## 核心能力',
       '',
       ...content.features.map((f) => `- **${f.title}**: ${f.desc}`),
+      '',
+      '## 安装',
+      '',
+      `- Chrome Web Store: ${CHROME_WEB_STORE_URL}`,
+      `- GitHub: ${GITHUB_URL}`,
       '',
       '## 常见问题 (FAQ)',
       '',
