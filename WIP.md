@@ -1,5 +1,12 @@
 # WIP (Work In Progress)
 
+## 2026-11-06 ISR 全站 500 复盘与恢复（已恢复）
+
+- 现象：双语化上线验证时发现 /、/about、/en/*（app 除外）等全部 ● ISR 页 500，ƒ 动态页正常——与 11-04 事故同型分流特征。
+- 定位：`wrangler dev --remote`（同 HEAD 构建）200 而线上 500；HEAD 独有的 `/api/markdown-negotiation` 线上 404 → **线上 worker 是旧/坏构建产物**（094fa28 not-found 修复不在其中），非代码回归。
+- 处置：从干净 HEAD `opennextjs-cloudflare build + deploy` fix-forward，全页冒烟 200；`pnpm indexnow -- --since 3` 已提交 127 个 URL（HTTP 200）。
+- 待办：GSC / Bing 重提交 sitemap（/en/posts、/en/category 条目已移除）；2–4 周复查 GSC；经验已并入 memory playbook（部署后冒烟必须打 ISR 冷页）。
+
 ## 中短期跟踪与待办
 
 ### 1. Issue #18 机器可读性与 SEO 效果复查
